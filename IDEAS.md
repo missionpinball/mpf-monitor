@@ -25,6 +25,3 @@ MPF Monitor will be a GUI app that connects to a live running MPF instance.
 * Layout & config information for monitor can be in a YAML file, but it can also pull much of what it needs directly from config files and/or the running instance of MPF.
 * Enter a config for a mode which can be dynamically added to the game.
 
-Changes to MPF
-* Will register as a plugin, so we need to make MPF plugins use standard entry points.
-* Need to change MPF so it can connect to multiple servers at the same time, and so MPF can listen for incoming connections.
