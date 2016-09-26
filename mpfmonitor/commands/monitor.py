@@ -123,8 +123,6 @@ class Command(object):
         #
         # self.preprocess_config(mpf_config)
 
-        print("RUNNING MONITOR")
-
         from mpfmonitor.core.mpfmon import MpfMon
 
         logging.info("Loading MPF Monitor")

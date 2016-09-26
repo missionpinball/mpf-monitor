@@ -6,7 +6,7 @@ monitor:
 kivy_config:
   kivy:
     desktop: 1
-    exit_on_escape: true
+    exit_on_escape: false
     pause_on_minimize: 0
     log_dir:
     window_icon:
@@ -27,3 +27,9 @@ kivy_config:
     width: 800
     minimum_width: 100
     minimum_height: 100
+
+bcp:
+    connections:
+        mpf:
+            host: localhost
+            port: 5051

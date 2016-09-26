@@ -15,13 +15,14 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.popup import Popup
 
 
-from mpfmc.core.bcp_server import BCPServer
+from mpfmonitor.core.bcp_client import BCPClient
 
 from mpfmonitor._version import __version__
 
 # The following line is needed to allow mpfmon modules to use the getLogger(
 # name) method
 logging.Logger.manager.root = Logger
+
 
 class MpfMon(App):
 
@@ -31,7 +32,6 @@ class MpfMon(App):
         super().__init__(**kwargs)
 
         self.bcp_client_connected = False
-        self.socket_thread = None
         self.receive_queue = queue.Queue()
         self.sending_queue = queue.Queue()
         self.crash_queue = queue.Queue()
@@ -40,13 +40,8 @@ class MpfMon(App):
         self.device_states = dict()
         self.device_type_widgets = dict()
 
-        self.socket_thread = BCPServer(self, self.receive_queue,
-                                       self.sending_queue, 'localhost', 5052)
-
-        self.socket_thread.daemon = True
-        self.socket_thread.start()
-
-        self.sending_queue.put(('monitor_devices', None))
+        self.bcp = BCPClient(self, self.receive_queue,
+                             self.sending_queue, 'localhost', 5051)
 
     def build(self):
         Clock.schedule_interval(self.tick, 0)
@@ -85,7 +80,6 @@ class MpfMon(App):
                 self.socket_thread.start_sending_loop()
 
     def process_device_update(self, name, state, changes, type):
-
         try:
             self.device_states[type][name] = state
         except KeyError:
@@ -126,6 +120,8 @@ class MpfMon(App):
                            content=self.popup_text)
         self.popup.open()
 
+    def on_stop(self):
+        self.log.info("Stopping...")
+        self.thread_stopper.set()
+        self.bcp.disconnect()
 
-if __name__ == '__main__':
-    MyApp().run()
