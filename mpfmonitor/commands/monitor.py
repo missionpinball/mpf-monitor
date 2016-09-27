@@ -32,8 +32,10 @@ class Command(object):
 
         # Need to have these in here because we don't want them to load when
         # the module is loaded as an mpf.command
-        # import mpfmc
+        import mpfmonitor
         from mpf.core.utility_functions import Util
+        from mpfmc.core.config_processor import ConfigProcessor
+        from mpfmc.core.utils import set_machine_path, load_machine_config
 
         del mpf_path
 
@@ -43,7 +45,7 @@ class Command(object):
                             action="store", dest="logfile",
                             metavar='file_name',
                             default=os.path.join("logs", datetime.now().strftime(
-                                "%Y-%m-%d-%H-%M-%S-mpfmon-" +
+                                "%Y-%m-%d-%H-%M-%S-monitor-" +
                                 socket.gethostname() +
                                 ".log")),
                             help="The name (and path) of the log file")
@@ -111,7 +113,7 @@ class Command(object):
         logging.getLogger('').addHandler(console)
 
         # mpf_config = ConfigProcessor.load_config_file(os.path.join(
-        #     mpfmonitor.__path__[0], args.mpfmonconfigfile), 'machine')
+        #     mpfmonitor.__path__, args.mpfmonconfigfile), 'machine')
         #
         # machine_path = set_machine_path(machine_path,
         #                                 mpf_config['mpf_monitor']['paths'][
@@ -130,7 +132,7 @@ class Command(object):
         thread_stopper = threading.Event()
 
         try:
-            # MpfMc(options=vars(args), config=mpf_config,
+            # MpfMon(options=vars(args), config=mpf_config,
             #       machine_path=machine_path,
             #       thread_stopper=thread_stopper).run()
             MpfMon().run()
