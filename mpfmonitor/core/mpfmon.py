@@ -129,13 +129,7 @@ class MpfMon(App):
 
             cls = device_classes.get(type, TreeViewLabel)
 
-            node = cls(on_touch_down=self.device_clicked,
-                                 id='{}.{}'.format(type, name))
-            node = cls(id='{}.{}'.format(type, name))
-
-
-            label = Label(text=name)
-            node.add_widget(label)
+            node = cls(id='{}.{}'.format(type, name), text=name)
 
             self.device_tree.ids['{}.{}'.format(type, name)] = node
             self.device_tree.add_node(node, self.device_tree.ids['{}'.format(type)])
@@ -208,25 +202,36 @@ class SwitchLabel(RelativeLayout, TreeViewLabel):
             RoundedRectangle(pos=(150, 8), size=(10,10), radius=[5, 5])
 
 
-class LedLabel(DragBehavior, RelativeLayout, TreeViewLabel):
+class LedLabel(TreeViewLabel):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
         with self.canvas:
             Color(1, 0, 0, 1)
-            self.rec = RoundedRectangle(pos=(150, 8), size=(10,10), radius=[5,
-                                                                          5])
+            self.rect = RoundedRectangle(
+                pos=(self.pos[0] + self.width - 15, self.pos[1] + 8),
+                size=(10,10), radius=[5, 5])
+
+        self.bind(pos=self.update_rect)
+        self.bind(size=self.update_rect)
 
     def update_states(self, state_dict):
-        self.canvas.remove(self.rec)
+        self.canvas.remove(self.rect)
 
         with self.canvas:
             Color(state_dict['_color'][0]/255,
                   state_dict['_color'][1]/255,
                   state_dict['_color'][2]/255)
-            self.rec = RoundedRectangle(
-                pos=(150, 8), size=(10,10), radius=[5, 5])
+            self.rect = RoundedRectangle(
+                pos=(self.pos[0] + self.width - 15, self.pos[1] + 8),
+                size=(10,10), radius=[5, 5])
+
+        self.bind(pos=self.update_rect)
+        self.bind(size=self.update_rect)
+
+    def update_rect(self, *args):
+        self.rect.pos = (self.pos[0] + self.width - 15, self.pos[1] + 8)
 
     # def on_touch_down(self, touch):
     #     print(self.children[0].text, touch)
@@ -244,8 +249,11 @@ class LedPlayfield(DragBehavior, Widget):
 
         with self.canvas:
             Color(1, 0, 0, 1)
-            self.rec = RoundedRectangle(pos=(100,100), size=(10,10), radius=[
+            self.rect = RoundedRectangle(pos=(100,100), size=(10,10), radius=[
                 5,5])
+
+        self.bind(pos=self.update_rect)
+        self.bind(size=self.update_rect)
 
     def update(self, state_dict):
         self.canvas.clear()
@@ -254,8 +262,15 @@ class LedPlayfield(DragBehavior, Widget):
             Color(state_dict['_color'][0]/255,
                   state_dict['_color'][1]/255,
                   state_dict['_color'][2]/255)
-            self.rec = RoundedRectangle(pos=(100,100), size=(10,10), radius=[
+            self.rect = RoundedRectangle(pos=(100,100), size=(10,10), radius=[
                 5, 5])
+
+        self.bind(pos=self.update_rect)
+        self.bind(size=self.update_rect)
+
+    def update_rect(self, *args):
+        self.rect.pos = self.pos
+        self.rect.size = self.size
 
     # def on_touch_move(self, touch):
     #     print("move", self, touch, self.collide_point(touch.pos[0],
