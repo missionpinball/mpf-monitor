@@ -36,21 +36,20 @@ class MainWindow(QMainWindow):
         self.tick_timer.timeout.connect(self.tick)
         self.tick_timer.start()
 
-
         hbox = QHBoxLayout()
 
+        self.playfield_frame = Playfield()
+
         self.playfield_image = QPixmap('monitor/playfield.jpg')
-        self.playfield = QLabel(self)
-        # self.playfield.setScaledContents(True)
+        self.playfield = QLabel(self.playfield_frame)
         self.playfield.setPixmap(self.playfield_image)
         self.playfield.setMinimumSize(1, 1)
         self.playfield.setAlignment(Qt.AlignCenter)
         self.playfield.installEventFilter(self)
 
         hbox.addWidget(self.playfield)
-        # self.setLayout(hbox)
 
-        main_widget = QWidget()
+        main_widget = self.playfield_frame
         main_widget.setLayout(hbox)
 
         self.setCentralWidget(main_widget)
@@ -92,7 +91,6 @@ class MainWindow(QMainWindow):
             _state = QStandardItem()
             self.device_states[type][name] = _state
 
-
             self.device_type_widgets[type].appendRow([node, _state])
             self.device_type_widgets[type].sortChildren(0)
 
@@ -101,6 +99,9 @@ class MainWindow(QMainWindow):
         self.device_states[type][name].setData(state)
 
     def createDockWindows(self):
+
+        # Devices window
+
         dock = QDockWidget("Devices", self)
         dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
 
@@ -111,6 +112,7 @@ class MainWindow(QMainWindow):
 
         self.treeview.setSortingEnabled(True)
         self.treeview.setItemDelegate(DeviceDelegate())
+        self.treeview.setDragDropMode(QAbstractItemView.DragOnly)
 
         self.treeview.setModel(model)
         self.treeview.setColumnWidth(0, 150)
@@ -119,6 +121,8 @@ class MainWindow(QMainWindow):
 
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
         self.viewMenu.addAction(dock.toggleViewAction())
+
+        # Event window
 
         dock = QDockWidget("MPF Event History", self)
         self.event_list = QListWidget(dock)
@@ -304,6 +308,34 @@ class DeviceDelegate(QStyledItemDelegate):
                              text)
 
         painter.restore()
+
+
+class Playfield(QWidget):
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event):
+        # print(event)
+        event.acceptProposedAction()
+
+    dragMoveEvent = dragEnterEvent
+
+    def dropEvent(self, event):
+        # print(event)
+        # print(event.mimeData().formats())
+        print(event.mimeData().data(
+            'application/x-qabstractitemmodeldatalist').decode())
+        print(event.mimeData().data(
+            'application/x-qstandarditemmodeldatalist').decode())
+        print(event.mimeData().data('application/x-qt-mime-type-name'))
+
+    def mousePressEvent(self, event):
+        print(event)
+
+
 
 
 def run():
