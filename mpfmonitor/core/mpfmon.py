@@ -90,9 +90,6 @@ class DeviceDelegate(QStyledItemDelegate):
         state = None
         balls = None
         bd_state = None
-        # complete = bool
-        # _enabled
-        balls_locked = None
         found = False
 
         num_circles = 1
@@ -124,9 +121,34 @@ class DeviceDelegate(QStyledItemDelegate):
             return
 
         try:
+            if '_enabled' in index.model().itemFromIndex(index).data():
+                # print(index.model().itemData(index))['_color']
+                state = index.model().itemFromIndex(index).data()[
+                    '_enabled']
+                found = True
+        except TypeError:
+            return
+
+        try:
             if 'balls' in index.model().itemFromIndex(index).data():
                 # print(index.model().itemData(index))['_color']
                 balls = index.model().itemFromIndex(index).data()['balls']
+                found = True
+        except TypeError:
+            return
+
+        try:
+            if 'balls_locked' in index.model().itemFromIndex(index).data():
+                # print(index.model().itemData(index))['_color']
+                balls = index.model().itemFromIndex(index).data()['balls_locked']
+                found = True
+        except TypeError:
+            return
+
+        try:
+            if '_state' in index.model().itemFromIndex(index).data():
+                # print(index.model().itemData(index))['_color']
+                bd_state = index.model().itemFromIndex(index).data()['_state']
                 found = True
         except TypeError:
             return
@@ -159,13 +181,14 @@ class DeviceDelegate(QStyledItemDelegate):
 
         x_offset = 0
         for _ in range(num_circles):
-            if num_circles > 1:
-                print("Number circles", num_circles, x_offset)
-
             painter.drawEllipse(
                 view.rect.x() + x_offset, view.rect.y(), 14, 14)
 
             x_offset += 20
+
+        if bd_state:
+            painter.drawText(view.rect.x() + x_offset, view.rect.y() + 12,
+                             bd_state)
 
         painter.restore()
 
