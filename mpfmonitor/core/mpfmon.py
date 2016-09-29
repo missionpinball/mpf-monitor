@@ -89,8 +89,8 @@ class DeviceDelegate(QStyledItemDelegate):
         color = None
         state = None
         balls = None
-        bd_state = None
         found = False
+        text = ''
 
         num_circles = 1
 
@@ -148,7 +148,27 @@ class DeviceDelegate(QStyledItemDelegate):
         try:
             if '_state' in index.model().itemFromIndex(index).data():
                 # print(index.model().itemData(index))['_color']
-                bd_state = index.model().itemFromIndex(index).data()['_state']
+                text = index.model().itemFromIndex(index).data()['_state']
+                found = True
+        except TypeError:
+            return
+
+        try:
+            if 'num_balls_requested' in index.model().itemFromIndex(
+                    index).data():
+                # print(index.model().itemData(index))['_color']
+                text += 'Requested: {} '.format(
+                    index.model().itemFromIndex(index).data()['num_balls_requested'])
+                found = True
+        except TypeError:
+            return
+
+        try:
+            if 'unexpected_balls' in index.model().itemFromIndex(
+                    index).data():
+                # print(index.model().itemData(index))['_color']
+                text += 'Unexpected: {} '.format(
+                    index.model().itemFromIndex(index).data()['unexpected_balls'])
                 found = True
         except TypeError:
             return
@@ -186,9 +206,9 @@ class DeviceDelegate(QStyledItemDelegate):
 
             x_offset += 20
 
-        if bd_state:
+        if text:
             painter.drawText(view.rect.x() + x_offset, view.rect.y() + 12,
-                             bd_state)
+                             text)
 
         painter.restore()
 
