@@ -53,16 +53,20 @@ else:
 
 install_requires = ['ruamel.yaml>=0.10,<0.11',
                     'mpf>={}'.format(mpf_version),
-                    'PyQt5'
                     ]
+
+# PyQt5 wheels are Python 3.5 only
+# PyQt5 binaries for Python 3.4 on Windows: https://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5.1/
+if sys.version_info.major == 3 and sys.version_info.minor == 5:
+    install_requires += ['PtQt5']
+
 
 setup(
 
     name='mpf-monitor',
     version=mon_version,
     description='MPF Monitor',
-    long_description='''GUI Monitoring & Troubleshooting app for the Mission
-Pinball Framework.
+    long_description='''GUI Monitoring app for the Mission Pinball Framework.
 
 MPF Monitor is built using PyQt5.''',
 
@@ -84,7 +88,7 @@ MPF Monitor is built using PyQt5.''',
         'Topic :: Games/Entertainment :: Arcade'
     ],
 
-    keywords='pinball',
+    keywords = ['pinball', 'mpf'],
 
     include_package_data=True,
 
