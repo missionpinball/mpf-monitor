@@ -29,7 +29,7 @@ class BCPClient(object):
         self.receive_thread = None
         self.done = False
 
-        self.log.info('Looking for MPF at %s:%s', self.interface, self.port)
+        self.mc.log.info('Looking for MPF at %s:%s', self.interface, self.port)
         self.connect_to_mpf()
 
     def connect_to_mpf(self, *args):

@@ -11,24 +11,11 @@ import time
 
 import errno
 
-# Note, other imports are done deeper in this file, which we need to do there
-# since Kivy does so much with singletons and we don't want MPF to import
-# them when it reads this command
-
 
 class Command(object):
 
     # pylint: disable-msg=too-many-locals
     def __init__(self, mpf_path, machine_path, args):
-
-        # undo all of Kivy's built-in logging so we can do it our way
-        os.environ['KIVY_NO_FILELOG'] = '1'
-        os.environ['KIVY_NO_CONSOLELOG'] = '1'
-        from kivy.logger import Logger
-
-        for handler in Logger.handlers:
-            Logger.removeHandler(handler)
-        sys.stderr = sys.__stderr__
 
         # Need to have these in here because we don't want them to load when
         # the module is loaded as an mpf.command
@@ -150,36 +137,6 @@ class Command(object):
         logging.info("All child threads stopped.")
 
         sys.exit()
-
-    def preprocess_config(self, config):
-        from kivy.config import Config
-
-        kivy_config = config['kivy_config']
-
-        try:
-            kivy_config['graphics'].update(config['window'])
-        except KeyError:
-            pass
-
-        if ('top' in kivy_config['graphics'] and
-                'left' in kivy_config['graphics']):
-            kivy_config['graphics']['position'] = 'custom'
-
-        for section, settings in kivy_config.items():
-            for k, v in settings.items():
-                try:
-                    if k in Config[section]:
-                        Config.set(section, k, v)
-                except KeyError:
-                    continue
-
-        try:  # config not validated yet, so we use try
-            if config['window']['exit_on_escape']:
-                Config.set('kivy', 'exit_on_escape', '1')
-        except KeyError:
-            pass
-
-        Config.set('graphics', 'maxfps', int(config['monitor']['fps']))
 
 
 def get_command():

@@ -17,6 +17,8 @@ class MainWindow(QMainWindow):
         self.resize(520,300)
         self.setWindowTitle("MPF Monitor")
 
+        self.log = logging.getLogger('Core')
+
         self.bcp_client_connected = False
         self.receive_queue = queue.Queue()
         self.sending_queue = queue.Queue()
@@ -55,6 +57,9 @@ class MainWindow(QMainWindow):
                 self.process_device_update(**kwargs)
 
     def process_device_update(self, name, state, changes, type):
+
+        self.log.debug("Device Update: {}.{}: {}".format(type, name, state))
+
         if type not in self.device_states:
             self.device_states[type] = dict()
             node = QStandardItem(type)
@@ -81,13 +86,52 @@ class DeviceDelegate(QStyledItemDelegate):
 
     def paint(self, painter, view, index):
         super().paint(painter, view, index)
+        color = None
+        state = None
+        balls = None
+        bd_state = None
+        # complete = bool
+        # _enabled
+        balls_locked = None
+        found = False
 
+        num_circles = 1
 
         try:
             if '_color' in index.model().itemFromIndex(index).data():
                 # print(index.model().itemData(index))['_color']
                 color = index.model().itemFromIndex(index).data()['_color']
+                found = True
         except TypeError:
+            return
+
+        try:
+            if 'state' in index.model().itemFromIndex(index).data():
+                # print(index.model().itemData(index))['_color']
+                state = True == index.model().itemFromIndex(index).data()[
+                    'state']
+                found = True
+        except TypeError:
+            return
+
+        try:
+            if 'complete' in index.model().itemFromIndex(index).data():
+                # print(index.model().itemData(index))['_color']
+                state = not index.model().itemFromIndex(index).data()[
+                    'complete']
+                found = True
+        except TypeError:
+            return
+
+        try:
+            if 'balls' in index.model().itemFromIndex(index).data():
+                # print(index.model().itemData(index))['_color']
+                balls = index.model().itemFromIndex(index).data()['balls']
+                found = True
+        except TypeError:
+            return
+
+        if not found:
             return
 
         if index.column() == 0:
@@ -100,14 +144,30 @@ class DeviceDelegate(QStyledItemDelegate):
         # painter.setPen(Qt.NoPen)
         painter.setPen(QPen(Qt.gray, 1, Qt.SolidLine))
 
-        painter.setBrush(QBrush(QColor(*color),Qt.SolidPattern))
+        if color:
+            painter.setBrush(QBrush(QColor(*color),Qt.SolidPattern))
+        elif state is True:
+            painter.setBrush(QBrush(QColor(0, 255, 0),Qt.SolidPattern))
+        elif state is False:
+            painter.setBrush(QBrush(QColor(255, 255, 255),Qt.SolidPattern))
+        elif isinstance(balls, int):
+            painter.setBrush(QBrush(QColor(0, 255, 0),Qt.SolidPattern))
+            num_circles = balls
 
-        # painter.setBrush(QBrush(QColor(*self.color),Qt.SolidPattern))
+
         # painter.translate(rect.x() + 15, rect.y() + 10)
-        painter.drawEllipse(view.rect.x(), view.rect.y(), 14, 14)
+
+        x_offset = 0
+        for _ in range(num_circles):
+            if num_circles > 1:
+                print("Number circles", num_circles, x_offset)
+
+            painter.drawEllipse(
+                view.rect.x() + x_offset, view.rect.y(), 14, 14)
+
+            x_offset += 20
 
         painter.restore()
-
 
 
 def run():
