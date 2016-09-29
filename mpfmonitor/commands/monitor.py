@@ -125,7 +125,7 @@ class Command(object):
         #
         # self.preprocess_config(mpf_config)
 
-        from mpfmonitor.core.mpfmon import MpfMon
+        from mpfmonitor.core.mpfmon import run
 
         logging.info("Loading MPF Monitor")
 
@@ -135,7 +135,7 @@ class Command(object):
             # MpfMon(options=vars(args), config=mpf_config,
             #       machine_path=machine_path,
             #       thread_stopper=thread_stopper).run()
-            MpfMon().run()
+            run()
             logging.info("MPF Monitor run loop ended.")
         except Exception as e:
             logging.exception(str(e))

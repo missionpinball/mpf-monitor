@@ -53,15 +53,8 @@ else:
 
 install_requires = ['ruamel.yaml>=0.10,<0.11',
                     'mpf>={}'.format(mpf_version),
+                    'PyQt5'
                     ]
-
-if platform == 'win32':
-    install_requires += ['pypiwin32',
-                         'kivy.deps.sdl2',
-                         'kivy.deps.sdl2_dev',
-                         'kivy.deps.glew',
-                         'kivy',
-                         ]
 
 setup(
 
@@ -71,7 +64,7 @@ setup(
     long_description='''GUI Monitoring & Troubleshooting app for the Mission
 Pinball Framework.
 
-MPF Monitor is built on Kivy.''',
+MPF Monitor is built using PyQt5.''',
 
     url='https://missionpinball.org',
     author='The Mission Pinball Framework Team',
