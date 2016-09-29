@@ -14,7 +14,7 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.resize(520,300)
+        self.resize(1024, 768)
         self.setWindowTitle("MPF Monitor")
 
         self.log = logging.getLogger('Core')
@@ -36,19 +36,38 @@ class MainWindow(QMainWindow):
         self.tick_timer.timeout.connect(self.tick)
         self.tick_timer.start()
 
-        self.treeview = QTreeView(self)
 
-        model = QStandardItemModel()
-        self.rootNode = model.invisibleRootItem()
+        hbox = QHBoxLayout()
 
-        # self.treeview.setHorizontalHeaderLabels(['Device', 'State'])
-        self.treeview.setSortingEnabled(True)
-        self.treeview.setItemDelegate(DeviceDelegate())
+        self.playfield_image = QPixmap('monitor/playfield.jpg')
+        self.playfield = QLabel(self)
+        # self.playfield.setScaledContents(True)
+        self.playfield.setPixmap(self.playfield_image)
+        self.playfield.setMinimumSize(1, 1)
+        self.playfield.setAlignment(Qt.AlignCenter)
+        self.playfield.installEventFilter(self)
 
-        self.treeview.setModel(model)
-        self.treeview.setColumnWidth(0, 150)
+        hbox.addWidget(self.playfield)
+        # self.setLayout(hbox)
 
-        self.setCentralWidget(self.treeview)
+        main_widget = QWidget()
+        main_widget.setLayout(hbox)
+
+        self.setCentralWidget(main_widget)
+
+        # self.createActions()
+        self.createMenus()
+        self.createToolBars()
+        self.createStatusBar()
+        self.createDockWindows()
+
+    def eventFilter(self, source, event):
+        if (source is self.playfield and event.type() == QEvent.Resize):
+            self.playfield.setPixmap(self.playfield_image.scaled(
+                self.playfield.size(), Qt.KeepAspectRatio,
+                Qt.SmoothTransformation))
+
+        return super().eventFilter(source, event)
 
     def tick(self):
         while not self.receive_queue.empty():
@@ -81,6 +100,80 @@ class MainWindow(QMainWindow):
 
         self.device_states[type][name].setData(state)
 
+    def createDockWindows(self):
+        dock = QDockWidget("Devices", self)
+        dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
+
+        self.treeview = QTreeView(dock)
+
+        model = QStandardItemModel()
+        self.rootNode = model.invisibleRootItem()
+
+        self.treeview.setSortingEnabled(True)
+        self.treeview.setItemDelegate(DeviceDelegate())
+
+        self.treeview.setModel(model)
+        self.treeview.setColumnWidth(0, 150)
+
+        dock.setWidget(self.treeview)
+
+        self.addDockWidget(Qt.RightDockWidgetArea, dock)
+        self.viewMenu.addAction(dock.toggleViewAction())
+
+        dock = QDockWidget("MPF Event History", self)
+        self.event_list = QListWidget(dock)
+        #
+        dock.setWidget(self.event_list)
+        self.addDockWidget(Qt.RightDockWidgetArea, dock)
+        self.viewMenu.addAction(dock.toggleViewAction())
+
+        # self.customerList.currentTextChanged.connect(self.insertCustomer)
+        # self.event_list.currentTextChanged.connect(self.addParagraph)
+
+    def add_event(self, event):
+        self.event_list.addItem(event)
+
+
+    def createToolBars(self):
+
+        # todo, snapshot, buttons to show/hide docks
+
+        self.fileToolBar = self.addToolBar("File")
+        # self.fileToolBar.addAction(self.newLetterAct)
+        # self.fileToolBar.addAction(self.saveAct)
+        # self.fileToolBar.addAction(self.printAct)
+
+        self.editToolBar = self.addToolBar("Edit")
+        # self.editToolBar.addAction(self.undoAct)
+
+        # snapshot button
+        # pause events
+
+    def createMenus(self):
+        self.fileMenu = self.menuBar().addMenu("&File")
+        # self.fileMenu.addAction(self.newLetterAct)
+        # self.fileMenu.addAction(self.saveAct)
+        # self.fileMenu.addAction(self.printAct)
+        # self.fileMenu.addSeparator()
+        # self.fileMenu.addAction(self.quitAct)
+
+        # self.editMenu = self.menuBar().addMenu("&Edit")
+        # self.editMenu.addAction(self.undoAct)
+        #
+        self.viewMenu = self.menuBar().addMenu("&View")
+        #
+        # self.menuBar().addSeparator()
+
+        # self.helpMenu = self.menuBar().addMenu("&Help")
+        # self.helpMenu.addAction(self.aboutAct)
+        # self.helpMenu.addAction(self.aboutQtAct)
+
+    def createStatusBar(self):
+        self.statusBar().showMessage("Ready")
+
+    def about(self):
+        QMessageBox.about(self, "About MPF Monitor",
+                "This is the MPF Monitor")
 
 class DeviceDelegate(QStyledItemDelegate):
 
