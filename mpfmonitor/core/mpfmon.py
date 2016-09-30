@@ -38,7 +38,7 @@ class MainWindow(QMainWindow):
 
         hbox = QHBoxLayout()
 
-        self.playfield_frame = Playfield()
+        self.playfield_frame = Playfield(self)
 
         self.playfield_image = QPixmap('monitor/playfield.jpg')
         self.playfield = QLabel(self.playfield_frame)
@@ -324,18 +324,42 @@ class Playfield(QWidget):
     dragMoveEvent = dragEnterEvent
 
     def dropEvent(self, event):
-        # print(event)
-        # print(event.mimeData().formats())
-        print(event.mimeData().data(
-            'application/x-qabstractitemmodeldatalist').decode())
-        print(event.mimeData().data(
-            'application/x-qstandarditemmodeldatalist').decode())
-        print(event.mimeData().data('application/x-qt-mime-type-name'))
+
+        device = event.source().selectedIndexes()[0]
+        device_name = device.data()
+        device_type = device.parent().data()
+
+        drop_x  = event.posF().x()
+        drop_y  = event.posF().y()
+
+        pf_frame_height =  self.parent().playfield.height()
+        pf_image_height = self.parent().playfield_image.height()
+
+        pf_frame_width = self.parent().playfield.width()
+        pf_image_width = self.parent().playfield_image.width()
+
+        ratio = (min(pf_frame_height / pf_image_height,
+                     pf_frame_width / pf_image_width))
+
+        current_pf_height = pf_image_height * ratio
+        current_pf_width = pf_image_width * ratio
+
+        left = ((self.width() - current_pf_width) / 2)
+        right = left + current_pf_width
+
+        top = ((self.height() - current_pf_height) / 2)
+        bottom = top + current_pf_height
+
+        drop_x_percent = ((drop_x - left) / (right - left))
+        drop_y_percent = ((drop_y - top) / (bottom - top))
+
+        print('----------------------------------')
+        print('dropped widget {}.{}'.format(device_type, device_name))
+        print('x:', drop_x_percent)
+        print('y:', drop_y_percent)
 
     def mousePressEvent(self, event):
         print(event)
-
-
 
 
 def run():
