@@ -329,10 +329,10 @@ class Playfield(QWidget):
         device_name = device.data()
         device_type = device.parent().data()
 
-        drop_x  = event.posF().x()
-        drop_y  = event.posF().y()
+        drop_x = event.posF().x()
+        drop_y = event.posF().y()
 
-        pf_frame_height =  self.parent().playfield.height()
+        pf_frame_height = self.parent().playfield.height()
         pf_image_height = self.parent().playfield_image.height()
 
         pf_frame_width = self.parent().playfield.width()
