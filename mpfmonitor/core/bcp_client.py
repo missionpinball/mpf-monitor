@@ -7,8 +7,6 @@ import threading
 
 import select
 
-from kivy.clock import Clock
-
 import mpf.core.bcp.bcp_socket_client as bcp
 
 
@@ -51,7 +49,7 @@ class BCPClient(object):
             self.start_monitoring()
 
     def start_monitoring(self):
-        self.sending_queue.put(('monitor_devices', None))
+        self.sending_queue.put('monitor_devices')
 
     def create_socket_threads(self):
         """Creates and starts the sending and receiving threads for the BCP
@@ -111,7 +109,6 @@ class BCPClient(object):
         if not self.connected:
             self.log.info("Disconnecting from BCP")
             self.sending_queue.put('goodbye', None)
-            Clock.schedule_once(self.close, 1)
 
     def close(self):
         try:
@@ -133,7 +130,7 @@ class BCPClient(object):
     def sending_loop(self):
         while self.connected and not self.mc.thread_stopper.is_set():
             try:
-                msg, rawbytes = self.sending_queue.get(block=True, timeout=1)
+                msg = self.sending_queue.get(block=True, timeout=1)
             except queue.Empty:
                 if self.mc.thread_stopper.is_set():
                     return
@@ -141,13 +138,7 @@ class BCPClient(object):
                 else:
                     continue
 
-            if not rawbytes:
-                self.socket.sendall(('{}\n'.format(msg)).encode('utf-8'))
-
-            else:
-                self.socket.sendall('{}&bytes={}\n'.format(
-                    msg, len(rawbytes)).encode('utf-8'))
-                self.socket.sendall(rawbytes)
+            self.socket.sendall(('{}\n'.format(msg)).encode('utf-8'))
 
     def process_received_message(self, message):
         """Puts a received BCP message into the receiving queue.
@@ -164,3 +155,7 @@ class BCPClient(object):
         except ValueError:
             self.log.error("DECODE BCP ERROR. Message: %s", message)
             raise
+
+    def send(self, bcp_command, **kwargs):
+            self.sending_queue.put(bcp.encode_command_string(bcp_command,
+                                                             **kwargs))

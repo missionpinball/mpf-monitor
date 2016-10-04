@@ -2,6 +2,7 @@ import logging
 import queue
 import sys
 import os
+import time
 
 import ruamel.yaml as yaml
 
@@ -300,9 +301,6 @@ class PfPixmapItem(QGraphicsPixmapItem):
         current_pf_height = self.boundingRect().height()
         current_pf_width = self.boundingRect().width()
 
-        drop_x_percent = drop_x / current_pf_width
-        drop_y_percent = drop_y / current_pf_height
-
         self.create_pf_widget(widget, device_type, device_name, drop_x,
                               drop_y)
 
@@ -334,13 +332,14 @@ class PfWidget(QGraphicsItem):
         self.setAcceptedMouseButtons(Qt.LeftButton)
         self.setPos(x, y)
         self.update_pos(save)
+        self.click_start = 0
 
     def boundingRect(self):
         return QRectF(self.device_size / -2, self.device_size / -2,
                       self.device_size, self.device_size)
 
     def paint(self, painter, option, widget):
-        if '_color' in self.widget.data():
+        if self.device_type == 'led':
             color = self.widget.data()['_color']
 
             painter.setRenderHint(QPainter.Antialiasing, True)
@@ -348,6 +347,20 @@ class PfWidget(QGraphicsItem):
             painter.setBrush(QBrush(QColor(*color),Qt.SolidPattern))
             painter.drawEllipse(self.device_size / -2, self.device_size / -2,
                                 self.device_size, self.device_size)
+
+        if self.device_type == 'switch':
+            state = self.widget.data()['state']
+
+            if state:
+                color = [0, 255, 0]
+            else:
+                color = [0, 0, 0]
+
+            painter.setRenderHint(QPainter.Antialiasing, True)
+            painter.setPen(QPen(Qt.gray, 1, Qt.SolidLine))
+            painter.setBrush(QBrush(QColor(*color),Qt.SolidPattern))
+            painter.drawRect(self.device_size / -2, self.device_size / -2,
+                             self.device_size, self.device_size)
 
     def notify(self, source):
         if source == self.widget:
@@ -362,13 +375,20 @@ class PfWidget(QGraphicsItem):
             self.move_in_progress = True
 
     def mousePressEvent(self, event):
-        # print("press", event)
-        pass
+        if self.device_type == 'switch':
+            self.click_start = time.time()
+            self.mpfmon.bcp.send('switch', name=self.name, state=-1)
 
     def mouseReleaseEvent(self, event):
-        if self.move_in_progress:
+        if self.move_in_progress and time.time() - self.click_start > .1:
             self.move_in_progress = False
             self.update_pos()
+
+        elif self.device_type == 'switch' and self.click_start:
+            if time.time() - self.click_start < .6:
+                self.mpfmon.bcp.send('switch', name=self.name, state=-1)
+
+        self.click_start = 0
 
     def update_pos(self, save=True):
         x = self.pos().x() / self.mpfmon.scene.width()
