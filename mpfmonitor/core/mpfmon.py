@@ -19,6 +19,8 @@ class MainWindow(QMainWindow):
 
         self.log = logging.getLogger('Core')
 
+        sys.excepthook = self.except_hook
+
         self.bcp_client_connected = False
         self.receive_queue = queue.Queue()
         self.sending_queue = queue.Queue()
@@ -36,7 +38,7 @@ class MainWindow(QMainWindow):
         self.tick_timer.timeout.connect(self.tick)
         self.tick_timer.start()
 
-        hbox = QHBoxLayout()
+        self.hbox = QHBoxLayout()
 
         self.playfield_frame = Playfield(self)
 
@@ -47,10 +49,10 @@ class MainWindow(QMainWindow):
         self.playfield.setAlignment(Qt.AlignCenter)
         self.playfield.installEventFilter(self)
 
-        hbox.addWidget(self.playfield)
+        self.hbox.addWidget(self.playfield)
 
         main_widget = self.playfield_frame
-        main_widget.setLayout(hbox)
+        main_widget.setLayout(self.hbox)
 
         self.setCentralWidget(main_widget)
 
@@ -60,8 +62,11 @@ class MainWindow(QMainWindow):
         self.createStatusBar()
         self.createDockWindows()
 
+    def except_hook(self, exception, traceback):
+        sys.__excepthook__(self, exception, traceback)
+
     def eventFilter(self, source, event):
-        if (source is self.playfield and event.type() == QEvent.Resize):
+        if source is self.playfield and event.type() == QEvent.Resize:
             self.playfield.setPixmap(self.playfield_image.scaled(
                 self.playfield.size(), Qt.KeepAspectRatio,
                 Qt.SmoothTransformation))
@@ -107,14 +112,14 @@ class MainWindow(QMainWindow):
 
         self.treeview = QTreeView(dock)
 
-        model = QStandardItemModel()
-        self.rootNode = model.invisibleRootItem()
+        self.model = QStandardItemModel()
+        self.rootNode = self.model.invisibleRootItem()
 
         self.treeview.setSortingEnabled(True)
         self.treeview.setItemDelegate(DeviceDelegate())
         self.treeview.setDragDropMode(QAbstractItemView.DragOnly)
 
-        self.treeview.setModel(model)
+        self.treeview.setModel(self.model)
         self.treeview.setColumnWidth(0, 150)
 
         dock.setWidget(self.treeview)
@@ -136,7 +141,6 @@ class MainWindow(QMainWindow):
 
     def add_event(self, event):
         self.event_list.addItem(event)
-
 
     def createToolBars(self):
 
@@ -178,6 +182,7 @@ class MainWindow(QMainWindow):
     def about(self):
         QMessageBox.about(self, "About MPF Monitor",
                 "This is the MPF Monitor")
+
 
 class DeviceDelegate(QStyledItemDelegate):
 
@@ -293,7 +298,6 @@ class DeviceDelegate(QStyledItemDelegate):
             painter.setBrush(QBrush(QColor(0, 255, 0),Qt.SolidPattern))
             num_circles = balls
 
-
         # painter.translate(rect.x() + 15, rect.y() + 10)
 
         x_offset = 0
@@ -358,8 +362,14 @@ class Playfield(QWidget):
         print('x:', drop_x_percent)
         print('y:', drop_y_percent)
 
+        self.create_pf_widget('{}.{}'.format(device_type, device_name),
+                              drop_x, drop_y)
+
     def mousePressEvent(self, event):
         print(event)
+
+    def create_pf_widget(self, name, x, y):
+        pass
 
 
 def run(thread_stopper):
