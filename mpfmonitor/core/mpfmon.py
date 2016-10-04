@@ -1,6 +1,5 @@
 import logging
 import queue
-import threading
 import sys
 
 from PyQt5.QtGui import *
@@ -27,6 +26,8 @@ class MainWindow(QMainWindow):
         self.crash_queue = queue.Queue()
         self.thread_stopper = thread_stopper
 
+        self.pf_device_size = .05
+
         self.device_states = dict()
         self.device_type_widgets = dict()
 
@@ -48,6 +49,16 @@ class MainWindow(QMainWindow):
         self.playfield.setMinimumSize(1, 1)
         self.playfield.setAlignment(Qt.AlignCenter)
         self.playfield.installEventFilter(self)
+
+        self.scene = QGraphicsScene()
+
+        pf = PfPixmapItem(QPixmap('monitor/playfield.jpg'), self)
+
+        self.scene.addItem(pf)
+
+        self.view = PfView(self.scene, pf)
+        self.view.show()
+
 
         self.hbox.addWidget(self.playfield)
 
@@ -99,7 +110,7 @@ class MainWindow(QMainWindow):
             self.device_type_widgets[type].appendRow([node, _state])
             self.device_type_widgets[type].sortChildren(0)
 
-            self.device_type_widgets['{}.{}'.format(type, name)] = _state
+            # self.device_type_widgets['{}.{}'.format(type, name)] = _state
 
         self.device_states[type][name].setData(state)
 
@@ -357,19 +368,139 @@ class Playfield(QWidget):
         drop_x_percent = ((drop_x - left) / (right - left))
         drop_y_percent = ((drop_y - top) / (bottom - top))
 
-        print('----------------------------------')
-        print('dropped widget {}.{}'.format(device_type, device_name))
-        print('x:', drop_x_percent)
-        print('y:', drop_y_percent)
+        # print('----------------------------------')
+        # print('dropped widget {}.{}'.format(device_type, device_name))
+        # print('x:', drop_x_percent)
+        # print('y:', drop_y_percent)
 
         self.create_pf_widget('{}.{}'.format(device_type, device_name),
                               drop_x, drop_y)
 
-    def mousePressEvent(self, event):
-        print(event)
+    # def mousePressEvent(self, event):
+    #     print(event)
 
     def create_pf_widget(self, name, x, y):
         pass
+
+
+class PfView(QGraphicsView):
+
+    def __init__(self, parent, pf):
+        self.pf = pf
+        super().__init__(parent)
+
+    def resizeEvent(self, event):
+        # print(self.pf, event)
+        self.fitInView(self.pf, Qt.KeepAspectRatio)
+
+class PfPixmapItem(QGraphicsPixmapItem):
+
+    def __init__(self, image, mpfmon, parent=None):
+        super().__init__(image, parent)
+
+        self.mpfmon = mpfmon
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event):
+        # print(event)
+        event.acceptProposedAction()
+
+    dragMoveEvent = dragEnterEvent
+
+    def dropEvent(self, event):
+
+        # print(event.scenePos().x())
+        # print(event.scenePos().y())
+        #
+        #
+        # print(self.boundingRect().height())
+        # print(self.boundingRect().width())
+
+        device = event.source().selectedIndexes()[0]
+        device_name = device.data()
+        device_type = device.parent().data()
+        widget = self.mpfmon.device_states[device_type][device_name]
+        wdata = widget.data()
+
+        drop_x = event.scenePos().x()
+        drop_y = event.scenePos().y()
+
+        # pf_frame_height = self.parent().playfield.height()
+        # pf_image_height = self.parent().playfield_image.height()
+        #
+        # pf_frame_width = self.parent().playfield.width()
+        # pf_image_width = self.parent().playfield_image.width()
+        #
+        # ratio = (min(pf_frame_height / pf_image_height,
+        #              pf_frame_width / pf_image_width))
+
+        current_pf_height = self.boundingRect().height()
+        current_pf_width = self.boundingRect().width()
+
+        # left = ((self.width() - current_pf_width) / 2)
+        # right = left + current_pf_width
+        #
+        # top = ((self.height() - current_pf_height) / 2)
+        # bottom = top + current_pf_height
+        #
+        # drop_x_percent = ((drop_x - left) / (right - left))
+        # drop_y_percent = ((drop_y - top) / (bottom - top))
+
+        drop_x_percent = drop_x / current_pf_width
+        drop_y_percent = drop_y / current_pf_height
+
+        # print('----------------------------------')
+        # print('dropped widget {}.{}'.format(device_type, device_name))
+        # print('widget', widget)
+        # print('wdata', wdata)
+        # print('x:', drop_x_percent)
+        # print('y:', drop_y_percent)
+
+        self.create_pf_widget(widget, drop_x, drop_y, drop_x_percent,
+                              drop_y_percent)
+
+    # def mousePressEvent(self, event):
+    #     print(event)
+
+    def create_pf_widget(self, widget, drop_x, drop_y, drop_x_percent,
+                              drop_y_percent):
+        w = PfWidget(self.mpfmon, widget, drop_x, drop_y, drop_x_percent,
+                              drop_y_percent)
+        w.setPos(drop_x, drop_y)
+        self.mpfmon.scene.addItem(w)
+
+
+class PfWidget(QGraphicsItem):
+
+    def __init__(self, mpfmon, widget, rel_x, rel_y, x, y):
+        super().__init__()
+
+        widget.model().itemChanged.connect(self.notify, Qt.QueuedConnection)
+
+        self.widget = widget
+        self.mpfmon = mpfmon
+        self.device_size = self.mpfmon.scene.width() * \
+                           self.mpfmon.pf_device_size
+
+    def boundingRect(self):
+        return QRectF(0, 0, self.device_size, self.device_size)
+
+    def paint(self, painter, option, widget):
+
+        # print("paint", self, painter, option, widget, self.widget.data())
+
+        if '_color' in self.widget.data():
+            color = self.widget.data()['_color']
+
+            painter.setRenderHint(QPainter.Antialiasing, True)
+            painter.setPen(QPen(Qt.gray, 1, Qt.SolidLine))
+            painter.setBrush(QBrush(QColor(*color),Qt.SolidPattern))
+            painter.drawEllipse(0, 0, self.device_size, self.device_size)
+
+    def notify(self, source):
+        if source == self.widget:
+            self.update()
+
 
 
 def run(thread_stopper):
