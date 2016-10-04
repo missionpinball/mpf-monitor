@@ -354,8 +354,12 @@ class PfWidget(QGraphicsItem):
             self.update()
 
     def mouseMoveEvent(self, event):
-        self.setPos(event.scenePos())
-        self.move_in_progress = True
+        if (self.mpfmon.pf.boundingRect().width() > event.scenePos().x() >
+                0) and (self.mpfmon.pf.boundingRect().height() >
+                event.scenePos().y() > 0):
+            # devices off the pf do weird things at the moment
+            self.setPos(event.scenePos())
+            self.move_in_progress = True
 
     def mousePressEvent(self, event):
         # print("press", event)
