@@ -1,6 +1,9 @@
 import logging
 import queue
 import sys
+import os
+
+import ruamel.yaml as yaml
 
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
@@ -10,7 +13,7 @@ from mpfmonitor.core.bcp_client import BCPClient
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, thread_stopper, parent=None):
+    def __init__(self, machine_path, thread_stopper, parent=None):
         super().__init__(parent)
 
         self.resize(400, 800)
@@ -25,6 +28,12 @@ class MainWindow(QMainWindow):
         self.sending_queue = queue.Queue()
         self.crash_queue = queue.Queue()
         self.thread_stopper = thread_stopper
+        self.machine_path = machine_path
+        self.config = None
+        self.config_file = os.path.join(self.machine_path, "monitor",
+                                        "monitor.yaml")
+
+        self.load_config()
 
         self.pf_device_size = .05
 
@@ -41,11 +50,11 @@ class MainWindow(QMainWindow):
 
         self.scene = QGraphicsScene()
 
-        pf = PfPixmapItem(QPixmap('monitor/playfield.jpg'), self)
+        self.pf = PfPixmapItem(QPixmap('monitor/playfield.jpg'), self)
 
-        self.scene.addItem(pf)
+        self.scene.addItem(self.pf)
 
-        self.view = PfView(self.scene, pf)
+        self.view = PfView(self.scene, self.pf)
         self.view.show()
 
         self.treeview = QTreeView(self)
@@ -85,7 +94,6 @@ class MainWindow(QMainWindow):
             self.rootNode.appendRow([node, None])
             self.rootNode.sortChildren(0)
 
-
         if name not in self.device_states[type]:
 
             node = QStandardItem(name)
@@ -95,11 +103,26 @@ class MainWindow(QMainWindow):
             self.device_type_widgets[type].appendRow([node, _state])
             self.device_type_widgets[type].sortChildren(0)
 
+            self.pf.create_widget_from_config(_state, type, name)
+
         self.device_states[type][name].setData(state)
 
     def about(self):
         QMessageBox.about(self, "About MPF Monitor",
                 "This is the MPF Monitor")
+
+    def load_config(self):
+
+        try:
+            with open(self.config_file, 'r') as f:
+                self.config = yaml.load(f)
+        except FileNotFoundError:
+                self.config = dict()
+
+    def save_config(self):
+        print("Saving monitor.yaml")
+        with open(self.config_file, 'w') as f:
+            f.write(yaml.dump(self.config, default_flow_style=False))
 
 
 class DeviceDelegate(QStyledItemDelegate):
@@ -203,7 +226,6 @@ class DeviceDelegate(QStyledItemDelegate):
         painter.save()
 
         painter.setRenderHint(QPainter.Antialiasing, True)
-        # painter.setPen(Qt.NoPen)
         painter.setPen(QPen(Qt.gray, 1, Qt.SolidLine))
 
         if color:
@@ -215,8 +237,6 @@ class DeviceDelegate(QStyledItemDelegate):
         elif isinstance(balls, int):
             painter.setBrush(QBrush(QColor(0, 255, 0),Qt.SolidPattern))
             num_circles = balls
-
-        # painter.translate(rect.x() + 15, rect.y() + 10)
 
         x_offset = 0
         for _ in range(num_circles):
@@ -239,7 +259,6 @@ class PfView(QGraphicsView):
         super().__init__(parent)
 
     def resizeEvent(self, event):
-        # print(self.pf, event)
         self.fitInView(self.pf, Qt.KeepAspectRatio)
 
 
@@ -251,6 +270,18 @@ class PfPixmapItem(QGraphicsPixmapItem):
         self.mpfmon = mpfmon
         self.setAcceptDrops(True)
 
+    def create_widget_from_config(self, widget, device_type, device_name):
+        try:
+            x = self.mpfmon.config[device_type][device_name]['x']
+            y = self.mpfmon.config[device_type][device_name]['y']
+        except KeyError:
+            return
+
+        x *= self.mpfmon.scene.width()
+        y *= self.mpfmon.scene.height()
+
+        self.create_pf_widget(widget, device_type, device_name, x, y)
+
     def dragEnterEvent(self, event):
         # print(event)
         event.acceptProposedAction()
@@ -258,73 +289,34 @@ class PfPixmapItem(QGraphicsPixmapItem):
     dragMoveEvent = dragEnterEvent
 
     def dropEvent(self, event):
-
-        # print(event.scenePos().x())
-        # print(event.scenePos().y())
-        #
-        #
-        # print(self.boundingRect().height())
-        # print(self.boundingRect().width())
-
         device = event.source().selectedIndexes()[0]
         device_name = device.data()
         device_type = device.parent().data()
         widget = self.mpfmon.device_states[device_type][device_name]
-        wdata = widget.data()
 
         drop_x = event.scenePos().x()
         drop_y = event.scenePos().y()
 
-        # pf_frame_height = self.parent().playfield.height()
-        # pf_image_height = self.parent().playfield_image.height()
-        #
-        # pf_frame_width = self.parent().playfield.width()
-        # pf_image_width = self.parent().playfield_image.width()
-        #
-        # ratio = (min(pf_frame_height / pf_image_height,
-        #              pf_frame_width / pf_image_width))
-
         current_pf_height = self.boundingRect().height()
         current_pf_width = self.boundingRect().width()
-
-        # left = ((self.width() - current_pf_width) / 2)
-        # right = left + current_pf_width
-        #
-        # top = ((self.height() - current_pf_height) / 2)
-        # bottom = top + current_pf_height
-        #
-        # drop_x_percent = ((drop_x - left) / (right - left))
-        # drop_y_percent = ((drop_y - top) / (bottom - top))
 
         drop_x_percent = drop_x / current_pf_width
         drop_y_percent = drop_y / current_pf_height
 
-        # print('----------------------------------')
-        # print('dropped widget {}.{}'.format(device_type, device_name))
-        # print('widget', widget)
-        # print('wdata', wdata)
-        # print('x:', drop_x_percent)
-        # print('y:', drop_y_percent)
-
         self.create_pf_widget(widget, device_type, device_name, drop_x,
-                              drop_y, drop_x_percent, drop_y_percent)
-
-    # def mousePressEvent(self, event):
-    #     print(event)
+                              drop_y)
 
     def create_pf_widget(self, widget, device_type, device_name, drop_x,
-                         drop_y, drop_x_percent,
-                              drop_y_percent):
+                         drop_y):
         w = PfWidget(self.mpfmon, widget, device_type, device_name, drop_x,
-                     drop_y, drop_x_percent, drop_y_percent)
-        w.setPos(drop_x, drop_y)
+                     drop_y)
         self.mpfmon.scene.addItem(w)
+
 
 
 class PfWidget(QGraphicsItem):
 
-    def __init__(self, mpfmon, widget, device_type, device_name, rel_x,
-                 rel_y, x, y):
+    def __init__(self, mpfmon, widget, device_type, device_name, x, y):
         super().__init__()
 
         widget.model().itemChanged.connect(self.notify, Qt.QueuedConnection)
@@ -332,21 +324,21 @@ class PfWidget(QGraphicsItem):
         self.widget = widget
         self.mpfmon = mpfmon
         self.name = device_name
+        self.move_in_progress = True
         self.device_type = device_type
         self.device_size = self.mpfmon.scene.width() * \
                            self.mpfmon.pf_device_size
 
         self.setToolTip('{}: {}'.format(self.device_type, self.name))
         self.setAcceptedMouseButtons(Qt.LeftButton)
+        self.setPos(x, y)
+        self.update_pos()
 
     def boundingRect(self):
         return QRectF(self.device_size / -2, self.device_size / -2,
                       self.device_size, self.device_size)
 
     def paint(self, painter, option, widget):
-
-        # print("paint", self, painter, option, widget, self.widget.data())
-
         if '_color' in self.widget.data():
             color = self.widget.data()['_color']
 
@@ -362,14 +354,35 @@ class PfWidget(QGraphicsItem):
 
     def mouseMoveEvent(self, event):
         self.setPos(event.scenePos())
+        self.move_in_progress = True
 
     def mousePressEvent(self, event):
         # print("press", event)
         pass
 
-def run(thread_stopper):
+    def mouseReleaseEvent(self, event):
+        if self.move_in_progress:
+            self.move_in_progress = False
+            self.update_pos()
+
+    def update_pos(self):
+        x = self.pos().x() / self.mpfmon.scene.width()
+        y = self.pos().y() / self.mpfmon.scene.height()
+
+        if self.device_type not in self.mpfmon.config:
+            self.mpfmon.config[self.device_type] = dict()
+
+        if self.name not in self.mpfmon.config[self.device_type]:
+            self.mpfmon.config[self.device_type][self.name] = dict()
+
+        self.mpfmon.config[self.device_type][self.name]['x'] = x
+        self.mpfmon.config[self.device_type][self.name]['y'] = y
+
+        self.mpfmon.save_config()
+
+def run(machine_path, thread_stopper):
 
     app = QApplication(sys.argv)
-    w = MainWindow(thread_stopper)
+    w = MainWindow(machine_path, thread_stopper)
     w.show()
     app.exec_()

@@ -99,19 +99,6 @@ class Command(object):
         # add the handler to the root logger
         logging.getLogger('').addHandler(console)
 
-        # mpf_config = ConfigProcessor.load_config_file(os.path.join(
-        #     mpfmonitor.__path__, args.mpfmonconfigfile), 'machine')
-        #
-        # machine_path = set_machine_path(machine_path,
-        #                                 mpf_config['mpf_monitor']['paths'][
-        #                                     'machine_files'])
-        #
-        # mpf_config = load_machine_config(args.configfile, machine_path,
-        #                                  mpf_config['mpf_monitor']['paths'][
-        #                                      'config'], mpf_config)
-        #
-        # self.preprocess_config(mpf_config)
-
         from mpfmonitor.core.mpfmon import run
 
         logging.info("Loading MPF Monitor")
@@ -119,10 +106,7 @@ class Command(object):
         thread_stopper = threading.Event()
 
         try:
-            # MpfMon(options=vars(args), config=mpf_config,
-            #       machine_path=machine_path,
-            #       thread_stopper=thread_stopper).run()
-            run(thread_stopper=thread_stopper)
+            run(machine_path=machine_path, thread_stopper=thread_stopper)
             logging.info("MPF Monitor run loop ended.")
         except Exception as e:
             logging.exception(str(e))
