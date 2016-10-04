@@ -122,12 +122,13 @@ class Command(object):
             # MpfMon(options=vars(args), config=mpf_config,
             #       machine_path=machine_path,
             #       thread_stopper=thread_stopper).run()
-            run()
+            run(thread_stopper=thread_stopper)
             logging.info("MPF Monitor run loop ended.")
         except Exception as e:
             logging.exception(str(e))
 
-        logging.info("Stopping child threads... (%s remaining)", len(threading.enumerate()) - 1)
+        logging.info("Stopping child threads... (%s remaining)",
+                     len(threading.enumerate()) - 1)
 
         thread_stopper.set()
 

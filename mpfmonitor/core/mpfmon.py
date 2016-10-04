@@ -11,7 +11,7 @@ from mpfmonitor.core.bcp_client import BCPClient
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, parent=None):
+    def __init__(self, thread_stopper, parent=None):
         super().__init__(parent)
 
         self.resize(1024, 768)
@@ -23,7 +23,7 @@ class MainWindow(QMainWindow):
         self.receive_queue = queue.Queue()
         self.sending_queue = queue.Queue()
         self.crash_queue = queue.Queue()
-        self.thread_stopper = threading.Event()
+        self.thread_stopper = thread_stopper
 
         self.device_states = dict()
         self.device_type_widgets = dict()
@@ -362,9 +362,9 @@ class Playfield(QWidget):
         print(event)
 
 
-def run():
+def run(thread_stopper):
 
     app = QApplication(sys.argv)
-    w = MainWindow()
+    w = MainWindow(thread_stopper)
     w.show()
     app.exec_()
