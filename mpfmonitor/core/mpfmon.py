@@ -13,8 +13,8 @@ class MainWindow(QMainWindow):
     def __init__(self, thread_stopper, parent=None):
         super().__init__(parent)
 
-        self.resize(1024, 768)
-        self.setWindowTitle("MPF Monitor")
+        self.resize(400, 800)
+        self.setWindowTitle("MPF Devices")
 
         self.log = logging.getLogger('Core')
 
@@ -39,17 +39,6 @@ class MainWindow(QMainWindow):
         self.tick_timer.timeout.connect(self.tick)
         self.tick_timer.start()
 
-        self.hbox = QHBoxLayout()
-
-        self.playfield_frame = Playfield(self)
-
-        self.playfield_image = QPixmap('monitor/playfield.jpg')
-        self.playfield = QLabel(self.playfield_frame)
-        self.playfield.setPixmap(self.playfield_image)
-        self.playfield.setMinimumSize(1, 1)
-        self.playfield.setAlignment(Qt.AlignCenter)
-        self.playfield.installEventFilter(self)
-
         self.scene = QGraphicsScene()
 
         pf = PfPixmapItem(QPixmap('monitor/playfield.jpg'), self)
@@ -59,19 +48,15 @@ class MainWindow(QMainWindow):
         self.view = PfView(self.scene, pf)
         self.view.show()
 
+        self.treeview = QTreeView(self)
+        model = QStandardItemModel()
+        self.rootNode = model.invisibleRootItem()
+        self.treeview.setSortingEnabled(True)
+        self.treeview.setDragDropMode(QAbstractItemView.DragOnly)
+        self.treeview.setItemDelegate(DeviceDelegate())
+        self.treeview.setModel(model)
 
-        self.hbox.addWidget(self.playfield)
-
-        main_widget = self.playfield_frame
-        main_widget.setLayout(self.hbox)
-
-        self.setCentralWidget(main_widget)
-
-        # self.createActions()
-        self.createMenus()
-        self.createToolBars()
-        self.createStatusBar()
-        self.createDockWindows()
+        self.setCentralWidget(self.treeview)
 
     def except_hook(self, exception, traceback):
         sys.__excepthook__(self, exception, traceback)
@@ -91,7 +76,6 @@ class MainWindow(QMainWindow):
                 self.process_device_update(**kwargs)
 
     def process_device_update(self, name, state, changes, type):
-
         self.log.debug("Device Update: {}.{}: {}".format(type, name, state))
 
         if type not in self.device_states:
@@ -100,6 +84,7 @@ class MainWindow(QMainWindow):
             self.device_type_widgets[type] = node
             self.rootNode.appendRow([node, None])
             self.rootNode.sortChildren(0)
+
 
         if name not in self.device_states[type]:
 
@@ -110,85 +95,7 @@ class MainWindow(QMainWindow):
             self.device_type_widgets[type].appendRow([node, _state])
             self.device_type_widgets[type].sortChildren(0)
 
-            # self.device_type_widgets['{}.{}'.format(type, name)] = _state
-
         self.device_states[type][name].setData(state)
-
-    def createDockWindows(self):
-
-        # Devices window
-
-        dock = QDockWidget("Devices", self)
-        dock.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-
-        self.treeview = QTreeView(dock)
-
-        self.model = QStandardItemModel()
-        self.rootNode = self.model.invisibleRootItem()
-
-        self.treeview.setSortingEnabled(True)
-        self.treeview.setItemDelegate(DeviceDelegate())
-        self.treeview.setDragDropMode(QAbstractItemView.DragOnly)
-
-        self.treeview.setModel(self.model)
-        self.treeview.setColumnWidth(0, 150)
-
-        dock.setWidget(self.treeview)
-
-        self.addDockWidget(Qt.RightDockWidgetArea, dock)
-        self.viewMenu.addAction(dock.toggleViewAction())
-
-        # Event window
-
-        dock = QDockWidget("MPF Event History", self)
-        self.event_list = QListWidget(dock)
-        #
-        dock.setWidget(self.event_list)
-        self.addDockWidget(Qt.RightDockWidgetArea, dock)
-        self.viewMenu.addAction(dock.toggleViewAction())
-
-        # self.customerList.currentTextChanged.connect(self.insertCustomer)
-        # self.event_list.currentTextChanged.connect(self.addParagraph)
-
-    def add_event(self, event):
-        self.event_list.addItem(event)
-
-    def createToolBars(self):
-
-        # todo, snapshot, buttons to show/hide docks
-
-        self.fileToolBar = self.addToolBar("File")
-        # self.fileToolBar.addAction(self.newLetterAct)
-        # self.fileToolBar.addAction(self.saveAct)
-        # self.fileToolBar.addAction(self.printAct)
-
-        self.editToolBar = self.addToolBar("Edit")
-        # self.editToolBar.addAction(self.undoAct)
-
-        # snapshot button
-        # pause events
-
-    def createMenus(self):
-        self.fileMenu = self.menuBar().addMenu("&File")
-        # self.fileMenu.addAction(self.newLetterAct)
-        # self.fileMenu.addAction(self.saveAct)
-        # self.fileMenu.addAction(self.printAct)
-        # self.fileMenu.addSeparator()
-        # self.fileMenu.addAction(self.quitAct)
-
-        # self.editMenu = self.menuBar().addMenu("&Edit")
-        # self.editMenu.addAction(self.undoAct)
-        #
-        self.viewMenu = self.menuBar().addMenu("&View")
-        #
-        # self.menuBar().addSeparator()
-
-        # self.helpMenu = self.menuBar().addMenu("&Help")
-        # self.helpMenu.addAction(self.aboutAct)
-        # self.helpMenu.addAction(self.aboutQtAct)
-
-    def createStatusBar(self):
-        self.statusBar().showMessage("Ready")
 
     def about(self):
         QMessageBox.about(self, "About MPF Monitor",
@@ -325,64 +232,6 @@ class DeviceDelegate(QStyledItemDelegate):
         painter.restore()
 
 
-class Playfield(QWidget):
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        self.setAcceptDrops(True)
-
-    def dragEnterEvent(self, event):
-        # print(event)
-        event.acceptProposedAction()
-
-    dragMoveEvent = dragEnterEvent
-
-    def dropEvent(self, event):
-
-        device = event.source().selectedIndexes()[0]
-        device_name = device.data()
-        device_type = device.parent().data()
-
-        drop_x = event.posF().x()
-        drop_y = event.posF().y()
-
-        pf_frame_height = self.parent().playfield.height()
-        pf_image_height = self.parent().playfield_image.height()
-
-        pf_frame_width = self.parent().playfield.width()
-        pf_image_width = self.parent().playfield_image.width()
-
-        ratio = (min(pf_frame_height / pf_image_height,
-                     pf_frame_width / pf_image_width))
-
-        current_pf_height = pf_image_height * ratio
-        current_pf_width = pf_image_width * ratio
-
-        left = ((self.width() - current_pf_width) / 2)
-        right = left + current_pf_width
-
-        top = ((self.height() - current_pf_height) / 2)
-        bottom = top + current_pf_height
-
-        drop_x_percent = ((drop_x - left) / (right - left))
-        drop_y_percent = ((drop_y - top) / (bottom - top))
-
-        # print('----------------------------------')
-        # print('dropped widget {}.{}'.format(device_type, device_name))
-        # print('x:', drop_x_percent)
-        # print('y:', drop_y_percent)
-
-        self.create_pf_widget('{}.{}'.format(device_type, device_name),
-                              drop_x, drop_y)
-
-    # def mousePressEvent(self, event):
-    #     print(event)
-
-    def create_pf_widget(self, name, x, y):
-        pass
-
-
 class PfView(QGraphicsView):
 
     def __init__(self, parent, pf):
@@ -392,6 +241,7 @@ class PfView(QGraphicsView):
     def resizeEvent(self, event):
         # print(self.pf, event)
         self.fitInView(self.pf, Qt.KeepAspectRatio)
+
 
 class PfPixmapItem(QGraphicsPixmapItem):
 
