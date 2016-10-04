@@ -280,7 +280,7 @@ class PfPixmapItem(QGraphicsPixmapItem):
         x *= self.mpfmon.scene.width()
         y *= self.mpfmon.scene.height()
 
-        self.create_pf_widget(widget, device_type, device_name, x, y)
+        self.create_pf_widget(widget, device_type, device_name, x, y, False)
 
     def dragEnterEvent(self, event):
         # print(event)
@@ -307,16 +307,17 @@ class PfPixmapItem(QGraphicsPixmapItem):
                               drop_y)
 
     def create_pf_widget(self, widget, device_type, device_name, drop_x,
-                         drop_y):
+                         drop_y, save=True):
         w = PfWidget(self.mpfmon, widget, device_type, device_name, drop_x,
-                     drop_y)
+                     drop_y, save)
         self.mpfmon.scene.addItem(w)
 
 
 
 class PfWidget(QGraphicsItem):
 
-    def __init__(self, mpfmon, widget, device_type, device_name, x, y):
+    def __init__(self, mpfmon, widget, device_type, device_name, x, y,
+                 save=True):
         super().__init__()
 
         widget.model().itemChanged.connect(self.notify, Qt.QueuedConnection)
@@ -332,7 +333,7 @@ class PfWidget(QGraphicsItem):
         self.setToolTip('{}: {}'.format(self.device_type, self.name))
         self.setAcceptedMouseButtons(Qt.LeftButton)
         self.setPos(x, y)
-        self.update_pos()
+        self.update_pos(save)
 
     def boundingRect(self):
         return QRectF(self.device_size / -2, self.device_size / -2,
@@ -365,7 +366,7 @@ class PfWidget(QGraphicsItem):
             self.move_in_progress = False
             self.update_pos()
 
-    def update_pos(self):
+    def update_pos(self, save=True):
         x = self.pos().x() / self.mpfmon.scene.width()
         y = self.pos().y() / self.mpfmon.scene.height()
 
@@ -378,7 +379,8 @@ class PfWidget(QGraphicsItem):
         self.mpfmon.config[self.device_type][self.name]['x'] = x
         self.mpfmon.config[self.device_type][self.name]['y'] = y
 
-        self.mpfmon.save_config()
+        if save:
+            self.mpfmon.save_config()
 
 def run(machine_path, thread_stopper):
 
