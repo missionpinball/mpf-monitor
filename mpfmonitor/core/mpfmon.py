@@ -329,10 +329,11 @@ class PfWidget(QGraphicsItem):
                            self.mpfmon.pf_device_size
 
         self.setToolTip('{}: {}'.format(self.device_type, self.name))
-        self.setAcceptedMouseButtons(Qt.LeftButton)
+        self.setAcceptedMouseButtons(Qt.LeftButton | Qt.RightButton)
         self.setPos(x, y)
         self.update_pos(save)
         self.click_start = 0
+        self.release_switch = False
 
     def boundingRect(self):
         return QRectF(self.device_size / -2, self.device_size / -2,
@@ -371,22 +372,29 @@ class PfWidget(QGraphicsItem):
                 0) and (self.mpfmon.pf.boundingRect().height() >
                 event.scenePos().y() > 0):
             # devices off the pf do weird things at the moment
-            self.setPos(event.scenePos())
-            self.move_in_progress = True
+
+            if time.time() - self.click_start > .3:
+                self.setPos(event.scenePos())
+                self.move_in_progress = True
 
     def mousePressEvent(self, event):
+        self.click_start = time.time()
+
         if self.device_type == 'switch':
-            self.click_start = time.time()
-            self.mpfmon.bcp.send('switch', name=self.name, state=-1)
+            if event.buttons() & Qt.RightButton:
+                self.mpfmon.bcp.send('switch', name=self.name, state=-1)
+                self.release_switch = False
+            elif event.buttons() & Qt.LeftButton:
+                self.mpfmon.bcp.send('switch', name=self.name, state=-1)
+                self.release_switch = True
 
     def mouseReleaseEvent(self, event):
-        if self.move_in_progress and time.time() - self.click_start > .1:
+        if self.move_in_progress and time.time() - self.click_start > .5:
             self.move_in_progress = False
             self.update_pos()
 
-        elif self.device_type == 'switch' and self.click_start:
-            if time.time() - self.click_start < .6:
-                self.mpfmon.bcp.send('switch', name=self.name, state=-1)
+        elif self.release_switch:
+            self.mpfmon.bcp.send('switch', name=self.name, state=-1)
 
         self.click_start = 0
 
