@@ -456,31 +456,37 @@ class PfPixmapItem(QGraphicsPixmapItem):
         # print('x:', drop_x_percent)
         # print('y:', drop_y_percent)
 
-        self.create_pf_widget(widget, drop_x, drop_y, drop_x_percent,
-                              drop_y_percent)
+        self.create_pf_widget(widget, device_type, device_name, drop_x,
+                              drop_y, drop_x_percent, drop_y_percent)
 
     # def mousePressEvent(self, event):
     #     print(event)
 
-    def create_pf_widget(self, widget, drop_x, drop_y, drop_x_percent,
+    def create_pf_widget(self, widget, device_type, device_name, drop_x,
+                         drop_y, drop_x_percent,
                               drop_y_percent):
-        w = PfWidget(self.mpfmon, widget, drop_x, drop_y, drop_x_percent,
-                              drop_y_percent)
+        w = PfWidget(self.mpfmon, widget, device_type, device_name, drop_x,
+                     drop_y, drop_x_percent, drop_y_percent)
         w.setPos(drop_x, drop_y)
         self.mpfmon.scene.addItem(w)
 
 
 class PfWidget(QGraphicsItem):
 
-    def __init__(self, mpfmon, widget, rel_x, rel_y, x, y):
+    def __init__(self, mpfmon, widget, device_type, device_name, rel_x,
+                 rel_y, x, y):
         super().__init__()
 
         widget.model().itemChanged.connect(self.notify, Qt.QueuedConnection)
 
         self.widget = widget
         self.mpfmon = mpfmon
+        self.name = device_name
+        self.device_type = device_type
         self.device_size = self.mpfmon.scene.width() * \
                            self.mpfmon.pf_device_size
+
+        self.setToolTip('{}: {}'.format(self.device_type, self.name))
 
     def boundingRect(self):
         return QRectF(0, 0, self.device_size, self.device_size)
@@ -500,6 +506,9 @@ class PfWidget(QGraphicsItem):
     def notify(self, source):
         if source == self.widget:
             self.update()
+
+    def mouseMoveEvent(self, event):
+        pass
 
 
 
