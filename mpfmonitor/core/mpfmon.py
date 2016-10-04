@@ -487,9 +487,11 @@ class PfWidget(QGraphicsItem):
                            self.mpfmon.pf_device_size
 
         self.setToolTip('{}: {}'.format(self.device_type, self.name))
+        self.setAcceptedMouseButtons(Qt.LeftButton)
 
     def boundingRect(self):
-        return QRectF(0, 0, self.device_size, self.device_size)
+        return QRectF(self.device_size / -2, self.device_size / -2,
+                      self.device_size, self.device_size)
 
     def paint(self, painter, option, widget):
 
@@ -501,16 +503,19 @@ class PfWidget(QGraphicsItem):
             painter.setRenderHint(QPainter.Antialiasing, True)
             painter.setPen(QPen(Qt.gray, 1, Qt.SolidLine))
             painter.setBrush(QBrush(QColor(*color),Qt.SolidPattern))
-            painter.drawEllipse(0, 0, self.device_size, self.device_size)
+            painter.drawEllipse(self.device_size / -2, self.device_size / -2,
+                                self.device_size, self.device_size)
 
     def notify(self, source):
         if source == self.widget:
             self.update()
 
     def mouseMoveEvent(self, event):
+        self.setPos(event.scenePos())
+
+    def mousePressEvent(self, event):
+        # print("press", event)
         pass
-
-
 
 def run(thread_stopper):
 
