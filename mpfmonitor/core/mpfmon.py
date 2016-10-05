@@ -4,21 +4,20 @@ import sys
 import os
 import time
 
-import ruamel.yaml as yaml
-
-from PyQt5.QtGui import *
+# will change these to specific imports once code is more final
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+
+import ruamel.yaml as yaml
 
 from mpfmonitor.core.bcp_client import BCPClient
 
 
 class MainWindow(QMainWindow):
     def __init__(self, machine_path, thread_stopper, parent=None):
-        super().__init__(parent)
 
-        self.resize(400, 800)
-        self.setWindowTitle("MPF Devices")
+        super().__init__(parent)
 
         self.log = logging.getLogger('Core')
 
@@ -31,10 +30,28 @@ class MainWindow(QMainWindow):
         self.thread_stopper = thread_stopper
         self.machine_path = machine_path
         self.config = None
+        self.layout = None
         self.config_file = os.path.join(self.machine_path, "monitor",
                                         "monitor.yaml")
+        self.layout_file = os.path.join(self.machine_path, "monitor",
+                                        "layout.yaml")
 
         self.load_config()
+        self.load_layout()
+
+        try:
+            self.move(self.layout['windows']['devices']['x'],
+                      self.layout['windows']['devices']['y'])
+            self.resize(self.layout['windows']['devices']['width'],
+                        self.layout['windows']['devices']['height'])
+        except KeyError:
+            self.layout['windows'] = dict()
+            self.layout['windows']['devices'] = dict()
+            self.resize(400, 800)
+
+        self.setWindowTitle("Devices")
+
+        self.save_timer = QTimer()
 
         self.pf_device_size = .05
 
@@ -52,10 +69,18 @@ class MainWindow(QMainWindow):
         self.scene = QGraphicsScene()
 
         self.pf = PfPixmapItem(QPixmap('monitor/playfield.jpg'), self)
-
         self.scene.addItem(self.pf)
 
-        self.view = PfView(self.scene, self.pf)
+        self.view = PfView(self.scene, self)
+
+        try:
+            self.view.move(self.layout['windows']['playfield']['x'],
+                           self.layout['windows']['playfield']['y'])
+            self.view.resize(self.layout['windows']['playfield']['width'],
+                             self.layout['windows']['playfield']['height'])
+        except KeyError:
+            self.layout['windows']['playfield'] = dict()
+
         self.view.show()
 
         self.treeview = QTreeView(self)
@@ -78,6 +103,16 @@ class MainWindow(QMainWindow):
                 Qt.SmoothTransformation))
 
         return super().eventFilter(source, event)
+
+    def resizeEvent(self, event):
+        self.layout['windows']['devices']['width'] = self.size().width()
+        self.layout['windows']['devices']['height'] = self.size().height()
+        self.save_layout()
+
+    def moveEvent(self, event):
+        self.layout['windows']['devices']['x'] = self.pos().x()
+        self.layout['windows']['devices']['y'] = self.pos().y()
+        self.save_layout()
 
     def tick(self):
         while not self.receive_queue.empty():
@@ -113,17 +148,28 @@ class MainWindow(QMainWindow):
                 "This is the MPF Monitor")
 
     def load_config(self):
-
         try:
             with open(self.config_file, 'r') as f:
                 self.config = yaml.load(f)
         except FileNotFoundError:
                 self.config = dict()
 
+    def load_layout(self):
+        try:
+            with open(self.layout_file, 'r') as f:
+                self.layout = yaml.load(f)
+        except FileNotFoundError:
+                self.layout = dict()
+
     def save_config(self):
-        print("Saving monitor.yaml")
+        print("Saving config to disk")
         with open(self.config_file, 'w') as f:
             f.write(yaml.dump(self.config, default_flow_style=False))
+
+    def save_layout(self):
+        print("Saving layout to disk")
+        with open(self.layout_file, 'w') as f:
+            f.write(yaml.dump(self.layout, default_flow_style=False))
 
 
 class DeviceDelegate(QStyledItemDelegate):
@@ -227,16 +273,16 @@ class DeviceDelegate(QStyledItemDelegate):
         painter.save()
 
         painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setPen(QPen(Qt.gray, 1, Qt.SolidLine))
+        painter.setPen(QPen(QColor(100, 100, 100), 1, Qt.SolidLine))
 
         if color:
-            painter.setBrush(QBrush(QColor(*color),Qt.SolidPattern))
+            painter.setBrush(QBrush(QColor(*color), Qt.SolidPattern))
         elif state is True:
-            painter.setBrush(QBrush(QColor(0, 255, 0),Qt.SolidPattern))
+            painter.setBrush(QBrush(QColor(0, 255, 0), Qt.SolidPattern))
         elif state is False:
-            painter.setBrush(QBrush(QColor(255, 255, 255),Qt.SolidPattern))
+            painter.setBrush(QBrush(QColor(255, 255, 255), Qt.SolidPattern))
         elif isinstance(balls, int):
-            painter.setBrush(QBrush(QColor(0, 255, 0),Qt.SolidPattern))
+            painter.setBrush(QBrush(QColor(0, 255, 0), Qt.SolidPattern))
             num_circles = balls
 
         x_offset = 0
@@ -255,12 +301,25 @@ class DeviceDelegate(QStyledItemDelegate):
 
 class PfView(QGraphicsView):
 
-    def __init__(self, parent, pf):
-        self.pf = pf
+    def __init__(self, parent, mpfmon):
+        self.mpfmon = mpfmon
         super().__init__(parent)
 
+        self.setWindowTitle("Playfield")
+
     def resizeEvent(self, event):
-        self.fitInView(self.pf, Qt.KeepAspectRatio)
+        self.fitInView(self.mpfmon.pf, Qt.KeepAspectRatio)
+
+        self.mpfmon.layout['windows']['playfield']['width'] = self.size().width()
+        self.mpfmon.layout['windows']['playfield']['height'] = self.size().height()
+
+        self.mpfmon.save_layout()
+
+    def moveEvent(self, event):
+        self.mpfmon.layout['windows']['playfield']['x'] = self.pos().x()
+        self.mpfmon.layout['windows']['playfield']['y'] = self.pos().y()
+
+        self.mpfmon.save_layout()
 
 
 class PfPixmapItem(QGraphicsPixmapItem):
@@ -298,9 +357,6 @@ class PfPixmapItem(QGraphicsPixmapItem):
         drop_x = event.scenePos().x()
         drop_y = event.scenePos().y()
 
-        current_pf_height = self.boundingRect().height()
-        current_pf_width = self.boundingRect().width()
-
         self.create_pf_widget(widget, device_type, device_name, drop_x,
                               drop_y)
 
@@ -309,7 +365,6 @@ class PfPixmapItem(QGraphicsPixmapItem):
         w = PfWidget(self.mpfmon, widget, device_type, device_name, drop_x,
                      drop_y, save)
         self.mpfmon.scene.addItem(w)
-
 
 
 class PfWidget(QGraphicsItem):
@@ -345,7 +400,7 @@ class PfWidget(QGraphicsItem):
 
             painter.setRenderHint(QPainter.Antialiasing, True)
             painter.setPen(QPen(Qt.gray, 1, Qt.SolidLine))
-            painter.setBrush(QBrush(QColor(*color),Qt.SolidPattern))
+            painter.setBrush(QBrush(QColor(*color), Qt.SolidPattern))
             painter.drawEllipse(self.device_size / -2, self.device_size / -2,
                                 self.device_size, self.device_size)
 
@@ -359,7 +414,7 @@ class PfWidget(QGraphicsItem):
 
             painter.setRenderHint(QPainter.Antialiasing, True)
             painter.setPen(QPen(Qt.gray, 1, Qt.SolidLine))
-            painter.setBrush(QBrush(QColor(*color),Qt.SolidPattern))
+            painter.setBrush(QBrush(QColor(*color), Qt.SolidPattern))
             painter.drawRect(self.device_size / -2, self.device_size / -2,
                              self.device_size, self.device_size)
 
@@ -413,6 +468,7 @@ class PfWidget(QGraphicsItem):
 
         if save:
             self.mpfmon.save_config()
+
 
 def run(machine_path, thread_stopper):
 
