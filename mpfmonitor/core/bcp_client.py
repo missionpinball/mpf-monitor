@@ -8,6 +8,7 @@ import threading
 import select
 
 import mpf.core.bcp.bcp_socket_client as bcp
+from PyQt5.QtCore import QTimer
 
 
 class BCPClient(object):
@@ -28,10 +29,17 @@ class BCPClient(object):
         self.done = False
 
         self.mc.log.info('Looking for MPF at %s:%s', self.interface, self.port)
-        self.connect_to_mpf()
+
+        self.reconnect_timer = QTimer(self.mc)
+        self.reconnect_timer.setInterval(1000)
+        self.reconnect_timer.timeout.connect(self.connect_to_mpf)
+        self.reconnect_timer.start()
 
     def connect_to_mpf(self, *args):
         del args
+
+        if self.connected:
+            return
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -39,11 +47,10 @@ class BCPClient(object):
         try:
             self.socket.connect((self.interface, self.port))
             self.connected = True
+            self.log.info("Connected to MPF")
 
         except socket.error:
             self.socket = None
-            self.log.warning("Failed to connect to remote BCP host %s:%s. ",
-                             self.interface, self.port)
 
         if self.create_socket_threads():
             self.start_monitoring()
@@ -105,6 +112,8 @@ class BCPClient(object):
             except OSError:
                 break
 
+        self.connected = False
+
     def disconnect(self):
         if not self.connected:
             self.log.info("Disconnecting from BCP")
@@ -139,6 +148,8 @@ class BCPClient(object):
                     continue
 
             self.socket.sendall(('{}\n'.format(msg)).encode('utf-8'))
+
+        self.connected = False
 
     def process_received_message(self, message):
         """Puts a received BCP message into the receiving queue.
