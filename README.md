@@ -1,7 +1,7 @@
 MPF Monitor (mpf-monitor)
 =========================
 
-<img align="right" height="146" src="mpfmc/icons/mpfmc-logo.png"/>
+<img align="right" width="300" src="mpf-monitor-logo.png"/>
 
 This package is for Mission Pinball Framework (MPF) Monitor (mpf-monitor).
 
@@ -10,6 +10,8 @@ The MPF monitor is a graphical app that connects to a live running instance of M
 so you can interact with your machine when you're not near your physical machine.
 
 The MPF Monitor can run on Windows, Mac, and Linux. It uses PyQt5 (Python bindings for Qt5) for its visual framework.
+
+<img src="screenshot.jpg"/>
 
 Features
 --------
