@@ -15,7 +15,7 @@ from mpfmonitor.core.bcp_client import BCPClient
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, machine_path, thread_stopper, parent=None):
+    def __init__(self, app, machine_path, thread_stopper, parent=None):
 
         super().__init__(parent)
 
@@ -29,6 +29,7 @@ class MainWindow(QMainWindow):
         self.crash_queue = queue.Queue()
         self.thread_stopper = thread_stopper
         self.machine_path = machine_path
+        self.app = app
         self.config = None
         self.layout = None
         self.config_file = os.path.join(self.machine_path, "monitor",
@@ -93,8 +94,9 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.treeview)
 
-    def except_hook(self, exception, traceback):
-        sys.__excepthook__(self, exception, traceback)
+    def except_hook(self, cls, exception, traceback):
+        sys.__excepthook__(cls, exception, traceback)
+        self.app.exit()
 
     def eventFilter(self, source, event):
         if source is self.playfield and event.type() == QEvent.Resize:
@@ -473,6 +475,6 @@ class PfWidget(QGraphicsItem):
 def run(machine_path, thread_stopper):
 
     app = QApplication(sys.argv)
-    w = MainWindow(machine_path, thread_stopper)
+    w = MainWindow(app, machine_path, thread_stopper)
     w.show()
     app.exec_()
