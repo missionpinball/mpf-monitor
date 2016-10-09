@@ -401,7 +401,7 @@ class PfWidget(QGraphicsItem):
             color = self.widget.data()['_color']
 
             painter.setRenderHint(QPainter.Antialiasing, True)
-            painter.setPen(QPen(Qt.gray, 1, Qt.SolidLine))
+            painter.setPen(QPen(Qt.white, 3, Qt.SolidLine))
             painter.setBrush(QBrush(QColor(*color), Qt.SolidPattern))
             painter.drawEllipse(self.device_size / -2, self.device_size / -2,
                                 self.device_size, self.device_size)
@@ -415,7 +415,7 @@ class PfWidget(QGraphicsItem):
                 color = [0, 0, 0]
 
             painter.setRenderHint(QPainter.Antialiasing, True)
-            painter.setPen(QPen(Qt.gray, 1, Qt.SolidLine))
+            painter.setPen(QPen(Qt.white, 3, Qt.SolidLine))
             painter.setBrush(QBrush(QColor(*color), Qt.SolidPattern))
             painter.drawRect(self.device_size / -2, self.device_size / -2,
                              self.device_size, self.device_size)
