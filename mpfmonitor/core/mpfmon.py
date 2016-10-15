@@ -195,6 +195,14 @@ class DeviceDelegate(QStyledItemDelegate):
             return
 
         try:
+            if '_brightness' in index.model().itemFromIndex(index).data():
+                # print(index.model().itemData(index))['_color']
+                color = [index.model().itemFromIndex(index).data()['_brightness']]*3
+                found = True
+        except TypeError:
+            return
+
+        try:
             if 'state' in index.model().itemFromIndex(index).data():
                 # print(index.model().itemData(index))['_color']
                 state = True == index.model().itemFromIndex(index).data()[
@@ -406,7 +414,7 @@ class PfWidget(QGraphicsItem):
             painter.drawEllipse(self.device_size / -2, self.device_size / -2,
                                 self.device_size, self.device_size)
 
-        if self.device_type == 'switch':
+        elif self.device_type == 'switch':
             state = self.widget.data()['state']
 
             if state:
@@ -419,6 +427,15 @@ class PfWidget(QGraphicsItem):
             painter.setBrush(QBrush(QColor(*color), Qt.SolidPattern))
             painter.drawRect(self.device_size / -2, self.device_size / -2,
                              self.device_size, self.device_size)
+
+        elif self.device_type == 'light':
+            color = [self.widget.data()['_brightness']]*3
+
+            painter.setRenderHint(QPainter.Antialiasing, True)
+            painter.setPen(QPen(Qt.white, 3, Qt.SolidLine))
+            painter.setBrush(QBrush(QColor(*color), Qt.SolidPattern))
+            painter.drawEllipse(self.device_size / -2, self.device_size / -2,
+                                self.device_size, self.device_size)
 
     def notify(self, source):
         if source == self.widget:
