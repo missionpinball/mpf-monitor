@@ -20,8 +20,8 @@ Features
 * Automatically discovers all devices.
 * Device state is updated in real time in the device tree view.
 * Add a photo of your playfield.
-* Drag and drop LEDs and switches from the device tree onto the playfield. LEDs (circle icons) show their color in real 
-  time. Switches (square icons) show their state (green = active, black = inactive).
+* Drag and drop LEDs, lights, and switches from the device tree onto the playfield. LEDs (circle icons) show their color in real 
+  time. Lights (circle icons) show their brightness in realtime between black and white. Switches (square icons) show their state (green = active, black = inactive).
 * Left-click on a switch to activate & release. Right-click on a switch to toggle and hold it.
 * Devices added to the playfield image are saved & restored.
 * Window sizes and positions are remembered and restored on next use.
