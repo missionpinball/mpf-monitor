@@ -92,6 +92,11 @@ class MainWindow(QMainWindow):
         self.treeview.setItemDelegate(DeviceDelegate())
         self.treeview.setModel(model)
 
+        self.event_window = EventWindow(self)
+        self.event_model = QStandardItemModel()
+        self.event_window.setModel(self.event_model)
+        self.event_window.show()
+
         self.setCentralWidget(self.treeview)
 
     def except_hook(self, cls, exception, traceback):
@@ -121,6 +126,8 @@ class MainWindow(QMainWindow):
             cmd, kwargs = self.receive_queue.get_nowait()
             if cmd == 'device':
                 self.process_device_update(**kwargs)
+            elif cmd == 'monitored_event':
+                self.process_event_update(**kwargs)
 
     def process_device_update(self, name, state, changes, type):
         self.log.debug("Device Update: {}.{}: {}".format(type, name, state))
@@ -144,6 +151,16 @@ class MainWindow(QMainWindow):
             self.pf.create_widget_from_config(_state, type, name)
 
         self.device_states[type][name].setData(state)
+
+    def process_event_update(self, posted_event, registered_handlers):
+
+
+        event = posted_event.split("'")[1]
+        # ['PostedEvent(event=', 'slide_attract_dmd_loop_slide_2_created', ', type=None, callback=None, kwargs={', '_from_bcp', ': True})']
+
+
+        item = QStandardItem(event)
+        self.event_model.insertRow(0, item)
 
     def about(self):
         QMessageBox.about(self, "About MPF Monitor",
@@ -487,6 +504,36 @@ class PfWidget(QGraphicsItem):
 
         if save:
             self.mpfmon.save_config()
+
+
+class EventWindow(QListView):
+
+    def __init__(self, mpfmon):
+        self.mpfmon = mpfmon
+        super().__init__()
+
+        self.setWindowTitle('Events')
+        # self.model = self.mpfmon.event_model
+
+        try:
+            self.move(self.mpfmon.layout['windows']['events']['x'],
+                           self.mpfmon.layout['windows']['events']['y'])
+            self.resize(self.mpfmon.layout['windows']['events']['width'],
+                             self.mpfmon.layout['windows']['events']['height'])
+        except KeyError:
+            self.mpfmon.layout['windows']['events'] = dict()
+
+    def resizeEvent(self, event):
+        self.mpfmon.layout['windows']['events']['width'] = self.size().width()
+        self.mpfmon.layout['windows']['events']['height'] = self.size().height()
+
+        self.mpfmon.save_layout()
+
+    def moveEvent(self, event):
+        self.mpfmon.layout['windows']['events']['x'] = self.pos().x()
+        self.mpfmon.layout['windows']['events']['y'] = self.pos().y()
+
+        self.mpfmon.save_layout()
 
 
 def run(machine_path, thread_stopper):
