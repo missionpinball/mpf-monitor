@@ -67,6 +67,21 @@ class MainWindow(QMainWindow):
         self.tick_timer.timeout.connect(self.tick)
         self.tick_timer.start()
 
+        self.toggle_pf_window_action = QAction('&Playfield',
+                                        statusTip='Show the playfield window',
+                                        triggered=self.toggle_pf_window)
+        self.toggle_pf_window_action.setCheckable(True)
+
+        self.toggle_device_window_action = QAction('&Devices',
+                                        statusTip='Show the device window',
+                                        triggered=self.toggle_device_window)
+        self.toggle_device_window_action.setCheckable(True)
+
+        self.toggle_event_window_action = QAction('&Events',
+                                        statusTip='Show the events window',
+                                        triggered=self.toggle_event_window)
+        self.toggle_event_window_action.setCheckable(True)
+
         self.scene = QGraphicsScene()
 
         self.pf = PfPixmapItem(QPixmap('monitor/playfield.jpg'), self)
@@ -82,7 +97,8 @@ class MainWindow(QMainWindow):
         except KeyError:
             self.layout['windows']['playfield'] = dict()
 
-        self.view.show()
+        if self.layout['windows']['playfield'].get('visible', True):
+            self.toggle_pf_window(False)
 
         self.treeview = QTreeView(self)
         model = QStandardItemModel()
@@ -95,9 +111,56 @@ class MainWindow(QMainWindow):
         self.event_window = EventWindow(self)
         # self.event_model = QStandardItemModel()
         # self.event_window.setModel(self.event_model)
-        self.event_window.show()
+        if self.layout['windows']['events'].get('visible', True):
+            self.toggle_event_window(False)
 
-        self.setCentralWidget(self.treeview)
+        self.view_menu = self.menuBar().addMenu("&View")
+        self.view_menu.addAction(self.toggle_pf_window_action)
+        self.view_menu.addAction(self.toggle_device_window_action)
+        self.view_menu.addAction(self.toggle_event_window_action)
+
+        if self.layout['windows']['devices'].get('visible', True):
+            self.setCentralWidget(self.treeview)
+            self.toggle_device_window_action.setChecked(True)
+
+    def toggle_pf_window(self, save=True):
+        if self.view.isVisible():
+            self.view.hide()
+            self.toggle_pf_window_action.setChecked(False)
+            self.layout['windows']['playfield']['visible'] = False
+        else:
+            self.view.show()
+            self.toggle_pf_window_action.setChecked(True)
+            self.layout['windows']['playfield']['visible'] = True
+
+        if save:
+            self.save_layout()
+
+    def toggle_device_window(self, save=True):
+        if self.treeview.isVisible():
+            self.treeview.hide()
+            self.toggle_device_window_action.setChecked(False)
+            self.layout['windows']['devices']['visible'] = False
+        else:
+            self.treeview.show()
+            self.toggle_device_window_action.setChecked(True)
+            self.layout['windows']['devices']['visible'] = True
+
+        if save:
+            self.save_layout()
+
+    def toggle_event_window(self, save=True):
+        if self.event_window.isVisible():
+            self.event_window.hide()
+            self.toggle_event_window_action.setChecked(False)
+            self.layout['windows']['events']['visible'] = False
+        else:
+            self.event_window.show()
+            self.toggle_event_window_action.setChecked(True)
+            self.layout['windows']['events']['visible'] = True
+
+        if save:
+            self.save_layout()
 
     def except_hook(self, cls, exception, traceback):
         sys.__excepthook__(cls, exception, traceback)
