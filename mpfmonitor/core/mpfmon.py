@@ -93,8 +93,8 @@ class MainWindow(QMainWindow):
         self.treeview.setModel(model)
 
         self.event_window = EventWindow(self)
-        self.event_model = QStandardItemModel()
-        self.event_window.setModel(self.event_model)
+        # self.event_model = QStandardItemModel()
+        # self.event_window.setModel(self.event_model)
         self.event_window.show()
 
         self.setCentralWidget(self.treeview)
@@ -102,6 +102,10 @@ class MainWindow(QMainWindow):
     def except_hook(self, cls, exception, traceback):
         sys.__excepthook__(cls, exception, traceback)
         self.app.exit()
+
+    def reset_connection(self):
+        self.start_time = 0
+        self.event_window.model.clear()
 
     def eventFilter(self, source, event):
         if source is self.playfield and event.type() == QEvent.Resize:
@@ -152,15 +156,19 @@ class MainWindow(QMainWindow):
 
         self.device_states[type][name].setData(state)
 
-    def process_event_update(self, posted_event, registered_handlers):
+    def process_event_update(self, event_name, event_type, event_callback,
+                             event_kwargs, registered_handlers):
 
+        from_bcp = event_kwargs.pop('_from_bcp', False)
 
-        event = posted_event.split("'")[1]
-        # ['PostedEvent(event=', 'slide_attract_dmd_loop_slide_2_created', ', type=None, callback=None, kwargs={', '_from_bcp', ': True})']
+        name = QStandardItem(event_name)
+        kwargs = QStandardItem(str(event_kwargs))
+        # ev_time = QStandardItem(time.time())
+        self.event_window.model.insertRow(0, [name, kwargs])
 
-
-        item = QStandardItem(event)
-        self.event_model.insertRow(0, item)
+        # if registered_handlers:
+        #     handlers = QStandardItem(registered_handlers)
+        #     name.appendRow(handlers)
 
     def about(self):
         QMessageBox.about(self, "About MPF Monitor",
@@ -506,14 +514,17 @@ class PfWidget(QGraphicsItem):
             self.mpfmon.save_config()
 
 
-class EventWindow(QListView):
+class EventWindow(QTreeView):
 
     def __init__(self, mpfmon):
         self.mpfmon = mpfmon
         super().__init__()
 
         self.setWindowTitle('Events')
-        # self.model = self.mpfmon.event_model
+        self.model = QStandardItemModel()
+        self.setModel(self.model)
+        self.rootNode = self.model.invisibleRootItem()
+        self.setSortingEnabled(True)
 
         try:
             self.move(self.mpfmon.layout['windows']['events']['x'],

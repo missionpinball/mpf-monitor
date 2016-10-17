@@ -47,6 +47,7 @@ class BCPClient(object):
         try:
             self.socket.connect((self.interface, self.port))
             self.connected = True
+            # self.mc.reset_connection()
             self.log.info("Connected to MPF")
 
         except socket.error:
