@@ -18,7 +18,8 @@ Features
 
 * Connects to a live running instance of MPF.
 * Automatically discovers all devices.
-* Device state is updated in real time in the device tree view.
+* Device state is updated in real time in the device window.
+* Events and their keyword argmuments are posted in the event window.
 * Add a photo of your playfield.
 * Drag and drop LEDs, lights, and switches from the device tree onto the playfield. LEDs (circle icons) show their color in real 
   time. Lights (circle icons) show their brightness in realtime between black and white. Switches (square icons) show their state (green = active, black = inactive).
@@ -56,8 +57,6 @@ Running MPF Monitor
    be created in your machine's `monitor` folder. x/y values of devices are stored in percentages instead of pixels, so 
    they should stay in the right place even if you change your playfield image. The yaml file is updated automatically.
 7. Edit the YAML file to remove devices from the playfield you don't want anymore.
-8. Window size and position is saved to `monitor/layout.yaml`. Exclude this from your game repo (via .gitignore) if you use
-   multiple computers and want to save a custom layout per computer.
 
 Future Features
 ---------------
@@ -65,7 +64,7 @@ Future Features
 MPF Monitor is *very* rough at this point. In the near future (after Expo 2016), we'll add
 more features, including:
 
-* Events that have been posted, current registered handlers
+* More details for events, including registered handlers & making the list sortable and searchable
 * Pulling information about running modes (priority, etc.)
 * Shots, shot groups, and shot profiles
 * Logic blocks
@@ -76,8 +75,6 @@ more features, including:
 * A "snapshot" button that can dump the entire current state to a file
   for debugging later
 * Export position (x/y) settings of widgets back to the MPF config
-* Allow the monitor to stay running when MPF stops and automatically
-  reconnect when MPF starts again
 * Connect to MPF-MC to get information about slides, displays, widgets, etc.
 * Add color controls to the playfield image to set brightness and color saturation
 * Buttons to enable/disable different types of devices
