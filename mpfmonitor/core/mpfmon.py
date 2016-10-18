@@ -34,21 +34,15 @@ class MainWindow(QMainWindow):
         self.layout = None
         self.config_file = os.path.join(self.machine_path, "monitor",
                                         "monitor.yaml")
-        self.layout_file = os.path.join(self.machine_path, "monitor",
-                                        "layout.yaml")
+
+        self.local_settings = QSettings("Mission Pinball", "mpf-monitor")
 
         self.load_config()
-        self.load_layout()
 
-        try:
-            self.move(self.layout['windows']['devices']['x'],
-                      self.layout['windows']['devices']['y'])
-            self.resize(self.layout['windows']['devices']['width'],
-                        self.layout['windows']['devices']['height'])
-        except KeyError:
-            self.layout['windows'] = dict()
-            self.layout['windows']['devices'] = dict()
-            self.resize(400, 800)
+        self.move(self.local_settings.value('windows/devices/pos',
+                                            QPoint(200, 200)))
+        self.resize(self.local_settings.value('windows/devices/size',
+                                            QSize(300, 600)))
 
         self.setWindowTitle("Devices")
 
@@ -89,16 +83,13 @@ class MainWindow(QMainWindow):
 
         self.view = PfView(self.scene, self)
 
-        try:
-            self.view.move(self.layout['windows']['playfield']['x'],
-                           self.layout['windows']['playfield']['y'])
-            self.view.resize(self.layout['windows']['playfield']['width'],
-                             self.layout['windows']['playfield']['height'])
-        except KeyError:
-            self.layout['windows']['playfield'] = dict()
 
-        if self.layout['windows']['playfield'].get('visible', True):
-            self.toggle_pf_window(False)
+        self.view.move(self.local_settings.value('windows/pf/pos',
+                                                 QPoint(400, 200)))
+        self.view.resize(self.local_settings.value('windows/pf/size',
+                                                   QSize(300, 600)))
+        if self.local_settings.value('windows/pf/visible', True):
+            self.toggle_pf_window()
 
         self.treeview = QTreeView(self)
         model = QStandardItemModel()
@@ -111,56 +102,41 @@ class MainWindow(QMainWindow):
         self.event_window = EventWindow(self)
         # self.event_model = QStandardItemModel()
         # self.event_window.setModel(self.event_model)
-        if self.layout['windows']['events'].get('visible', True):
-            self.toggle_event_window(False)
+        if self.local_settings.value('windows/events/visible', True):
+            self.toggle_event_window()
 
         self.view_menu = self.menuBar().addMenu("&View")
         self.view_menu.addAction(self.toggle_pf_window_action)
         self.view_menu.addAction(self.toggle_device_window_action)
         self.view_menu.addAction(self.toggle_event_window_action)
 
-        if self.layout['windows']['devices'].get('visible', True):
+        if self.local_settings.value('windows/devices/visible', True):
             self.setCentralWidget(self.treeview)
             self.toggle_device_window_action.setChecked(True)
 
-    def toggle_pf_window(self, save=True):
+    def toggle_pf_window(self):
         if self.view.isVisible():
             self.view.hide()
             self.toggle_pf_window_action.setChecked(False)
-            self.layout['windows']['playfield']['visible'] = False
         else:
             self.view.show()
             self.toggle_pf_window_action.setChecked(True)
-            self.layout['windows']['playfield']['visible'] = True
 
-        if save:
-            self.save_layout()
-
-    def toggle_device_window(self, save=True):
+    def toggle_device_window(self):
         if self.treeview.isVisible():
             self.treeview.hide()
             self.toggle_device_window_action.setChecked(False)
-            self.layout['windows']['devices']['visible'] = False
         else:
             self.treeview.show()
             self.toggle_device_window_action.setChecked(True)
-            self.layout['windows']['devices']['visible'] = True
 
-        if save:
-            self.save_layout()
-
-    def toggle_event_window(self, save=True):
+    def toggle_event_window(self):
         if self.event_window.isVisible():
             self.event_window.hide()
             self.toggle_event_window_action.setChecked(False)
-            self.layout['windows']['events']['visible'] = False
         else:
             self.event_window.show()
             self.toggle_event_window_action.setChecked(True)
-            self.layout['windows']['events']['visible'] = True
-
-        if save:
-            self.save_layout()
 
     def except_hook(self, cls, exception, traceback):
         sys.__excepthook__(cls, exception, traceback)
@@ -178,15 +154,15 @@ class MainWindow(QMainWindow):
 
         return super().eventFilter(source, event)
 
-    def resizeEvent(self, event):
-        self.layout['windows']['devices']['width'] = self.size().width()
-        self.layout['windows']['devices']['height'] = self.size().height()
-        self.save_layout()
-
-    def moveEvent(self, event):
-        self.layout['windows']['devices']['x'] = self.pos().x()
-        self.layout['windows']['devices']['y'] = self.pos().y()
-        self.save_layout()
+    # def resizeEvent(self, event):
+    #     self.layout['windows']['devices']['width'] = self.size().width()
+    #     self.layout['windows']['devices']['height'] = self.size().height()
+    #     self.save_layout()
+    #
+    # def moveEvent(self, event):
+    #     self.layout['windows']['devices']['x'] = self.pos().x()
+    #     self.layout['windows']['devices']['y'] = self.pos().y()
+    #     self.save_layout()
 
     def tick(self):
         while not self.receive_queue.empty():
@@ -244,23 +220,42 @@ class MainWindow(QMainWindow):
         except FileNotFoundError:
                 self.config = dict()
 
-    def load_layout(self):
-        try:
-            with open(self.layout_file, 'r') as f:
-                self.layout = yaml.load(f)
-        except FileNotFoundError:
-                self.layout = dict()
+    # def load_layout(self):
+    #     try:
+    #         with open(self.layout_file, 'r') as f:
+    #             self.layout = yaml.load(f)
+    #     except FileNotFoundError:
+    #             self.layout = dict()
 
     def save_config(self):
         print("Saving config to disk")
         with open(self.config_file, 'w') as f:
             f.write(yaml.dump(self.config, default_flow_style=False))
 
-    def save_layout(self):
-        print("Saving layout to disk")
-        with open(self.layout_file, 'w') as f:
-            f.write(yaml.dump(self.layout, default_flow_style=False))
+    # def save_layout(self):
+    #     print("Saving layout to disk")
+    #     with open(self.layout_file, 'w') as f:
+    #         f.write(yaml.dump(self.layout, default_flow_style=False))
 
+    def closeEvent(self, event):
+        self.write_local_settings()
+        event.accept()
+
+    def write_local_settings(self):
+        self.local_settings.setValue('windows/devices/pos', self.pos())
+        self.local_settings.setValue('windows/devices/size', self.size())
+        self.local_settings.setValue('windows/devices/visible', self.isVisible())
+
+        self.local_settings.setValue('windows/pf/pos', self.view.pos())
+        self.local_settings.setValue('windows/pf/size', self.view.size())
+        self.local_settings.setValue('windows/pf/visible', self.view.isVisible())
+
+        self.local_settings.setValue('windows/events/pos',
+                                     self.event_window.pos())
+        self.local_settings.setValue('windows/events/size',
+                                     self.event_window.size())
+        self.local_settings.setValue('windows/event/visible',
+                                     self.event_window.isVisible())
 
 class DeviceDelegate(QStyledItemDelegate):
 
@@ -407,17 +402,17 @@ class PfView(QGraphicsView):
 
     def resizeEvent(self, event):
         self.fitInView(self.mpfmon.pf, Qt.KeepAspectRatio)
-
-        self.mpfmon.layout['windows']['playfield']['width'] = self.size().width()
-        self.mpfmon.layout['windows']['playfield']['height'] = self.size().height()
-
-        self.mpfmon.save_layout()
-
-    def moveEvent(self, event):
-        self.mpfmon.layout['windows']['playfield']['x'] = self.pos().x()
-        self.mpfmon.layout['windows']['playfield']['y'] = self.pos().y()
-
-        self.mpfmon.save_layout()
+    #
+    #     self.mpfmon.layout['windows']['playfield']['width'] = self.size().width()
+    #     self.mpfmon.layout['windows']['playfield']['height'] = self.size().height()
+    #
+    #     self.mpfmon.save_layout()
+    #
+    # def moveEvent(self, event):
+    #     self.mpfmon.layout['windows']['playfield']['x'] = self.pos().x()
+    #     self.mpfmon.layout['windows']['playfield']['y'] = self.pos().y()
+    #
+    #     self.mpfmon.save_layout()
 
 
 class PfPixmapItem(QGraphicsPixmapItem):
@@ -589,25 +584,30 @@ class EventWindow(QTreeView):
         self.rootNode = self.model.invisibleRootItem()
         self.setSortingEnabled(True)
 
-        try:
-            self.move(self.mpfmon.layout['windows']['events']['x'],
-                           self.mpfmon.layout['windows']['events']['y'])
-            self.resize(self.mpfmon.layout['windows']['events']['width'],
-                             self.mpfmon.layout['windows']['events']['height'])
-        except KeyError:
-            self.mpfmon.layout['windows']['events'] = dict()
+        self.move(self.mpfmon.local_settings.value('windows/events/pos',
+                                                   QPoint(600, 200)))
+        self.resize(self.mpfmon.local_settings.value('windows/events/size',
+                                                      QSize(300, 600)))
 
-    def resizeEvent(self, event):
-        self.mpfmon.layout['windows']['events']['width'] = self.size().width()
-        self.mpfmon.layout['windows']['events']['height'] = self.size().height()
+        # try:
+        #     self.move(self.mpfmon.layout['windows']['events']['x'],
+        #                    self.mpfmon.layout['windows']['events']['y'])
+        #     self.resize(self.mpfmon.layout['windows']['events']['width'],
+        #                      self.mpfmon.layout['windows']['events']['height'])
+        # except KeyError:
+        #     self.mpfmon.layout['windows']['events'] = dict()
 
-        self.mpfmon.save_layout()
-
-    def moveEvent(self, event):
-        self.mpfmon.layout['windows']['events']['x'] = self.pos().x()
-        self.mpfmon.layout['windows']['events']['y'] = self.pos().y()
-
-        self.mpfmon.save_layout()
+    # def resizeEvent(self, event):
+    #     self.mpfmon.layout['windows']['events']['width'] = self.size().width()
+    #     self.mpfmon.layout['windows']['events']['height'] = self.size().height()
+    #
+    #     self.mpfmon.save_layout()
+    #
+    # def moveEvent(self, event):
+    #     self.mpfmon.layout['windows']['events']['x'] = self.pos().x()
+    #     self.mpfmon.layout['windows']['events']['y'] = self.pos().y()
+    #
+    #     self.mpfmon.save_layout()
 
 
 def run(machine_path, thread_stopper):
