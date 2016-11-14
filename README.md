@@ -11,7 +11,7 @@ so you can interact with your machine when you're not near your physical machine
 
 The MPF Monitor can run on Windows, Mac, and Linux. It uses PyQt5 (Python bindings for Qt5) for its visual framework.
 
-<img src="screenshot.jpg"/>
+<img src="mpf-monitor-screenshot.jpg"/>
 
 Features
 --------
