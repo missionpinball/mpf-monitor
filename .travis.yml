@@ -2,7 +2,7 @@
 
 # todo
 # tests
-# multiple versions of MPF?
+# test against the multiple versions of MPF that are supported
 # load the graphics environment to make sure everything works?
 
 language: python
