@@ -16,9 +16,6 @@ install:
 script:
   - python3 setup.py install;
 
-after_success:
-  - python3 setup.py sdist; python3 -m twine upload -u brianmadden -p $PYPI_PASS --skip-existing dist/*;
-
 deploy:
   provider: pypi
   user: brianmadden
