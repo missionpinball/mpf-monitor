@@ -23,6 +23,12 @@ in the MPF documentation here:
 
 http://docs.missionpinball.org/en/latest/monitor
 
+**Note:** MPF Monitor requires PyQt5. There is a Python package for
+Python 3.5 which will be installed automatically if you're using Python
+3.5. If you're using Python 3.4, you will need to download and install
+PyQt5 manually. See the installation instructions in the link above for
+details.
+
 <img src="mpf-monitor-screenshot.jpg"/>
 
 License

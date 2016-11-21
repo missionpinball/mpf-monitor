@@ -60,17 +60,17 @@ install_requires = ['ruamel.yaml>=0.10,<0.11',
 if sys.version_info.major == 3 and sys.version_info.minor == 5:
     install_requires += ['PyQt5']
 
+with open('README.md', 'r') as f:
+    long_description = f.read()
 
 setup(
 
     name='mpf-monitor',
     version=mon_version,
     description='MPF Monitor',
-    long_description='''GUI Monitoring app for the Mission Pinball Framework.
+    long_description=long_description,
 
-MPF Monitor is built using PyQt5.''',
-
-    url='https://missionpinball.org',
+    url='http://missionpinball.org',
     author='The Mission Pinball Framework Team',
     author_email='brian@missionpinball.org',
     license='MIT',
