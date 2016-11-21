@@ -11,16 +11,18 @@ python:
   - "3.4"
 
 install:
-  - pip3 install coveralls
-
-env:
-  global:
-     secure: "WNvNRbHmintW6NlclAw3rbP4EzJ0Zt7gqVSha/+gC8Vo2pkbWphltgH5YwBGGM37ZRRbJ90Qm7aaLsFSpxOLnWlOlTw6/NBdKFEjvZISU8x7VcxlScNKTgDmeMYrDTsfbzoZJx7A6ZzxIm3fvRDcfhQcB0kI6wvLhcD1jHGqy0omfOHyFw51RfvRq07xsqavHN2Km9ObSqRCyMSuKNSCBHuIvGq7WnMfv+yU+iEV9pfQOEIo6JC7aySfIJ0gdgXK68RbWPLg1x4KwLsni9VDnOxXw9lPQbJfv9bpY1Fv3RWOQE763mHGojyorODrLCcYnKW+f177+h8PfBgIMMJdcF4CmanoGSrJG6QCp0GdauNzaqSXhGPFGIBToHPdFAW9XbHyVivFOP+rK8fo52euxX4rOgAF0oYuTxaz1SZn0x52u/BWG44Za9pQur8mZZHuZr9JpSzYF2u1FO3T4wj3noCBkXXe250WQp/zA1VrWgRPZgB9r6nxfguWsbzpia2dhcRDY+/jChJvc2mvHio8wlw3WhFhoUjUQkoGzmr/uio2j4SEo84wAClcQ5S6yzGY4IE8i8b4NZuJy9tsVS8+99TaR4TrUET1r+LqU7T4uN2Bp85zaw1ekmlj5xUD5/aJWagIM6kCv35nSD2camIQWVq0eiBqzOsu0npH9EhML0A="
+  - pip3 install --upgrade setuptools pip twine
 
 script:
-  - pip3 install --upgrade setuptools pip twine;
-    python3 setup.py install;
+  - python3 setup.py install;
 
 after_success:
-  - python3 setup.py sdist;
-    python3 -m twine upload -u brianmadden -p $PYPI_PASS --skip-existing dist/*;
+  - python3 setup.py sdist; python3 -m twine upload -u brianmadden -p $PYPI_PASS --skip-existing dist/*;
+
+deploy:
+  provider: pypi
+  user: brianmadden
+  password:
+    secure: F+Pbg/DfprzBs2Jestrl5GbB3q/F65UTVJo3yAL+cyzuWcPANm+pzAMBAfOOoz1PsQbIkXJzCDDjcw9AYXBvO1z3zMUvuFU1UTpf1Ezxt3PdnkDDwBYTj3VSexwyKqC82myARCXskD+aiD7ZR4OzrBelnM2K9qeXbhobMIntCJa3y7OF4rln8bJs1FogQg3+OMadc4XbFL5iFQdePzjqVii61uFfhTZDEiW+wNyWcB0h4R1Rf0TzN0OMlCBKJTRBXFUR8DtQ0wNA+mg3KaxPitrSv6yN3ZY4f+U2Mad9SYZamSY+MpOeX5rejPSJZ1faqn+JfIGPcbARchooC5v/bB6wzg7MSPHh0jbE6UIbJr8QKwe8T1gVPc0Vz+EYBhBp/474jmlrBvb99Ap9QbvAIluKeNbHoTF2fvyQIZUzJV0f9lw/cVwYDQMLDsiKc7SVNiH5jh+Ms0icpR+Qs22e5R0xkLWajGbkIQxUKlAoUiFi0hxInkXfrropYqkt1UnZXtswuCpV46uBQXc1cox5flczbFezCUprCG6dWUUsbqfxnwemz9PQESigThdhDfLFTmDk5WvI5qw7a2pTCRkvAq3fr6081FBYJSflHyM/ktCpgKmBagckFOTWFu5PCUl0dnk8po7cmxTaLFlIPW22ssL6iPfq+zc70bhNgvxFPt8=
+  on:
+    repo: missionpinball/mpf-monitor
