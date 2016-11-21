@@ -59,17 +59,17 @@ class MainWindow(QTreeView):
         self.tick_timer.timeout.connect(self.tick)
         self.tick_timer.start()
 
-        self.toggle_pf_window_action = QAction('&Playfield',
+        self.toggle_pf_window_action = QAction('&Playfield', self,
                                         statusTip='Show the playfield window',
                                         triggered=self.toggle_pf_window)
         self.toggle_pf_window_action.setCheckable(True)
 
-        self.toggle_device_window_action = QAction('&Devices',
+        self.toggle_device_window_action = QAction('&Devices', self,
                                         statusTip='Show the device window',
                                         triggered=self.toggle_device_window)
         self.toggle_device_window_action.setCheckable(True)
 
-        self.toggle_event_window_action = QAction('&Events',
+        self.toggle_event_window_action = QAction('&Events', self,
                                         statusTip='Show the events window',
                                         triggered=self.toggle_event_window)
         self.toggle_event_window_action.setCheckable(True)
