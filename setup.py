@@ -60,8 +60,16 @@ install_requires = ['ruamel.yaml>=0.10,<0.11',
 if sys.version_info.major == 3 and sys.version_info.minor == 5:
     install_requires += ['PyQt5']
 
-with open('README.md', 'r') as f:
-    long_description = f.read()
+# README.md is not included in the build packages.
+try:
+    with open('README.md', 'r') as f:
+        long_description = f.read()
+
+except:
+    long_description = '''The Mission Pinball Framework Monitor (mpf-monitor)
+
+Details & instructions are at http://docs.missionpinball.org/monitor
+'''
 
 setup(
 
