@@ -194,9 +194,10 @@ class MainWindow(QTreeView):
         # ev_time = QStandardItem(time.time())
         self.event_window.model.insertRow(0, [name, kwargs])
 
-        # if registered_handlers:
-        #     handlers = QStandardItem(registered_handlers)
-        #     name.appendRow(handlers)
+        # for rh in registered_handlers:
+        #     rh_name = QStandardItem(rh[0])
+        #     rh_kwargs = QStandardItem(rh[1])
+        #     self.event_window.model.index(0, 0).appendRow([rh_name, rh_kwargs])
 
     def about(self):
         QMessageBox.about(self, "About MPF Monitor",
