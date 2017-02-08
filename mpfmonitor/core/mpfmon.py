@@ -522,8 +522,8 @@ class PfWidget(QGraphicsItem):
         self.click_start = 0
 
     def update_pos(self, save=True):
-        x = self.pos().x() / self.mpfmon.scene.width()
-        y = self.pos().y() / self.mpfmon.scene.height()
+        x = self.pos().x() / self.mpfmon.scene.width() if self.mpfmon.scene.width() > 0 else self.pos().x()
+        y = self.pos().y() / self.mpfmon.scene.height() if self.mpfmon.scene.height() > 0 else self.pos().y()
 
         if self.device_type not in self.mpfmon.config:
             self.mpfmon.config[self.device_type] = dict()
