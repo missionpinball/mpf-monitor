@@ -257,6 +257,14 @@ class DeviceDelegate(QStyledItemDelegate):
             return
 
         try:
+            if 'color' in index.model().itemFromIndex(index).data():
+                # print(index.model().itemData(index))['_color']
+                color = index.model().itemFromIndex(index).data()['color']
+                found = True
+        except TypeError:
+            return
+
+        try:
             if '_brightness' in index.model().itemFromIndex(index).data():
                 # print(index.model().itemData(index))['_color']
                 color = [index.model().itemFromIndex(index).data()['_brightness']]*3
@@ -267,8 +275,15 @@ class DeviceDelegate(QStyledItemDelegate):
         try:
             if 'state' in index.model().itemFromIndex(index).data():
                 # print(index.model().itemData(index))['_color']
-                state = True == index.model().itemFromIndex(index).data()[
-                    'state']
+                text = index.model().itemFromIndex(index).data()['state']
+                found = True
+        except TypeError:
+            return
+
+        try:
+            if '_state' in index.model().itemFromIndex(index).data():
+                # print(index.model().itemData(index))['_color']
+                text = index.model().itemFromIndex(index).data()['_state']
                 found = True
         except TypeError:
             return
@@ -292,6 +307,15 @@ class DeviceDelegate(QStyledItemDelegate):
             return
 
         try:
+            if 'enabled' in index.model().itemFromIndex(index).data():
+                # print(index.model().itemData(index))['_color']
+                state = index.model().itemFromIndex(index).data()[
+                    'enabled']
+                found = True
+        except TypeError:
+            return
+
+        try:
             if 'balls' in index.model().itemFromIndex(index).data():
                 # print(index.model().itemData(index))['_color']
                 balls = index.model().itemFromIndex(index).data()['balls']
@@ -303,14 +327,6 @@ class DeviceDelegate(QStyledItemDelegate):
             if 'balls_locked' in index.model().itemFromIndex(index).data():
                 # print(index.model().itemData(index))['_color']
                 balls = index.model().itemFromIndex(index).data()['balls_locked']
-                found = True
-        except TypeError:
-            return
-
-        try:
-            if '_state' in index.model().itemFromIndex(index).data():
-                # print(index.model().itemData(index))['_color']
-                text = index.model().itemFromIndex(index).data()['_state']
                 found = True
         except TypeError:
             return
@@ -456,7 +472,10 @@ class PfWidget(QGraphicsItem):
 
     def paint(self, painter, option, widget):
         if self.device_type == 'led':
-            color = self.widget.data()['_color']
+            try:
+                color = self.widget.data()['_color']
+            except KeyError:
+                color = self.widget.data()['color']
 
             painter.setRenderHint(QPainter.Antialiasing, True)
             painter.setPen(QPen(Qt.white, 3, Qt.SolidLine))
