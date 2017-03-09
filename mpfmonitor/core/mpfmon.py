@@ -382,7 +382,7 @@ class DeviceDelegate(QStyledItemDelegate):
 
         if text:
             painter.drawText(view.rect.x() + x_offset, view.rect.y() + 12,
-                             text)
+                             str(text))
 
         painter.restore()
 
