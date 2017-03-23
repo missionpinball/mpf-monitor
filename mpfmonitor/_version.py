@@ -1,6 +1,6 @@
 # mpf-monitor
-__version__ = '0.1.14'
-__short_version__ = '0.1'
+__version__ = '0.2.0-dev.01'
+__short_version__ = '0.2'
 __bcp_version__ = '1.1'
 __config_version__ = '4'
 __mpf_version_required__ = '0.33.0'
