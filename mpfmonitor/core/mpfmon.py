@@ -160,6 +160,9 @@ class MainWindow(QTreeView):
                 self.process_device_update(**kwargs)
             elif cmd == 'monitored_event':
                 self.process_event_update(**kwargs)
+            elif cmd == 'reset':
+                self.reset_connection()
+                self.bcp.send("reset_complete")
 
     def process_device_update(self, name, state, changes, type):
         self.log.debug("Device Update: {}.{}: {}".format(type, name, state))
