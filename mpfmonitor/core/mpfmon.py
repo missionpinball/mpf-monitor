@@ -252,48 +252,28 @@ class DeviceDelegate(QStyledItemDelegate):
         num_circles = 1
 
         try:
-            if '_color' in index.model().itemFromIndex(index).data():
-                # print(index.model().itemData(index))['_color']
-                color = index.model().itemFromIndex(index).data()['_color']
-                found = True
-        except TypeError:
-            return
-
-        try:
             if 'color' in index.model().itemFromIndex(index).data():
-                # print(index.model().itemData(index))['_color']
                 color = index.model().itemFromIndex(index).data()['color']
                 found = True
         except TypeError:
             return
 
         try:
-            if '_brightness' in index.model().itemFromIndex(index).data():
-                # print(index.model().itemData(index))['_color']
-                color = [index.model().itemFromIndex(index).data()['_brightness']]*3
+            if 'brightness' in index.model().itemFromIndex(index).data():
+                color = [index.model().itemFromIndex(index).data()['brightness']]*3
                 found = True
         except TypeError:
             return
 
         try:
             if 'state' in index.model().itemFromIndex(index).data():
-                # print(index.model().itemData(index))['_color']
                 text = index.model().itemFromIndex(index).data()['state']
                 found = True
         except TypeError:
             return
 
         try:
-            if '_state' in index.model().itemFromIndex(index).data():
-                # print(index.model().itemData(index))['_color']
-                text = index.model().itemFromIndex(index).data()['_state']
-                found = True
-        except TypeError:
-            return
-
-        try:
             if 'complete' in index.model().itemFromIndex(index).data():
-                # print(index.model().itemData(index))['_color']
                 state = not index.model().itemFromIndex(index).data()[
                     'complete']
                 found = True
@@ -301,17 +281,7 @@ class DeviceDelegate(QStyledItemDelegate):
             return
 
         try:
-            if '_enabled' in index.model().itemFromIndex(index).data():
-                # print(index.model().itemData(index))['_color']
-                state = index.model().itemFromIndex(index).data()[
-                    '_enabled']
-                found = True
-        except TypeError:
-            return
-
-        try:
             if 'enabled' in index.model().itemFromIndex(index).data():
-                # print(index.model().itemData(index))['_color']
                 state = index.model().itemFromIndex(index).data()[
                     'enabled']
                 found = True
@@ -320,7 +290,6 @@ class DeviceDelegate(QStyledItemDelegate):
 
         try:
             if 'balls' in index.model().itemFromIndex(index).data():
-                # print(index.model().itemData(index))['_color']
                 balls = index.model().itemFromIndex(index).data()['balls']
                 found = True
         except TypeError:
@@ -328,7 +297,6 @@ class DeviceDelegate(QStyledItemDelegate):
 
         try:
             if 'balls_locked' in index.model().itemFromIndex(index).data():
-                # print(index.model().itemData(index))['_color']
                 balls = index.model().itemFromIndex(index).data()['balls_locked']
                 found = True
         except TypeError:
@@ -337,7 +305,6 @@ class DeviceDelegate(QStyledItemDelegate):
         try:
             if 'num_balls_requested' in index.model().itemFromIndex(
                     index).data():
-                # print(index.model().itemData(index))['_color']
                 text += 'Requested: {} '.format(
                     index.model().itemFromIndex(index).data()['num_balls_requested'])
                 found = True
@@ -347,7 +314,6 @@ class DeviceDelegate(QStyledItemDelegate):
         try:
             if 'unexpected_balls' in index.model().itemFromIndex(
                     index).data():
-                # print(index.model().itemData(index))['_color']
                 text += 'Unexpected: {} '.format(
                     index.model().itemFromIndex(index).data()['unexpected_balls'])
                 found = True
@@ -475,10 +441,7 @@ class PfWidget(QGraphicsItem):
 
     def paint(self, painter, option, widget):
         if self.device_type == 'led':
-            try:
-                color = self.widget.data()['_color']
-            except KeyError:
-                color = self.widget.data()['color']
+            color = self.widget.data()['color']
 
             painter.setRenderHint(QPainter.Antialiasing, True)
             painter.setPen(QPen(Qt.white, 3, Qt.SolidLine))
@@ -501,7 +464,7 @@ class PfWidget(QGraphicsItem):
                              self.device_size, self.device_size)
 
         elif self.device_type == 'light':
-            color = [self.widget.data()['_brightness']]*3
+            color = [self.widget.data()['brightness']] * 3
 
             painter.setRenderHint(QPainter.Antialiasing, True)
             painter.setPen(QPen(Qt.white, 3, Qt.SolidLine))
