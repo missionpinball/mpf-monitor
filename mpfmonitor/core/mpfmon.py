@@ -324,8 +324,9 @@ class DeviceDelegate(QStyledItemDelegate):
             return
 
         if index.column() == 0:
-            super().paint(painter, view, index)
             return
+
+        text += " " + str(index.model().itemFromIndex(index).data())
 
         painter.save()
 
@@ -439,8 +440,8 @@ class PfWidget(QGraphicsItem):
         return QRectF(self.device_size / -2, self.device_size / -2,
                       self.device_size, self.device_size)
 
-    def paint(self, painter, option, widget):
-        if self.device_type == 'led':
+    def paint(self, painter, option, widget=None):
+        if self.device_type == 'light':
             color = self.widget.data()['color']
 
             painter.setRenderHint(QPainter.Antialiasing, True)
@@ -462,15 +463,6 @@ class PfWidget(QGraphicsItem):
             painter.setBrush(QBrush(QColor(*color), Qt.SolidPattern))
             painter.drawRect(self.device_size / -2, self.device_size / -2,
                              self.device_size, self.device_size)
-
-        elif self.device_type == 'light':
-            color = [self.widget.data()['brightness']] * 3
-
-            painter.setRenderHint(QPainter.Antialiasing, True)
-            painter.setPen(QPen(Qt.white, 3, Qt.SolidLine))
-            painter.setBrush(QBrush(QColor(*color), Qt.SolidPattern))
-            painter.drawEllipse(self.device_size / -2, self.device_size / -2,
-                                self.device_size, self.device_size)
 
     def notify(self, source):
         if source == self.widget:
