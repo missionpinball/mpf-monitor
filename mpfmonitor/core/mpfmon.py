@@ -101,6 +101,9 @@ class MainWindow(QTreeView):
         if 1 or self.local_settings.value('windows/events/visible', True):
             self.toggle_event_window()
 
+        self.mode_window = ModeWindow(self)
+        self.mode_window.show()
+
         self.menu_bar = QMenuBar()
         self.view_menu = self.menu_bar.addMenu("&View")
         self.view_menu.addAction(self.toggle_pf_window_action)
@@ -141,6 +144,7 @@ class MainWindow(QTreeView):
     def reset_connection(self):
         self.start_time = 0
         self.event_window.model.clear()
+        self.mode_window.model.clear()
 
     def eventFilter(self, source, event):
         try:
@@ -160,9 +164,17 @@ class MainWindow(QTreeView):
                 self.process_device_update(**kwargs)
             elif cmd == 'monitored_event':
                 self.process_event_update(**kwargs)
+            elif cmd in ('mode_start', 'mode_stop', 'mode_list'):
+                self.process_mode_update(kwargs['running_modes'])
             elif cmd == 'reset':
                 self.reset_connection()
                 self.bcp.send("reset_complete")
+
+    def process_mode_update(self, running_modes):
+        self.mode_window.model.clear()
+        for mode in running_modes:
+            mode_obj = QStandardItem(mode)
+            self.mode_window.model.insertRow(0, [mode_obj])
 
     def process_device_update(self, name, state, changes, type):
         self.log.debug("Device Update: {}.{}: {}".format(type, name, state))
@@ -531,6 +543,23 @@ class EventWindow(QTreeView):
         self.move(self.mpfmon.local_settings.value('windows/events/pos',
                                                    QPoint(500, 200)))
         self.resize(self.mpfmon.local_settings.value('windows/events/size',
+                                                     QSize(300, 600)))
+
+class ModeWindow(QTreeView):
+
+    def __init__(self, mpfmon):
+        self.mpfmon = mpfmon
+        super().__init__()
+
+        self.setWindowTitle('Running Modes')
+        self.model = QStandardItemModel()
+        self.setModel(self.model)
+        self.rootNode = self.model.invisibleRootItem()
+        self.setSortingEnabled(True)
+
+        self.move(self.mpfmon.local_settings.value('windows/modes/pos',
+                                                   QPoint(1100, 200)))
+        self.resize(self.mpfmon.local_settings.value('windows/modes/size',
                                                      QSize(300, 600)))
 
 
