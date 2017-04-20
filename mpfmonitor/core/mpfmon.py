@@ -172,6 +172,7 @@ class MainWindow(QTreeView):
 
     def process_mode_update(self, running_modes):
         self.mode_window.model.clear()
+        running_modes = sorted(running_modes)
         for mode in running_modes:
             mode_obj = QStandardItem(mode)
             self.mode_window.model.insertRow(0, [mode_obj])
