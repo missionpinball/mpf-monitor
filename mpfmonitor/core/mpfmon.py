@@ -171,11 +171,12 @@ class MainWindow(QTreeView):
                 self.bcp.send("reset_complete")
 
     def process_mode_update(self, running_modes):
+        """Update mode list."""
         self.mode_window.model.clear()
-        running_modes = sorted(running_modes)
         for mode in running_modes:
-            mode_obj = QStandardItem(mode)
-            self.mode_window.model.insertRow(0, [mode_obj])
+            mode_name = QStandardItem(mode[0])
+            mode_prio = QStandardItem(str(mode[1]))
+            self.mode_window.model.appendRow([mode_name, mode_prio])
 
     def process_device_update(self, name, state, changes, type):
         self.log.debug("Device Update: {}.{}: {}".format(type, name, state))
