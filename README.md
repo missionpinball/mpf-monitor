@@ -21,7 +21,7 @@ Installation & Instructions
 Full instructions for installing and using the MPF monitor are included
 in the MPF documentation here:
 
-http://docs.missionpinball.org/en/latest/monitor
+http://docs.missionpinball.org/en/latest/tools/monitor
 
 **Note:** MPF Monitor requires PyQt5. There is a Python package for
 Python 3.5 which will be installed automatically if you're using Python
