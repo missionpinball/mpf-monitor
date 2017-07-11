@@ -281,7 +281,7 @@ class DeviceDelegate(QStyledItemDelegate):
 
         try:
             if 'state' in index.model().itemFromIndex(index).data():
-                text = index.model().itemFromIndex(index).data()['state']
+                text = str(index.model().itemFromIndex(index).data()['state'])
                 found = True
         except TypeError:
             return
