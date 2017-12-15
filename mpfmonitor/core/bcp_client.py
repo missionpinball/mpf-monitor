@@ -86,10 +86,8 @@ class BCPClient(object):
 
     def receive_loop(self):
         """The socket thread's run loop."""
+        socket_chars = b''
         while self.connected and not self.mc.thread_stopper.is_set():
-
-            socket_chars = b''
-
             try:
                 ready = select.select([self.socket], [], [], 1)
                 if ready[0]:
