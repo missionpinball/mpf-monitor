@@ -19,10 +19,7 @@ class Command(object):
 
         # Need to have these in here because we don't want them to load when
         # the module is loaded as an mpf.command
-        import mpfmonitor
         from mpf.core.utility_functions import Util
-        from mpfmc.core.config_processor import ConfigProcessor
-        from mpfmc.core.utils import set_machine_path, load_machine_config
 
         del mpf_path
 
