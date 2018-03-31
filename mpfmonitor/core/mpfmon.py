@@ -14,6 +14,202 @@ import ruamel.yaml as yaml
 from mpfmonitor.core.bcp_client import BCPClient
 
 
+class DeviceNode(object):
+    def __init__(self, name, state, description, parent=None):
+
+        self.name = name
+        self.state = state
+        self.description = description
+
+        self.parent = parent
+        self.children = []
+        self._callback = None
+
+        self.setParent(parent)
+        self._data = {}
+
+    def setData(self, data):
+        if self._callback:
+            self._callback()
+        self._data = data
+
+    def data(self):
+        return self._data
+
+    def sortChildren(self):
+        self.children.sort(key=lambda x: x.name)
+
+    def set_change_callback(self, callback):
+        if self._callback:
+            raise AssertionError("Can only have one callback")
+        self._callback = callback
+
+    def setParent(self, parent):
+        if parent != None:
+            self.parent = parent
+            self.parent.appendChild(self)
+        else:
+            self.parent = None
+
+    def appendChild(self, child):
+        self.children.append(child)
+
+    def appendRow(self, child):
+        self.children.append(child)
+
+    def childAtRow(self, row):
+        #if row not in self.children:
+        #    return None
+        return self.children[row]
+
+    def rowOfChild(self, child):
+        for i, item in enumerate(self.children):
+            if item == child:
+                return i
+        return -1
+
+    def removeChild(self, row):
+        value = self.children[row]
+        self.children.remove(value)
+
+        return True
+
+    def __len__(self):
+        return len(self.children)
+
+
+class DeviceTreeModel(QAbstractItemModel):
+
+    """A device tree."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.treeView = parent
+        self.headers = ['Item', 'State', 'Description']
+
+        self.columns = 2
+
+        # Create items
+        self.root = DeviceNode('root', 'on', 'this is root', None)
+
+    def supportedDropActions(self):
+        return Qt.CopyAction | Qt.MoveAction
+
+    def flags(self, index):
+        defaultFlags = QAbstractItemModel.flags(self, index)
+
+        if index.isValid():
+            return Qt.ItemIsEditable | Qt.ItemIsDragEnabled | \
+                   Qt.ItemIsDropEnabled | defaultFlags
+
+        else:
+            return Qt.ItemIsDropEnabled | defaultFlags
+
+    def headerData(self, section, orientation, role):
+        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
+            return QVariant(self.headers[section])
+        return QVariant()
+
+    def insertRow(self, row, parent):
+        return self.insertRows(row, 1, parent)
+
+    def insertRows(self, row, count, parent):
+        self.beginInsertRows(parent, row, (row + (count - 1)))
+        self.endInsertRows()
+        return True
+
+    def removeRow(self, row, parentIndex):
+        return self.removeRows(row, 1, parentIndex)
+
+    def removeRows(self, row, count, parentIndex):
+        self.beginRemoveRows(parentIndex, row, row)
+        node = self.nodeFromIndex(parentIndex)
+        node.removeChild(row)
+        self.endRemoveRows()
+        return True
+
+    def index(self, row, column, parent):
+        node = self.nodeFromIndex(parent)
+        return self.createIndex(row, column, node.childAtRow(row))
+
+    def data(self, index, role):
+        if role == Qt.DecorationRole:
+            return QVariant()
+
+        if role == Qt.TextAlignmentRole:
+            return QVariant(int(Qt.AlignTop | Qt.AlignLeft))
+
+        if role != Qt.DisplayRole:
+            return QVariant()
+
+        node = self.nodeFromIndex(index)
+
+        if index.column() == 0:
+            return QVariant(node.name)
+
+        elif index.column() == 1:
+            return QVariant(node.state)
+
+        elif index.column() == 2:
+            return QVariant(node.description)
+        else:
+            return QVariant()
+
+    def columnCount(self, parent):
+        return self.columns
+
+    def rowCount(self, parent):
+        node = self.nodeFromIndex(parent)
+        if node is None:
+            return 0
+        return len(node)
+
+    def parent(self, child):
+        if not child.isValid():
+            return QModelIndex()
+
+        node = self.nodeFromIndex(child)
+
+        if node is None:
+            return QModelIndex()
+
+        parent = node.parent
+
+        if parent is None:
+            return QModelIndex()
+
+        grandparent = parent.parent
+        if grandparent is None:
+            return QModelIndex()
+        row = grandparent.rowOfChild(parent)
+
+        assert row != - 1
+        return self.createIndex(row, 0, parent)
+
+    def nodeFromIndex(self, index):
+        return index.internalPointer() if index.isValid() else self.root
+
+    def itemFromIndex(self, index):
+        return index.internalPointer() if index.isValid() else self.root
+
+    def refreshData(self):
+        """Updates the data on all nodes, but without having to perform a full reset.
+
+        A full reset on a tree makes us lose selection and expansion states. When all we ant to do
+        is to refresh the data on the nodes without adding or removing a node, a call on
+        dataChanged() is better. But of course, Qt makes our life complicated by asking us topLeft
+        and bottomRight indexes. This is a convenience method refreshing the whole tree.
+        """
+        columnCount = self.columnCount(self.root)
+        rowCount = len(self.root.children)
+        if not rowCount:
+            return
+        topLeft = self.index(0, 0, QModelIndex())
+        bottomRight = self.index(rowCount - 1, columnCount - 1, QModelIndex())
+        self.dataChanged.emit(topLeft, bottomRight, [])
+
+
 class MainWindow(QTreeView):
     def __init__(self, app, machine_path, thread_stopper, parent=None):
 
@@ -89,12 +285,11 @@ class MainWindow(QTreeView):
             self.toggle_pf_window()
 
         self.treeview = self
-        model = QStandardItemModel()
-        self.rootNode = model.invisibleRootItem()
-        self.treeview.setSortingEnabled(True)
+        self.model = DeviceTreeModel(self)
+        self.rootNode = self.model.root
         self.treeview.setDragDropMode(QAbstractItemView.DragOnly)
         self.treeview.setItemDelegate(DeviceDelegate())
-        self.treeview.setModel(model)
+        self.treeview.setModel(self.model)
 
         self.event_window = EventWindow(self)
 
@@ -158,10 +353,12 @@ class MainWindow(QTreeView):
         return super().eventFilter(source, event)
 
     def tick(self):
+        device_update = False
         while not self.receive_queue.empty():
             cmd, kwargs = self.receive_queue.get_nowait()
             if cmd == 'device':
                 self.process_device_update(**kwargs)
+                device_update = True
             elif cmd == 'monitored_event':
                 self.process_event_update(**kwargs)
             elif cmd in ('mode_start', 'mode_stop', 'mode_list'):
@@ -169,6 +366,8 @@ class MainWindow(QTreeView):
             elif cmd == 'reset':
                 self.reset_connection()
                 self.bcp.send("reset_complete")
+        if device_update:
+            self.model.refreshData()
 
     def process_mode_update(self, running_modes):
         """Update mode list."""
@@ -183,23 +382,21 @@ class MainWindow(QTreeView):
 
         if type not in self.device_states:
             self.device_states[type] = dict()
-            node = QStandardItem(type)
+            node = DeviceNode(type, "", "", self.rootNode)
             self.device_type_widgets[type] = node
-            self.rootNode.appendRow([node, None])
-            self.rootNode.sortChildren(0)
+            self.model.insertRow(0, QModelIndex())
+            self.rootNode.sortChildren()
 
         if name not in self.device_states[type]:
 
-            node = QStandardItem(name)
-            _state = QStandardItem()
-            self.device_states[type][name] = _state
+            node = DeviceNode(name, "", "", self.device_type_widgets[type])
+            self.device_states[type][name] = node
+            self.device_type_widgets[type].sortChildren()
 
-            self.device_type_widgets[type].appendRow([node, _state])
-            self.device_type_widgets[type].sortChildren(0)
-
-            self.pf.create_widget_from_config(_state, type, name)
+            self.pf.create_widget_from_config(node, type, name)
 
         self.device_states[type][name].setData(state)
+        self.model.setData(self.model.index(0, 0, QModelIndex()), None)
 
     def process_event_update(self, event_name, event_type, event_callback,
                              event_kwargs, registered_handlers):
@@ -264,6 +461,9 @@ class DeviceDelegate(QStyledItemDelegate):
         text = ''
 
         num_circles = 1
+
+        if index.column() == 0:
+            return
 
         try:
             if 'color' in index.model().itemFromIndex(index).data():
@@ -335,9 +535,6 @@ class DeviceDelegate(QStyledItemDelegate):
             return
 
         if not found:
-            return
-
-        if index.column() == 0:
             return
 
         text += " " + str(index.model().itemFromIndex(index).data())
@@ -433,7 +630,7 @@ class PfWidget(QGraphicsItem):
                  save=True):
         super().__init__()
 
-        widget.model().itemChanged.connect(self.notify, Qt.QueuedConnection)
+        widget.set_change_callback(self.notify)
 
         self.widget = widget
         self.mpfmon = mpfmon
@@ -478,9 +675,8 @@ class PfWidget(QGraphicsItem):
             painter.drawRect(self.device_size / -2, self.device_size / -2,
                              self.device_size, self.device_size)
 
-    def notify(self, source):
-        if source == self.widget:
-            self.update()
+    def notify(self):
+        self.update()
 
     def mouseMoveEvent(self, event):
         if (self.mpfmon.pf.boundingRect().width() > event.scenePos().x() >
