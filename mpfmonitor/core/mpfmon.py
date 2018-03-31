@@ -242,7 +242,7 @@ class MainWindow(QTreeView):
 
         self.setWindowTitle("Devices")
 
-        self.pf_device_size = .02
+        self.pf_device_size = self.config.get("device_size", .02)
 
         self.device_states = dict()
         self.device_type_widgets = dict()
