@@ -230,6 +230,8 @@ class MainWindow(QTreeView):
         self.layout = None
         self.config_file = os.path.join(self.machine_path, "monitor",
                                         "monitor.yaml")
+        self.playfield_image_file = os.path.join(self.machine_path,
+                                        "monitor", "playfield.jpg")
 
         self.local_settings = QSettings("Mission Pinball", "mpf-monitor")
 
@@ -272,7 +274,7 @@ class MainWindow(QTreeView):
 
         self.scene = QGraphicsScene()
 
-        self.pf = PfPixmapItem(QPixmap('monitor/playfield.jpg'), self)
+        self.pf = PfPixmapItem(QPixmap(self.playfield_image_file), self)
         self.scene.addItem(self.pf)
 
         self.view = PfView(self.scene, self)
