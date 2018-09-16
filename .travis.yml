@@ -8,7 +8,7 @@
 language: python
 
 python:
-  - "3.4"
+  - "3.6"
 
 install:
   - pip3 install --upgrade setuptools pip twine
@@ -17,6 +17,7 @@ script:
   - python3 setup.py install;
 
 deploy:
+  skip_existing: true
   provider: pypi
   user: jabdoa
   password:
