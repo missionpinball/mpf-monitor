@@ -51,7 +51,7 @@ else:
     raise RuntimeError("Unable to find MPF version string in %s." % (
         version_file,))
 
-install_requires = ['ruamel.yaml>=0.10,<0.11',
+install_requires = ['ruamel.yaml==0.15.37',
                     'mpf>={}'.format(mpf_version),
                     ]
 
