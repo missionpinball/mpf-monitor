@@ -422,7 +422,7 @@ class MainWindow(QTreeView):
     def load_config(self):
         try:
             with open(self.config_file, 'r') as f:
-                self.config = yaml.load(f)
+                self.config = yaml.safe_load(f)
         except FileNotFoundError:
                 self.config = dict()
 
