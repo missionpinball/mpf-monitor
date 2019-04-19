@@ -209,6 +209,10 @@ class DeviceTreeModel(QAbstractItemModel):
         bottomRight = self.index(rowCount - 1, columnCount - 1, QModelIndex())
         self.dataChanged.emit(topLeft, bottomRight, [])
 
+    def closeEvent(self, event):
+        self.mpfmon.write_local_settings()
+        event.accept()
+
 
 class MainWindow(QTreeView):
     def __init__(self, app, machine_path, thread_stopper, parent=None):
@@ -233,7 +237,7 @@ class MainWindow(QTreeView):
         self.playfield_image_file = os.path.join(self.machine_path,
                                         "monitor", "playfield.jpg")
 
-        self.local_settings = QSettings("Mission Pinball", "mpf-monitor")
+        self.local_settings = QSettings("mpf", "mpf-monitor")
 
         self.load_config()
 
@@ -443,6 +447,10 @@ class MainWindow(QTreeView):
         self.local_settings.setValue('windows/pf/pos', self.view.pos())
         self.local_settings.setValue('windows/pf/size', self.view.size())
         self.local_settings.setValue('windows/pf/visible', self.view.isVisible())
+
+        self.local_settings.setValue('windows/modes/pos', self.mode_window.pos())
+        self.local_settings.setValue('windows/modes/size', self.mode_window.size())
+        self.local_settings.setValue('windows/modes/visible', self.mode_window.isVisible())
 
         self.local_settings.setValue('windows/events/pos',
                                      self.event_window.pos())
@@ -745,6 +753,11 @@ class EventWindow(QTreeView):
         self.resize(self.mpfmon.local_settings.value('windows/events/size',
                                                      QSize(300, 600)))
 
+    def closeEvent(self, event):
+        self.mpfmon.write_local_settings()
+        event.accept()
+
+
 class ModeWindow(QTreeView):
 
     def __init__(self, mpfmon):
@@ -761,6 +774,10 @@ class ModeWindow(QTreeView):
                                                    QPoint(1100, 200)))
         self.resize(self.mpfmon.local_settings.value('windows/modes/size',
                                                      QSize(300, 600)))
+
+    def closeEvent(self, event):
+        self.mpfmon.write_local_settings()
+        event.accept()
 
 
 def run(machine_path, thread_stopper):
