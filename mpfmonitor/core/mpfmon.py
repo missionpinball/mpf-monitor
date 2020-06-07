@@ -87,6 +87,7 @@ class DeviceTreeModel(QAbstractItemModel):
 
         self.treeView = parent
         self.headers = ['Item', 'State', 'Description']
+        self.treeView.setAlternatingRowColors(True)
 
         self.columns = 2
 
@@ -359,6 +360,12 @@ class MainWindow(QTreeView):
         return super().eventFilter(source, event)
 
     def tick(self):
+        """
+        Called every 20 mSec
+        Check the queue to see if BCP has any messages to process.
+        If any devices have updated, refresh the model data.
+        """
+
         device_update = False
         while not self.receive_queue.empty():
             cmd, kwargs = self.receive_queue.get_nowait()
@@ -657,13 +664,36 @@ class PfWidget(QGraphicsItem):
         self.click_start = 0
         self.release_switch = False
 
+        self.log = logging.getLogger('Core')
+
+
     def boundingRect(self):
         return QRectF(self.device_size / -2, self.device_size / -2,
                       self.device_size, self.device_size)
 
+    def color_gamma(self, color):
+
+        """
+        Feel free to fiddle with these constants until it feels right
+        With gamma = 0.5 and constant a = 18, the top 54 values are lost,
+        but the bottom 25% feels much more normal.
+        """
+
+        gamma = 0.5
+        a = 18
+        corrected = []
+
+        for value in color:
+            value = int(pow(value, gamma) * a)
+            if value > 255:
+                value = 255
+            corrected.append(value)
+
+        return corrected
+
     def paint(self, painter, option, widget=None):
         if self.device_type == 'light':
-            color = self.widget.data()['color']
+            color = self.color_gamma(self.widget.data()['color'])
 
             painter.setRenderHint(QPainter.Antialiasing, True)
             painter.setPen(QPen(Qt.white, 3, Qt.SolidLine))
@@ -743,7 +773,13 @@ class EventWindow(QTreeView):
         super().__init__()
 
         self.setWindowTitle('Events')
-        self.model = QStandardItemModel()
+        self.model = QStandardItemModel(0, 2)
+
+        self.model.setHeaderData(0, Qt.Horizontal, "Event")
+        self.model.setHeaderData(1, Qt.Horizontal, "Data")
+
+        self.setAlternatingRowColors(True)
+
         self.setModel(self.model)
         self.rootNode = self.model.invisibleRootItem()
         self.setSortingEnabled(True)
@@ -752,6 +788,7 @@ class EventWindow(QTreeView):
                                                    QPoint(500, 200)))
         self.resize(self.mpfmon.local_settings.value('windows/events/size',
                                                      QSize(300, 600)))
+
 
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()
@@ -765,7 +802,13 @@ class ModeWindow(QTreeView):
         super().__init__()
 
         self.setWindowTitle('Running Modes')
-        self.model = QStandardItemModel()
+        self.model = QStandardItemModel(0, 2)
+
+        self.model.setHeaderData(0, Qt.Horizontal, "Mode")
+        self.model.setHeaderData(1, Qt.Horizontal, "Priority")
+
+        self.setAlternatingRowColors(True)
+
         self.setModel(self.model)
         self.rootNode = self.model.invisibleRootItem()
         self.setSortingEnabled(True)
