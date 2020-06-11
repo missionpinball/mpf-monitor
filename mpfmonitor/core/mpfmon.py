@@ -20,21 +20,6 @@ from mpfmonitor.core.events import EventWindow
 from mpfmonitor.core.modes import ModeWindow
 from mpfmonitor.core.inspector import InspectorWindow
 
-"""
-
-Maybe use these soon
-import mpfmonitor.core.devices
-import mpfmonitor.core.playfield
-import mpfmonitor.core.bcp_client
-import mpfmonitor.core.events
-import mpfmonitor.core.modes
-import mpfmonitor.core.inspector
-
-
-"""
-
-
-
 
 
 class MainWindow(QTreeView):

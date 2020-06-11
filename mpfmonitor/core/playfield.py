@@ -1,16 +1,10 @@
 import logging
-import queue
-import sys
-import os
 import time
 
 # will change these to specific imports once code is more final
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
-
-import ruamel.yaml as yaml
-
 
 
 class PfView(QGraphicsView):
