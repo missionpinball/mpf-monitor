@@ -95,11 +95,6 @@ class DeviceTreeModel(QAbstractItemModel):
 
         self.columns = 2
 
-
-        # self.treeView.header().setSectionResizeMode(QHeaderView.ResizeToContents)
-        # self.treeView.header().setStretchLastSection(False)
-
-
         # Create items
         self.root = DeviceNode('root', 'on', 'this is root', None)
 
@@ -231,7 +226,6 @@ class MainWindow(QTreeView):
         super().__init__(parent)
 
         self.log = logging.getLogger('Core')
-        self.log.setLevel(logging.DEBUG)
 
         sys.excepthook = self.except_hook
 
@@ -311,9 +305,6 @@ class MainWindow(QTreeView):
         self.rootNode = self.model.root
         self.treeview.setDragDropMode(QAbstractItemView.DragOnly)
         self.treeview.setItemDelegate(DeviceDelegate())
-        # Resize mode doesn't work well here
-        # self.treeview.header().setSectionResizeMode(QHeaderView.ResizeToContents)
-        # self.treeview.header().setStretchLastSection(False)
         self.treeview.setModel(self.model)
 
         self.event_window = EventWindow(self)
@@ -930,9 +921,6 @@ class PfWidget(QGraphicsItem):
 
 
 
-
-
-
 class EventWindow(QTreeView):
 
     def __init__(self, mpfmon):
@@ -945,9 +933,6 @@ class EventWindow(QTreeView):
         self.model.setHeaderData(0, Qt.Horizontal, "Event")
         self.model.setHeaderData(1, Qt.Horizontal, "Data")
 
-        # self.header().horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-
-        # self.header().setSectionResizeMode(logicalIndex=1, mode=QHeaderView.ResizeToContents)
         self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
         self.header().setStretchLastSection(False)
 
@@ -1019,7 +1004,6 @@ class InspectorWindow(QWidget):
         self.register_last_selected_cb()
 
     def populate(self):
-
         self.tabs = QTabWidget()
 
         self.layout = QVBoxLayout()
@@ -1031,9 +1015,7 @@ class InspectorWindow(QWidget):
         self.setLayout(self.layout)
 
 
-
     def build_device_inspector_tab(self, tabs):
-
         dev_inspect_tab = QWidget()
         dev_inspect_tab.layout = QVBoxLayout()
 
@@ -1051,8 +1033,6 @@ class InspectorWindow(QWidget):
         self.last_selected_label = QLabel("Last Selected:") # Text gets overwritten later
         dev_inspect_tab.layout.addWidget(self.last_selected_label)
 
-        # https://www.tutorialspoint.com/pyqt/pyqt_qslider_widget_signal.htm
-
         slider_spin_combo = QHBoxLayout()
 
         self.slider = QSlider(Qt.Horizontal)
@@ -1069,17 +1049,12 @@ class InspectorWindow(QWidget):
         self.spinbox.setRange(0.01, 0.6)
         self.spinbox.setSingleStep(0.01)
 
-
         slider_spin_combo.addWidget(self.spinbox)
-
-        # self.layout.addWidget(self.slider_spin_combo)
 
         self.slider.valueChanged.connect(self.slider_drag) # Doesn't save value, just for live preview
         self.slider.sliderReleased.connect(self.slider_changed) # Saves value on release
         self.spinbox.valueChanged.connect(self.spinbox_changed)
 
-
-        # self.spinbox.setValue(self.mpfmon.pf_device_size) # After value change connected, set to default value
 
         self.clear_last_selected_device()
 
@@ -1104,22 +1079,13 @@ class InspectorWindow(QWidget):
 
 
     def build_monitor_inspector_tab(self, tabs):
-
-        # https://www.learnpyqt.com/courses/adanced-ui-features/qscrollarea/
-        # https://www.programcreek.com/python/example/82631/PyQt5.QtWidgets.QScrollArea
-
         tab_scroll = QScrollArea()
         tab = QWidget()
         scroll_layout = QVBoxLayout(tab)
-        # self.scroll_layout.setSpacing(20.0)
 
         scroll_layout.setAlignment(Qt.AlignTop)
 
         tabs.addTab(tab_scroll, "Monitor Inspector")
-
-        # for i in range(0, 4):
-        #     label = QLabel("One of many!")
-        #     scroll_layout.addWidget(label)
 
         toggle_device_win_button = QCheckBox("Show device window", self)
         toggle_device_win_button.setChecked(self.mpfmon.toggle_device_window_action.isChecked())
@@ -1185,8 +1151,6 @@ class InspectorWindow(QWidget):
             self.spinbox.setValue(self.last_pf_widget.size)
 
 
-            # self.last_pf_widget.update()
-
     def slider_drag(self):
         # For live preview
         new_size = self.slider.value() / 100  # convert from int to float
@@ -1223,9 +1187,8 @@ class InspectorWindow(QWidget):
             self.last_pf_widget.set_size(new_size)
             self.last_pf_widget.update_pos(save=save)
             self.mpfmon.view.resizeEvent()
-        else:
-            # Change the default size. Currently cannot refresh all elements in tree.
 
+        else:   # Change the default size.
             self.mpfmon.pf_device_size = new_size
             self.mpfmon.config["device_size"] = new_size
 
