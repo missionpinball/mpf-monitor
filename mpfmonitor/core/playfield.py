@@ -1,4 +1,6 @@
 import logging
+
+# For drag and drop vs click separation
 import time
 
 # will change these to specific imports once code is more final

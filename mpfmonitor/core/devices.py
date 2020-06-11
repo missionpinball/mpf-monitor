@@ -5,9 +5,6 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-# import ruamel.yaml as yaml
-
-
 class DeviceNode(object):
     def __init__(self, name, state, description, parent=None):
 
