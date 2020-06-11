@@ -95,6 +95,11 @@ class DeviceTreeModel(QAbstractItemModel):
 
         self.columns = 2
 
+
+        # self.treeView.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        # self.treeView.header().setStretchLastSection(False)
+
+
         # Create items
         self.root = DeviceNode('root', 'on', 'this is root', None)
 
@@ -217,6 +222,7 @@ class DeviceTreeModel(QAbstractItemModel):
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()
         event.accept()
+        self.mpfmon.check_if_quit()
 
 
 class MainWindow(QTreeView):
@@ -282,6 +288,11 @@ class MainWindow(QTreeView):
                                         triggered=self.toggle_event_window)
         self.toggle_event_window_action.setCheckable(True)
 
+        self.toggle_mode_window_action = QAction('&Modes', self,
+                                        statusTip='Show the mode window',
+                                        triggered=self.toggle_mode_window)
+        self.toggle_mode_window_action.setCheckable(True)
+
         self.scene = QGraphicsScene()
 
         self.pf = PfPixmapItem(QPixmap(self.playfield_image_file), self)
@@ -293,23 +304,38 @@ class MainWindow(QTreeView):
                                                  QPoint(800, 200)))
         self.view.resize(self.local_settings.value('windows/pf/size',
                                                    QSize(300, 600)))
-        if 1 or self.local_settings.value('windows/pf/visible', True):
-            self.toggle_pf_window()
+
 
         self.treeview = self
         self.model = DeviceTreeModel(self)
         self.rootNode = self.model.root
         self.treeview.setDragDropMode(QAbstractItemView.DragOnly)
         self.treeview.setItemDelegate(DeviceDelegate())
+        # Resize mode doesn't work well here
+        # self.treeview.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        # self.treeview.header().setStretchLastSection(False)
         self.treeview.setModel(self.model)
 
         self.event_window = EventWindow(self)
 
+        self.mode_window = ModeWindow(self)
+
+        if 1 or self.local_settings.value('windows/pf/visible', True):
+            self.toggle_pf_window()
+
         if 1 or self.local_settings.value('windows/events/visible', True):
             self.toggle_event_window()
 
-        self.mode_window = ModeWindow(self)
-        self.mode_window.show()
+        if 1 or self.local_settings.value('windows/devices/visible', True):
+            self.toggle_device_window()
+
+        if 1 or self.local_settings.value('windows/modes/visible', True):
+            self.toggle_mode_window()
+
+        self.quit_on_close = False
+
+        if str(self.local_settings.value('settings/quit-on-close', False)) == "true": # QSettings outputs string
+            self.toggle_quit_on_close()
 
         self.inspector_enabled = False
 
@@ -326,8 +352,7 @@ class MainWindow(QTreeView):
         self.view_menu.addAction(self.toggle_device_window_action)
         self.view_menu.addAction(self.toggle_event_window_action)
 
-        if 1 or self.local_settings.value('windows/devices/visible', True):
-            self.toggle_device_window()
+
 
     def toggle_pf_window(self):
         if self.view.isVisible():
@@ -352,6 +377,20 @@ class MainWindow(QTreeView):
         else:
             self.event_window.show()
             self.toggle_event_window_action.setChecked(True)
+
+    def toggle_mode_window(self):
+        if self.mode_window.isVisible():
+            self.mode_window.hide()
+            self.toggle_mode_window_action.setChecked(False)
+        else:
+            self.mode_window.show()
+            self.toggle_mode_window_action.setChecked(True)
+
+    def toggle_quit_on_close(self):
+        if self.quit_on_close:
+            self.quit_on_close = False
+        else:
+            self.quit_on_close = True
 
     def except_hook(self, cls, exception, traceback):
         sys.__excepthook__(cls, exception, traceback)
@@ -464,6 +503,13 @@ class MainWindow(QTreeView):
     def closeEvent(self, event):
         self.write_local_settings()
         event.accept()
+        self.check_if_quit()
+
+    def check_if_quit(self):
+        if self.quit_on_close:
+            self.log.info("Quitting due to quit on close")
+            QCoreApplication.exit(0)
+
 
     def write_local_settings(self):
         self.local_settings.setValue('windows/devices/pos', self.pos())
@@ -489,9 +535,13 @@ class MainWindow(QTreeView):
         self.local_settings.setValue('windows/event/visible',
                                      self.event_window.isVisible())
 
+        self.local_settings.setValue('settings/quit-on-close', self.quit_on_close)
+
+        self.local_settings.sync()
+
     def set_inspector_mode(self, enabled=False):
         self.inspector_enabled = enabled
-        self.view.set_inspector_mode_title(enabled)
+        self.view.set_inspector_mode_title(inspect=enabled)
 
 
 
@@ -623,13 +673,14 @@ class PfView(QGraphicsView):
         super().__init__(parent)
 
         self.setWindowTitle("Playfield")
+        self.set_inspector_mode_title(inspect=False)
 
     def resizeEvent(self, event=None):
         self.fitInView(self.mpfmon.pf, Qt.KeepAspectRatio)
 
-    def set_inspector_mode_title(self, debug=False):
-        if debug:
-            self.setWindowTitle('pf-debug')
+    def set_inspector_mode_title(self, inspect=False):
+        if inspect:
+            self.setWindowTitle('Inspector Enabled - Playfield')
         else:
             self.setWindowTitle("Playfield")
 
@@ -689,15 +740,6 @@ class PfWidget(QGraphicsItem):
     def __init__(self, mpfmon, widget, device_type, device_name, x, y, size=None, save=True):
         super().__init__()
 
-
-        old_widget_exists = widget.set_change_callback(self.notify)
-
-        if old_widget_exists:
-            print("Previous widget exists.")
-            widget = old_widget_exists.super()
-            widget.destroy()
-
-
         self.widget = widget
         self.mpfmon = mpfmon
         self.name = device_name
@@ -714,6 +756,12 @@ class PfWidget(QGraphicsItem):
 
         self.log = logging.getLogger('Core')
 
+        old_widget_exists = widget.set_change_callback(self.notify)
+
+        if old_widget_exists:
+            self.log.debug("Previous widget exists.")
+            old_widget_exists(destroy=True)
+
 
     def boundingRect(self):
         return QRectF(self.device_size / -2, self.device_size / -2,
@@ -727,6 +775,22 @@ class PfWidget(QGraphicsItem):
         else:
             self.size = size
             self.device_size = self.mpfmon.scene.width() * size
+
+    def resize_to_default(self, force=False):
+        device_config = self.mpfmon.config[self.device_type].get(self.name, None)
+
+        if force:
+            device_config.pop('size', None) # Delete saved size info, None is incase key doesn't exist (popped twice)
+
+        device_size = device_config.get('size', None)
+
+        if device_size is not None:
+            # Do not change the size if it's already set
+            pass
+        elif device_config is not None:
+            self.set_size()
+
+        self.update_pos(save=False)  # Do not save at this point. Let it be saved elsewhere. This reduces writes.
 
     def color_gamma(self, color):
 
@@ -772,11 +836,17 @@ class PfWidget(QGraphicsItem):
             painter.drawRect(self.device_size / -2, self.device_size / -2,
                              self.device_size, self.device_size)
 
-    def notify(self):
+    def notify(self, destroy=False, resize=False):
         self.update()
 
+        if destroy:
+            self.destroy()
+
+
     def destroy(self):
-        # self.removeItem()
+        self.log.debug("Destroy device: " + self.name)
+        self.mpfmon.scene.removeItem(self)
+        self.delete_from_config()
 
     def mouseMoveEvent(self, event):
         if (self.mpfmon.pf.boundingRect().width() > event.scenePos().x() >
@@ -798,24 +868,24 @@ class PfWidget(QGraphicsItem):
                     self.release_switch = False
                 else:
                     self.send_to_inspector_window()
-                    self.log.info('Switch ' + self.name + ' right clicked')
+                    self.log.debug('Switch ' + self.name + ' right clicked')
             elif event.buttons() & Qt.LeftButton:
                 if not self.get_val_inspector_enabled():
                     self.mpfmon.bcp.send('switch', name=self.name, state=-1)
                     self.release_switch = True
                 else:
                     self.send_to_inspector_window()
-                    self.log.info('Switch ' + self.name + ' clicked')
+                    self.log.debug('Switch ' + self.name + ' clicked')
 
         else:
             if event.buttons() & Qt.RightButton:
                 if self.get_val_inspector_enabled():
                     self.send_to_inspector_window()
-                    self.log.info(str(self.device_type) + ' ' + self.name + ' right clicked')
+                    self.log.debug(str(self.device_type) + ' ' + self.name + ' right clicked')
             elif event.buttons() & Qt.LeftButton:
                 if self.get_val_inspector_enabled():
                     self.send_to_inspector_window()
-                    self.log.info(str(self.device_type) + ' ' + self.name + ' clicked')
+                    self.log.debug(str(self.device_type) + ' ' + self.name + ' clicked')
 
 
     def mouseReleaseEvent(self, event):
@@ -847,6 +917,10 @@ class PfWidget(QGraphicsItem):
 
         if save:
             self.mpfmon.save_config()
+
+    def delete_from_config(self):
+        self.mpfmon.config[self.device_type].pop(self.name)
+        self.mpfmon.save_config()
 
     def get_val_inspector_enabled(self):
         return self.mpfmon.inspector_enabled
@@ -892,6 +966,7 @@ class EventWindow(QTreeView):
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()
         event.accept()
+        self.mpfmon.check_if_quit()
 
 
 class ModeWindow(QTreeView):
@@ -920,6 +995,7 @@ class ModeWindow(QTreeView):
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()
         event.accept()
+        self.mpfmon.check_if_quit()
 
 class InspectorWindow(QWidget):
 
@@ -944,29 +1020,40 @@ class InspectorWindow(QWidget):
 
     def populate(self):
 
+        self.tabs = QTabWidget()
+
         self.layout = QVBoxLayout()
 
-        self.toggle_inspector_button = QPushButton('Toggle Device Inspector', self)
-        self.toggle_inspector_button.clicked.connect(self.toggle_inspector_mode)
-        self.toggle_inspector_button.setCheckable(True)
-        # self.toggle_debug_button.show()
-        self.layout.addWidget(self.toggle_inspector_button)
+        self.layout.addWidget(self.tabs)
+        self.dev_inspect_tab = self.build_device_inspector_tab(self.tabs)
+        self.monitor_inspect_tab = self.build_monitor_inspector_tab(self.tabs)
+
+        self.setLayout(self.layout)
 
 
-        self.toggle_event_win_button = QPushButton("Toggle event window", self)
-        self.toggle_event_win_button.clicked.connect(self.mpfmon.toggle_event_window)
-        self.layout.addWidget(self.toggle_event_win_button)
 
-        self.refresh_pf_button = QPushButton("Refresh Playfield Drawing", self)
-        self.refresh_pf_button.clicked.connect(self.mpfmon.view.resizeEvent)
-        self.layout.addWidget(self.refresh_pf_button)
+    def build_device_inspector_tab(self, tabs):
 
-        self.last_selected_label = QLabel("last_selected: ")
-        self.layout.addWidget(self.last_selected_label)
+        dev_inspect_tab = QWidget()
+        dev_inspect_tab.layout = QVBoxLayout()
+
+        tabs.addTab(dev_inspect_tab, "Device Inspector")
+
+        toggle_inspector_button = QPushButton('Toggle Device Inspector', self)
+        toggle_inspector_button.clicked.connect(self.toggle_inspector_mode)
+        toggle_inspector_button.setCheckable(True) # Makes the button "toggle-able"
+        dev_inspect_tab.layout.addWidget(toggle_inspector_button)
+
+        refresh_pf_button = QPushButton("Refresh Playfield Drawing", self)
+        refresh_pf_button.clicked.connect(self.mpfmon.view.resizeEvent)
+        dev_inspect_tab.layout.addWidget(refresh_pf_button)
+
+        self.last_selected_label = QLabel("Last Selected:") # Text gets overwritten later
+        dev_inspect_tab.layout.addWidget(self.last_selected_label)
 
         # https://www.tutorialspoint.com/pyqt/pyqt_qslider_widget_signal.htm
 
-        self.slider_spin_combo = QHBoxLayout()
+        slider_spin_combo = QHBoxLayout()
 
         self.slider = QSlider(Qt.Horizontal)
 
@@ -976,13 +1063,14 @@ class InspectorWindow(QWidget):
         self.slider.setTickPosition(QSlider.TicksBelow)
         self.slider.setTickInterval(5)
 
-        self.slider_spin_combo.addWidget(self.slider)
+        slider_spin_combo.addWidget(self.slider)
 
         self.spinbox = QDoubleSpinBox()
         self.spinbox.setRange(0.01, 0.6)
         self.spinbox.setSingleStep(0.01)
 
-        self.slider_spin_combo.addWidget(self.spinbox)
+
+        slider_spin_combo.addWidget(self.spinbox)
 
         # self.layout.addWidget(self.slider_spin_combo)
 
@@ -991,20 +1079,98 @@ class InspectorWindow(QWidget):
         self.spinbox.valueChanged.connect(self.spinbox_changed)
 
 
-        self.layout.setAlignment(Qt.AlignTop)
+        # self.spinbox.setValue(self.mpfmon.pf_device_size) # After value change connected, set to default value
 
-        self.setLayout(self.layout)
-        self.layout.addLayout(self.slider_spin_combo)
+        self.clear_last_selected_device()
+
+        dev_inspect_tab.layout.setAlignment(Qt.AlignTop)
+
+        dev_inspect_tab.layout.addLayout(slider_spin_combo)
 
 
 
+        delete_last_device_button = QPushButton("Delete device", self)
+        delete_last_device_button.clicked.connect(self.delete_last_device)
+        dev_inspect_tab.layout.addWidget(delete_last_device_button)
+
+        delete_last_device_button = QPushButton("Reset device size", self)
+        delete_last_device_button.clicked.connect(self.force_resize_last_device)
+        dev_inspect_tab.layout.addWidget(delete_last_device_button)
+
+
+        dev_inspect_tab.setLayout(dev_inspect_tab.layout)
+
+        return dev_inspect_tab
+
+
+    def build_monitor_inspector_tab(self, tabs):
+
+        # https://www.learnpyqt.com/courses/adanced-ui-features/qscrollarea/
+        # https://www.programcreek.com/python/example/82631/PyQt5.QtWidgets.QScrollArea
+
+        tab_scroll = QScrollArea()
+        tab = QWidget()
+        scroll_layout = QVBoxLayout(tab)
+        # self.scroll_layout.setSpacing(20.0)
+
+        scroll_layout.setAlignment(Qt.AlignTop)
+
+        tabs.addTab(tab_scroll, "Monitor Inspector")
+
+        # for i in range(0, 4):
+        #     label = QLabel("One of many!")
+        #     scroll_layout.addWidget(label)
+
+        toggle_device_win_button = QCheckBox("Show device window", self)
+        toggle_device_win_button.setChecked(self.mpfmon.toggle_device_window_action.isChecked())
+        toggle_device_win_button.stateChanged.connect(self.mpfmon.toggle_device_window)
+        scroll_layout.addWidget(toggle_device_win_button)
+
+        toggle_event_win_button = QCheckBox("Show event window", self)
+        toggle_event_win_button.setChecked(self.mpfmon.toggle_event_window_action.isChecked())
+        toggle_event_win_button.stateChanged.connect(self.mpfmon.toggle_event_window)
+        scroll_layout.addWidget(toggle_event_win_button)
+
+        toggle_pf_win_button = QCheckBox("Show playfield window", self)
+        toggle_pf_win_button.setChecked(self.mpfmon.toggle_pf_window_action.isChecked())
+        toggle_pf_win_button.stateChanged.connect(self.mpfmon.toggle_pf_window)
+        scroll_layout.addWidget(toggle_pf_win_button)
+
+        toggle_mode_win_button = QCheckBox("Show mode window", self)
+        toggle_mode_win_button.setChecked(self.mpfmon.toggle_mode_window_action.isChecked())
+        toggle_mode_win_button.stateChanged.connect(self.mpfmon.toggle_mode_window)
+        scroll_layout.addWidget(toggle_mode_win_button)
+
+
+        line = QFrame()
+        line.setFixedHeight(3)
+        line.setFrameShadow(QFrame.Sunken)
+        line.setFrameShape(QFrame.HLine)
+        line.setLineWidth(1)
+        scroll_layout.addWidget(line)
+
+        quit_on_close_button = QCheckBox("Quit on single window close", self)
+        quit_on_close_button.setChecked(
+            "true" == str(self.mpfmon.local_settings.value('settings/quit-on-close', False))
+        )
+
+        quit_on_close_button.stateChanged.connect(self.mpfmon.toggle_quit_on_close)
+        scroll_layout.addWidget(quit_on_close_button)
+
+        tab_scroll.setWidget(tab)
+
+        return tab
 
 
     def toggle_inspector_mode(self):
         inspector_enabled = not self.mpfmon.inspector_enabled
         if self.registered_inspector_cb:
-            self.log.info('Debug mode toggled with cb registered. Value: ' + str(inspector_enabled))
             self.set_inspector_val_cb(inspector_enabled)
+            if inspector_enabled:
+                self.log.debug('Inspector mode toggled ON')
+            else:
+                self.log.debug('Inspector mode toggled OFF')
+                self.clear_last_selected_device()
 
     def register_set_inspector_val_cb(self, cb):
         self.registered_inspector_cb = True
@@ -1042,13 +1208,62 @@ class InspectorWindow(QWidget):
         self.resize_last_device(new_size=new_size)
 
 
+
+    def clear_last_selected_device(self):
+        # Must be called AFTER spinbox valueChanged is set. Otherwise slider will not follow
+
+        self.last_selected_label.setText("Default Device Size:")
+        self.last_pf_widget = None
+        self.spinbox.setValue(self.mpfmon.pf_device_size) # Reset the value to the stored default.
+
+
     def resize_last_device(self, new_size=None, save=True):
         new_size = round(new_size, 3)
         if self.last_pf_widget is not None:
             self.last_pf_widget.set_size(new_size)
             self.last_pf_widget.update_pos(save=save)
             self.mpfmon.view.resizeEvent()
+        else:
+            # Change the default size. Currently cannot refresh all elements in tree.
 
+            self.mpfmon.pf_device_size = new_size
+            self.mpfmon.config["device_size"] = new_size
+
+            if save:
+                self.resize_all_devices() # Apply new sizes to all devices without default sizes
+                self.mpfmon.view.resizeEvent() # Re draw the playfiled
+                self.mpfmon.save_config() # Save the config with new default to disk
+
+
+    def delete_last_device(self):
+        if self.last_pf_widget is not None:
+            self.last_pf_widget.destroy()
+            self.clear_last_selected_device()
+        else:
+            self.log.info("No device selected to delete")
+
+    def force_resize_last_device(self):
+        if self.last_pf_widget is not None:
+
+            # Redraw the device without saving
+            default_size = self.mpfmon.pf_device_size
+            self.resize_last_device(new_size=default_size, save=False)
+
+            # Update the device info and clear saved size data
+            self.last_pf_widget.resize_to_default(force=True)
+
+
+            # Redraw the device
+        else:
+            self.log.info("No device selected to resize")
+
+    def resize_all_devices(self):
+        for i in self.mpfmon.scene.items():
+            try:
+                i.resize_to_default()
+            except AttributeError as e:
+                # Can't resize object. That's ok.
+                pass
 
     def register_last_selected_cb(self):
         self.mpfmon.inspector_window_last_selected_cb = self.update_last_selected
@@ -1057,6 +1272,7 @@ class InspectorWindow(QWidget):
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()
         event.accept()
+        self.mpfmon.check_if_quit()
 
 
 
