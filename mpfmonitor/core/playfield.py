@@ -27,6 +27,11 @@ class PfView(QGraphicsView):
         else:
             self.setWindowTitle("Playfield")
 
+    def closeEvent(self, event):
+        self.mpfmon.write_local_settings()
+        event.accept()
+        self.mpfmon.check_if_quit()
+
 
 class PfPixmapItem(QGraphicsPixmapItem):
 

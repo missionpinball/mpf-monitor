@@ -107,7 +107,11 @@ class MainWindow(QTreeView):
         self.rootNode = self.model.root
         self.treeview.setDragDropMode(QAbstractItemView.DragOnly)
         self.treeview.setItemDelegate(DeviceDelegate())
+        self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.header().setStretchLastSection(False)
         self.treeview.setModel(self.model)
+
+        self.sort_by_time = True
 
         self.event_window = EventWindow(self)
 
@@ -185,6 +189,12 @@ class MainWindow(QTreeView):
         else:
             self.quit_on_close = True
 
+    def toggle_sort_by_time(self):
+        if self.sort_by_time:
+            self.sort_by_time = False
+        else:
+            self.sort_by_time = True
+
     def except_hook(self, cls, exception, traceback):
         sys.__excepthook__(cls, exception, traceback)
         self.app.exit()
@@ -249,13 +259,13 @@ class MainWindow(QTreeView):
             node = DeviceNode(type, "", "", self.rootNode)
             self.device_type_widgets[type] = node
             self.model.insertRow(0, QModelIndex())
-            self.rootNode.sortChildren()
+            self.rootNode.sortChildren(time=self.sort_by_time)
 
         if name not in self.device_states[type]:
 
             node = DeviceNode(name, "", "", self.device_type_widgets[type])
             self.device_states[type][name] = node
-            self.device_type_widgets[type].sortChildren()
+            self.device_type_widgets[type].sortChildren(time=self.sort_by_time)
 
             self.pf.create_widget_from_config(node, type, name)
 

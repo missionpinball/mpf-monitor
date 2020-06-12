@@ -49,9 +49,10 @@ class InspectorWindow(QWidget):
         toggle_inspector_button.setCheckable(True) # Makes the button "toggle-able"
         dev_inspect_tab.layout.addWidget(toggle_inspector_button)
 
-        refresh_pf_button = QPushButton("Refresh Playfield Drawing", self)
-        refresh_pf_button.clicked.connect(self.mpfmon.view.resizeEvent)
-        dev_inspect_tab.layout.addWidget(refresh_pf_button)
+        toggle_time_sorting_button = QCheckBox("Sort devices by config order", self)
+        toggle_time_sorting_button.setChecked(self.mpfmon.sort_by_time)
+        toggle_time_sorting_button.stateChanged.connect(self.mpfmon.toggle_sort_by_time)
+        dev_inspect_tab.layout.addWidget(toggle_time_sorting_button)
 
         self.last_selected_label = QLabel("Last Selected:") # Text gets overwritten later
         dev_inspect_tab.layout.addWidget(self.last_selected_label)

@@ -1,4 +1,5 @@
 import logging
+import time
 
 # will change these to specific imports once code is more final
 from PyQt5.QtCore import *
@@ -11,6 +12,7 @@ class DeviceNode(object):
         self.name = name
         self.state = state
         self.description = description
+        self.time_added = time.clock()
 
         self.parent = parent
         self.children = []
@@ -27,8 +29,11 @@ class DeviceNode(object):
     def data(self):
         return self._data
 
-    def sortChildren(self):
-        self.children.sort(key=lambda x: x.name)
+    def sortChildren(self, time=False):
+        if not time:
+            self.children.sort(key=lambda x: x.name)
+        else:
+            self.children.sort(key=lambda x: x.time_added)
 
     def set_change_callback(self, callback):
         if self._callback:
@@ -83,6 +88,11 @@ class DeviceTreeModel(QAbstractItemModel):
         self.treeView = parent
         self.headers = ['Item', 'State', 'Description']
         self.treeView.setAlternatingRowColors(True)
+
+        # try:
+        #     self.root.header().resizeSection(0, 200)
+        # except Exception as e:
+        #     print(e)
 
         self.columns = 2
 
