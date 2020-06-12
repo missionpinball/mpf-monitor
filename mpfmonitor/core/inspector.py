@@ -81,6 +81,11 @@ class InspectorWindow(QWidget):
 
         self.clear_last_selected_device()
 
+        default_size_button = QPushButton("Default", self)
+        default_size_button.clicked.connect(self.force_resize_last_device)
+        slider_spin_combo.addWidget(default_size_button)
+
+
         dev_inspect_tab.layout.setAlignment(Qt.AlignTop)
 
         dev_inspect_tab.layout.addLayout(slider_spin_combo)
@@ -91,9 +96,6 @@ class InspectorWindow(QWidget):
         delete_last_device_button.clicked.connect(self.delete_last_device)
         dev_inspect_tab.layout.addWidget(delete_last_device_button)
 
-        delete_last_device_button = QPushButton("Reset device size", self)
-        delete_last_device_button.clicked.connect(self.force_resize_last_device)
-        dev_inspect_tab.layout.addWidget(delete_last_device_button)
 
 
         dev_inspect_tab.setLayout(dev_inspect_tab.layout)
@@ -241,6 +243,7 @@ class InspectorWindow(QWidget):
 
             # Redraw the device
         else:
+            self.spinbox.setValue(0.07)
             self.log.info("No device selected to resize")
 
     def resize_all_devices(self):
