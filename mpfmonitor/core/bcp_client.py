@@ -4,8 +4,12 @@ import logging
 import queue
 import socket
 import threading
+import os
 
 import select
+
+from datetime import datetime
+import math
 
 import mpf.core.bcp.bcp_socket_client as bcp
 from PyQt5.QtCore import QTimer
@@ -13,10 +17,10 @@ from PyQt5.QtCore import QTimer
 
 class BCPClient(object):
 
-    def __init__(self, mc, receiving_queue, sending_queue,
-                 interface='localhost', port=5051):
+    def __init__(self, mpfmon, receiving_queue, sending_queue,
+                 interface='localhost', port=5051, simulate=False, cache=False):
 
-        self.mc = mc
+        self.mpfmon = mpfmon
         self.log = logging.getLogger('BCP Client')
         self.interface = interface
         self.port = port
@@ -27,13 +31,54 @@ class BCPClient(object):
         self.sending_thread = None
         self.receive_thread = None
         self.done = False
+        self.last_time = datetime.now()
 
-        self.mc.log.info('Looking for MPF at %s:%s', self.interface, self.port)
+        self.simulate = simulate
+        self.caching_enabled = cache
+        self.cache_file_location = os.path.join(self.mpfmon.machine_path, "monitor", "cache.txt")
 
-        self.reconnect_timer = QTimer(self.mc)
-        self.reconnect_timer.setInterval(1000)
-        self.reconnect_timer.timeout.connect(self.connect_to_mpf)
-        self.reconnect_timer.start()
+        self.mpfmon.log.info('Looking for MPF at %s:%s', self.interface, self.port)
+
+        self.reconnect_timer = QTimer(self.mpfmon)
+        self.simulator_timer = QTimer(self.mpfmon)
+
+
+        self.simulator_messages = []
+        self.simulator_msg_timer = []
+        self.enable_simulator(enable=self.simulate)
+
+
+
+
+
+    def register_timer(self):
+        if self.simulate:
+            self.reconnect_timer.stop()
+
+            self.simulator_init()
+
+            self.simulator_timer.setInterval(100)
+            self.simulator_timer.timeout.connect(self.simulate_received)
+            self.simulator_timer.start()
+        else:
+            self.simulator_timer.stop()
+
+            self.reconnect_timer.setInterval(1000)
+            self.reconnect_timer.timeout.connect(self.connect_to_mpf)
+            self.reconnect_timer.start()
+
+    def enable_simulator(self, enable=True):
+        if enable:
+            self.simulate = True
+            if self.caching_enabled:
+                self.cache_file = open(self.cache_file_location, "r")
+        else:
+            self.simulate = False
+            if self.caching_enabled:
+                self.cache_file = open(self.cache_file_location, "w")
+
+        self.start_time = datetime.now()
+        self.register_timer()
 
     def connect_to_mpf(self, *args):
         del args
@@ -87,7 +132,7 @@ class BCPClient(object):
     def receive_loop(self):
         """The socket thread's run loop."""
         socket_chars = b''
-        while self.connected and not self.mc.thread_stopper.is_set():
+        while self.connected and not self.mpfmon.thread_stopper.is_set():
             try:
                 ready = select.select([self.socket], [], [], 1)
                 if ready[0]:
@@ -128,6 +173,9 @@ class BCPClient(object):
         except (OSError, AttributeError):
             pass
 
+        if self.caching_enabled:
+            self.cache_file.close()
+
         self.socket = None
         self.connected = False
 
@@ -138,11 +186,11 @@ class BCPClient(object):
             self.sending_queue.queue.clear()
 
     def sending_loop(self):
-        while self.connected and not self.mc.thread_stopper.is_set():
+        while self.connected and not self.mpfmon.thread_stopper.is_set():
             try:
                 msg = self.sending_queue.get(block=True, timeout=1)
             except queue.Empty:
-                if self.mc.thread_stopper.is_set():
+                if self.mpfmon.thread_stopper.is_set():
                     return
 
                 else:
@@ -160,6 +208,11 @@ class BCPClient(object):
 
         """
         self.log.debug('Received "%s"', message)
+        if self.caching_enabled and not self.simulate:
+            time = datetime.now() - self.last_time
+            message_tmr = math.floor(time.microseconds / 1000)
+            self.last_time = datetime.now()
+            self.cache_file.write(str(message_tmr) + "," + message + "\n")
 
         try:
             cmd, kwargs = bcp.decode_command_string(message)
@@ -171,3 +224,33 @@ class BCPClient(object):
     def send(self, bcp_command, **kwargs):
             self.sending_queue.put(bcp.encode_command_string(bcp_command,
                                                              **kwargs))
+
+    def simulator_init(self):
+        if self.caching_enabled:
+            self.simulator_msg_timer.append(int(0))
+            for message in self.cache_file:
+                message_tmr = int(message.split(',', 1)[0])
+                message_str = message.split(',', 1)[1]
+
+                self.simulator_msg_timer.append(message_tmr)
+                self.simulator_messages.append(message_str)
+        else:
+            messages = [
+                'device?json={"type": "switch", "name": "s_start", "changes": false, "state": {"state": 0, "recycle_jitter_count": 0}}',
+                'device?json={"type": "switch", "name": "s_trough_1", "changes": false, "state": {"state": 1, "recycle_jitter_count": 0}}',
+                'device?json={"type": "light", "name": "l_shoot_again", "changes": ["color", [255, 255, 255], [0, 0, 0]], "state": {"color": [0, 0, 0]}}',
+                'device?json={"type": "light", "name": "l_ball_save", "changes": ["color", [0, 0, 0], [255, 255, 255]], "state": {"color": [255, 255, 255]}}',
+            ]
+            self.simulator_messages = messages
+            self.simulator_msg_timer = [100, 100, 100, 100]
+
+    def simulate_received(self):
+        if len(self.simulator_messages) > 0:
+            next_message = self.simulator_messages.pop(0)
+            timer = self.simulator_msg_timer.pop(0)
+            self.simulator_timer.setInterval(timer)
+            self.process_received_message(next_message)
+        else:
+            self.simulator_timer.stop()
+            self.log.info("End of cached file reached.")
+
