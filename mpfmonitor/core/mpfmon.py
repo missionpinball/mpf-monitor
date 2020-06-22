@@ -101,7 +101,6 @@ class MainWindow(QTreeView):
         self.view.resize(self.local_settings.value('windows/pf/size',
                                                    QSize(300, 600)))
 
-
         self.treeview = self
         self.model = DeviceTreeModel(self)
         self.rootNode = self.model.root
@@ -117,22 +116,22 @@ class MainWindow(QTreeView):
 
         self.mode_window = ModeWindow(self)
 
-        if 1 or self.local_settings.value('windows/pf/visible', True):
+        if self.get_local_settings_bool('windows/pf/visible'):
             self.toggle_pf_window()
 
-        if 1 or self.local_settings.value('windows/events/visible', True):
+        if self.get_local_settings_bool('windows/events/visible'):
             self.toggle_event_window()
 
-        if 1 or self.local_settings.value('windows/devices/visible', True):
+        if self.get_local_settings_bool('windows/devices/visible'):
             self.toggle_device_window()
 
-        if 1 or self.local_settings.value('windows/modes/visible', True):
+        if self.get_local_settings_bool('windows/modes/visible'):
             self.toggle_mode_window()
 
-        self.quit_on_close = False
+        self.exit_on_close = False
 
-        if str(self.local_settings.value('settings/quit-on-close', False)) == "true": # QSettings outputs string
-            self.toggle_quit_on_close()
+        if self.get_local_settings_bool('settings/exit-on-close'):
+            self.toggle_exit_on_close()
 
         self.inspector_enabled = False
 
@@ -183,11 +182,11 @@ class MainWindow(QTreeView):
             self.mode_window.show()
             self.toggle_mode_window_action.setChecked(True)
 
-    def toggle_quit_on_close(self):
-        if self.quit_on_close:
-            self.quit_on_close = False
+    def toggle_exit_on_close(self):
+        if self.exit_on_close:
+            self.exit_on_close = False
         else:
-            self.quit_on_close = True
+            self.exit_on_close = True
 
     def toggle_sort_by_time(self):
         if self.sort_by_time:
@@ -309,36 +308,37 @@ class MainWindow(QTreeView):
         self.check_if_quit()
 
     def check_if_quit(self):
-        if self.quit_on_close:
+        if self.exit_on_close:
             self.log.info("Quitting due to quit on close")
             QCoreApplication.exit(0)
 
+    def write_window_settings(self, window_name, window):
+        settings = {
+            'pos': window.pos(),
+            'size': window.size(),
+            'visible': window.isVisible()
+        }
+        for line in settings.keys():
+            setting_name = 'windows/' + window_name + '/' + line
+            self.local_settings.setValue(setting_name, settings.get(line))
+
+    def get_local_settings_bool(self, setting):
+        return "true" == str(self.local_settings.value(setting, False)).lower()
 
     def write_local_settings(self):
-        self.local_settings.setValue('windows/devices/pos', self.pos())
-        self.local_settings.setValue('windows/devices/size', self.size())
-        self.local_settings.setValue('windows/devices/visible', self.isVisible())
 
-        self.local_settings.setValue('windows/pf/pos', self.view.pos())
-        self.local_settings.setValue('windows/pf/size', self.view.size())
-        self.local_settings.setValue('windows/pf/visible', self.view.isVisible())
+        monitor_windows = {
+            'devices': self,
+            'pf': self.view,
+            'modes': self.mode_window,
+            'events': self.event_window,
+            'inspector': self.inspector_window
+        }
 
-        self.local_settings.setValue('windows/modes/pos', self.mode_window.pos())
-        self.local_settings.setValue('windows/modes/size', self.mode_window.size())
-        self.local_settings.setValue('windows/modes/visible', self.mode_window.isVisible())
+        for window in monitor_windows.keys():
+            self.write_window_settings(window, monitor_windows.get(window))
 
-        self.local_settings.setValue('windows/inspector/pos', self.inspector_window.pos())
-        self.local_settings.setValue('windows/inspector/size', self.inspector_window.size())
-        self.local_settings.setValue('windows/inspector/visible', self.inspector_window.isVisible())
-
-        self.local_settings.setValue('windows/events/pos',
-                                     self.event_window.pos())
-        self.local_settings.setValue('windows/events/size',
-                                     self.event_window.size())
-        self.local_settings.setValue('windows/event/visible',
-                                     self.event_window.isVisible())
-
-        self.local_settings.setValue('settings/quit-on-close', self.quit_on_close)
+        self.local_settings.setValue('settings/exit-on-close', self.exit_on_close)
 
         self.local_settings.sync()
 

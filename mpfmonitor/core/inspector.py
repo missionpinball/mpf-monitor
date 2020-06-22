@@ -141,13 +141,10 @@ class InspectorWindow(QWidget):
         line.setLineWidth(1)
         scroll_layout.addWidget(line)
 
-        quit_on_close_button = QCheckBox("Quit on single window close", self)
-        quit_on_close_button.setChecked(
-            "true" == str(self.mpfmon.local_settings.value('settings/quit-on-close', False))
-        )
-
-        quit_on_close_button.stateChanged.connect(self.mpfmon.toggle_quit_on_close)
-        scroll_layout.addWidget(quit_on_close_button)
+        exit_on_close_button = QCheckBox("Quit on single window close", self)
+        exit_on_close_button.setChecked(self.mpfmon.get_local_settings_bool('settings/exit-on-close'))
+        exit_on_close_button.stateChanged.connect(self.mpfmon.toggle_exit_on_close)
+        scroll_layout.addWidget(exit_on_close_button)
 
         tab_scroll.setWidget(tab)
 
