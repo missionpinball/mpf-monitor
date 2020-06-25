@@ -12,7 +12,7 @@ class DeviceNode(object):
         self.name = name
         self.state = state
         self.description = description
-        self.time_added = time.clock()
+        self.time_added = time.perf_counter()
 
         self.parent = parent
         self.children = []

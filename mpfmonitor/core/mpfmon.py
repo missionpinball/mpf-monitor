@@ -23,7 +23,7 @@ from mpfmonitor.core.inspector import InspectorWindow
 
 
 class MainWindow(QTreeView):
-    def __init__(self, app, machine_path, thread_stopper, parent=None):
+    def __init__(self, app, machine_path, thread_stopper, parent=None, testing=False):
 
         super().__init__(parent)
 
@@ -62,7 +62,8 @@ class MainWindow(QTreeView):
         self.device_type_widgets = dict()
 
         self.bcp = BCPClient(self, self.receive_queue,
-                             self.sending_queue, 'localhost', 5051)
+                             self.sending_queue, 'localhost', 5051,
+                             simulate=testing, cache=False)
 
         self.tick_timer = QTimer(self)
         self.tick_timer.setInterval(20)
@@ -349,8 +350,9 @@ class MainWindow(QTreeView):
 
 
 
-def run(machine_path, thread_stopper):
+
+def run(machine_path, thread_stopper, testing=False):
 
     app = QApplication(sys.argv)
-    MainWindow(app, machine_path, thread_stopper)
+    MainWindow(app, machine_path, thread_stopper, testing=testing)
     app.exec_()
