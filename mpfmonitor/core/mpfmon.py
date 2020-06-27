@@ -229,7 +229,8 @@ class MainWindow(QTreeView):
                 self.process_device_update(**kwargs)
                 device_update = True
             elif cmd == 'monitored_event':
-                self.process_event_update(**kwargs)
+                # self.process_event_update(**kwargs)
+                self.event_window.add_event_to_model(**kwargs)
             elif cmd in ('mode_start', 'mode_stop', 'mode_list'):
                 self.process_mode_update(kwargs['running_modes'])
             elif cmd == 'reset':
