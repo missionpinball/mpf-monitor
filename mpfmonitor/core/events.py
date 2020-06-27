@@ -59,7 +59,6 @@ class EventWindow(QWidget):
 
         self.ui.tableView.setModel(self.filtered_model)
         self.ui.tableView.setColumnHidden(2, True)
-        self.ui.tableView.setColumnHidden(2, True)
         self.rootNode = self.model.invisibleRootItem()
 
     def add_event_to_model(self, event_name, event_type, event_callback,
