@@ -4,152 +4,47 @@ import logging
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+from PyQt5 import uic
+
+import os
+
 
 class InspectorWindow(QWidget):
 
     def __init__(self, mpfmon):
         self.mpfmon = mpfmon
         super().__init__()
-
-        self.setWindowTitle('Inspector')
-
+        self.ui = None
 
         self.log = logging.getLogger('Core')
 
-        self.move(self.mpfmon.local_settings.value('windows/inspector/pos',
+        self.draw_ui()
+        self.attach_signals()
+
+        self.already_hidden = False
+        self.added_index = 0
+
+    def draw_ui(self):
+        # Load ui file from ./ui/
+        ui_path = os.path.join(os.path.dirname(__file__), "ui", "inspector.ui")
+        self.ui = uic.loadUi(ui_path, self)
+
+        self.ui.setWindowTitle('Inspector')
+
+        self.ui.move(self.mpfmon.local_settings.value('windows/inspector/pos',
                                                    QPoint(1100, 500)))
-        self.resize(self.mpfmon.local_settings.value('windows/inspector/size',
+        self.ui.resize(self.mpfmon.local_settings.value('windows/inspector/size',
                                                      QSize(300, 300)))
 
-        self.last_pf_widget = None
+    def attach_signals(self):
+        self.ui.toggle_inspector_button.clicked.connect(self.toggle_inspector_mode)
 
-        self.populate()
-        self.register_last_selected_cb()
+        self.ui.size_slider.valueChanged.connect(self.slider_drag)  # Doesn't save value, just for live preview
+        self.ui.size_slider.sliderReleased.connect(self.slider_changed)  # Saves value on release
+        self.ui.size_spinbox.valueChanged.connect(self.spinbox_changed)
 
-    def populate(self):
-        self.tabs = QTabWidget()
-
-        self.layout = QVBoxLayout()
-
-        self.layout.addWidget(self.tabs)
-        self.dev_inspect_tab = self.build_device_inspector_tab(self.tabs)
-        self.monitor_inspect_tab = self.build_monitor_inspector_tab(self.tabs)
-
-        self.setLayout(self.layout)
-
-
-    def build_device_inspector_tab(self, tabs):
-        dev_inspect_tab = QWidget()
-        dev_inspect_tab.layout = QVBoxLayout()
-
-        tabs.addTab(dev_inspect_tab, "Device Inspector")
-
-        toggle_inspector_button = QPushButton('Toggle Device Inspector', self)
-        toggle_inspector_button.clicked.connect(self.toggle_inspector_mode)
-        toggle_inspector_button.setCheckable(True) # Makes the button "toggle-able"
-        dev_inspect_tab.layout.addWidget(toggle_inspector_button)
-
-        toggle_time_sorting_button = QCheckBox("Sort devices by config order", self)
-        toggle_time_sorting_button.setChecked(self.mpfmon.sort_by_time)
-        toggle_time_sorting_button.stateChanged.connect(self.mpfmon.toggle_sort_by_time)
-        dev_inspect_tab.layout.addWidget(toggle_time_sorting_button)
-
-        self.last_selected_label = QLabel("Last Selected:") # Text gets overwritten later
-        dev_inspect_tab.layout.addWidget(self.last_selected_label)
-
-        slider_spin_combo = QHBoxLayout()
-
-        self.slider = QSlider(Qt.Horizontal)
-
-        # Slider values are ints, and we need floats, so range is 1-60, mapped to 0.01-0.6
-        self.slider.setMinimum(1)
-        self.slider.setMaximum(60)
-        self.slider.setTickPosition(QSlider.TicksBelow)
-        self.slider.setTickInterval(5)
-
-        slider_spin_combo.addWidget(self.slider)
-
-        self.spinbox = QDoubleSpinBox()
-        self.spinbox.setRange(0.01, 0.6)
-        self.spinbox.setSingleStep(0.01)
-
-        slider_spin_combo.addWidget(self.spinbox)
-
-        self.slider.valueChanged.connect(self.slider_drag) # Doesn't save value, just for live preview
-        self.slider.sliderReleased.connect(self.slider_changed) # Saves value on release
-        self.spinbox.valueChanged.connect(self.spinbox_changed)
-
-
-        self.clear_last_selected_device()
-
-        default_size_button = QPushButton("Default", self)
-        default_size_button.clicked.connect(self.force_resize_last_device)
-        slider_spin_combo.addWidget(default_size_button)
-
-
-        dev_inspect_tab.layout.setAlignment(Qt.AlignTop)
-
-        dev_inspect_tab.layout.addLayout(slider_spin_combo)
-
-
-
-        delete_last_device_button = QPushButton("Delete device", self)
-        delete_last_device_button.clicked.connect(self.delete_last_device)
-        dev_inspect_tab.layout.addWidget(delete_last_device_button)
-
-
-
-        dev_inspect_tab.setLayout(dev_inspect_tab.layout)
-
-        return dev_inspect_tab
-
-
-    def build_monitor_inspector_tab(self, tabs):
-        tab_scroll = QScrollArea()
-        tab = QWidget()
-        scroll_layout = QVBoxLayout(tab)
-
-        scroll_layout.setAlignment(Qt.AlignTop)
-
-        tabs.addTab(tab_scroll, "Monitor Inspector")
-
-        toggle_device_win_button = QCheckBox("Show device window", self)
-        toggle_device_win_button.setChecked(self.mpfmon.toggle_device_window_action.isChecked())
-        toggle_device_win_button.stateChanged.connect(self.mpfmon.toggle_device_window)
-        scroll_layout.addWidget(toggle_device_win_button)
-
-        toggle_event_win_button = QCheckBox("Show event window", self)
-        toggle_event_win_button.setChecked(self.mpfmon.toggle_event_window_action.isChecked())
-        toggle_event_win_button.stateChanged.connect(self.mpfmon.toggle_event_window)
-        scroll_layout.addWidget(toggle_event_win_button)
-
-        toggle_pf_win_button = QCheckBox("Show playfield window", self)
-        toggle_pf_win_button.setChecked(self.mpfmon.toggle_pf_window_action.isChecked())
-        toggle_pf_win_button.stateChanged.connect(self.mpfmon.toggle_pf_window)
-        scroll_layout.addWidget(toggle_pf_win_button)
-
-        toggle_mode_win_button = QCheckBox("Show mode window", self)
-        toggle_mode_win_button.setChecked(self.mpfmon.toggle_mode_window_action.isChecked())
-        toggle_mode_win_button.stateChanged.connect(self.mpfmon.toggle_mode_window)
-        scroll_layout.addWidget(toggle_mode_win_button)
-
-
-        line = QFrame()
-        line.setFixedHeight(3)
-        line.setFrameShadow(QFrame.Sunken)
-        line.setFrameShape(QFrame.HLine)
-        line.setLineWidth(1)
-        scroll_layout.addWidget(line)
-
-        exit_on_close_button = QCheckBox("Quit on single window close", self)
-        exit_on_close_button.setChecked(self.mpfmon.get_local_settings_bool('settings/exit-on-close'))
-        exit_on_close_button.stateChanged.connect(self.mpfmon.toggle_exit_on_close)
-        scroll_layout.addWidget(exit_on_close_button)
-
-        tab_scroll.setWidget(tab)
-
-        return tab
-
+        self.ui.reset_to_defaults_button.clicked.connect(self.force_resize_last_device)
+        self.ui.delete_last_device_button.clicked.connect(self.delete_last_device)
 
     def toggle_inspector_mode(self):
         inspector_enabled = not self.mpfmon.inspector_enabled
@@ -169,28 +64,28 @@ class InspectorWindow(QWidget):
         if pf_widget is not None:
             self.last_pf_widget = pf_widget
             text = '"' + str(self.last_pf_widget.name) + '" Size:'
-            self.last_selected_label.setText(text)
-            self.slider.setValue(self.last_pf_widget.size * 100)
-            self.spinbox.setValue(self.last_pf_widget.size)
+            self.ui.device_group_box.setTitle(text)
+            self.ui.size_slider.setValue(self.last_pf_widget.size * 100)
+            self.ui.size_spinbox.setValue(self.last_pf_widget.size)
 
 
     def slider_drag(self):
         # For live preview
-        new_size = self.slider.value() / 100  # convert from int to float
+        new_size = self.ui.size_slider.value() / 100  # convert from int to float
         self.resize_last_device(new_size=new_size, save=False)
 
     def slider_changed(self):
-        new_size = self.slider.value() / 100  # convert from int to float
+        new_size = self.ui.size_slider.value() / 100  # convert from int to float
         # Update spinbox value
-        self.spinbox.setValue(new_size)
+        self.ui.size_spinbox.setValue(new_size)
 
         # Don't need to call resize_last_device because updating the spinbox takes care of it
         # self.resize_last_device(new_size=new_size)
 
     def spinbox_changed(self):
-        new_size = self.spinbox.value()
+        new_size = self.ui.size_spinbox.value()
         # Update slider value
-        self.slider.setValue(new_size*100)
+        self.ui.size_slider.setValue(new_size*100)
 
         self.resize_last_device(new_size=new_size)
 
@@ -199,9 +94,10 @@ class InspectorWindow(QWidget):
     def clear_last_selected_device(self):
         # Must be called AFTER spinbox valueChanged is set. Otherwise slider will not follow
 
-        self.last_selected_label.setText("Default Device Size:")
+        # self.last_selected_label.setText("Default Device Size:")
+        self.ui.device_group_box.setTitle("Default Device:")
         self.last_pf_widget = None
-        self.spinbox.setValue(self.mpfmon.pf_device_size) # Reset the value to the stored default.
+        self.ui.size_spinbox.setValue(self.mpfmon.pf_device_size) # Reset the value to the stored default.
 
 
     def resize_last_device(self, new_size=None, save=True):
@@ -216,9 +112,9 @@ class InspectorWindow(QWidget):
             self.mpfmon.config["device_size"] = new_size
 
             if save:
-                self.resize_all_devices() # Apply new sizes to all devices without default sizes
-                self.mpfmon.view.resizeEvent() # Re draw the playfiled
-                self.mpfmon.save_config() # Save the config with new default to disk
+                self.resize_all_devices()  # Apply new sizes to all devices without default sizes
+                self.mpfmon.view.resizeEvent()  # Re draw the playfield
+                self.mpfmon.save_config()  # Save the config with new default to disk
 
 
     def delete_last_device(self):

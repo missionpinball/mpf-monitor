@@ -232,7 +232,8 @@ class MainWindow(QTreeView):
                 # self.process_event_update(**kwargs)
                 self.event_window.add_event_to_model(**kwargs)
             elif cmd in ('mode_start', 'mode_stop', 'mode_list'):
-                self.process_mode_update(kwargs['running_modes'])
+                # self.process_mode_update(kwargs['running_modes'])
+                self.mode_window.process_mode_update(kwargs['running_modes'])
             elif cmd == 'reset':
                 self.reset_connection()
                 self.bcp.send("reset_complete")

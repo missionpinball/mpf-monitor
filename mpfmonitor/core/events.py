@@ -56,6 +56,7 @@ class EventWindow(QWidget):
         self.filtered_model.setFilterKeyColumn(0)
         self.filtered_model.setDynamicSortFilter(True)
 
+        self.change_sort()  # Default sort
 
         self.ui.tableView.setModel(self.filtered_model)
         self.ui.tableView.setColumnHidden(2, True)
@@ -82,6 +83,8 @@ class EventWindow(QWidget):
     def filter_text(self, string):
         wc_string = "*" + str(string) + "*"
         self.filtered_model.setFilterWildcard(wc_string)
+        self.ui.tableView.resizeColumnToContents(0)
+        self.ui.tableView.resizeColumnToContents(1)
 
     def change_sort(self, index=1):
         # This is a bit sloppy and probably should be reworked.
