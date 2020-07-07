@@ -1,0 +1,4 @@
+mpf==0.54.0.dev45
+PyQt5==5.15.0
+PyQt5-sip==12.8.0
+PyQt5-stubs==5.14.2.2
