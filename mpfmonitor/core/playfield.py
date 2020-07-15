@@ -373,7 +373,7 @@ class PfWidget(QGraphicsItem):
         conf_angle = self.mpfmon.config[self.device_type][self.name].get('angle', -1)
 
         if self.angle is not conf_angle:
-            if self.angle is not 0:
+            if self.angle != 0:
                 self.mpfmon.config[self.device_type][self.name]['rotation'] = self.angle
             else:
                 try:
