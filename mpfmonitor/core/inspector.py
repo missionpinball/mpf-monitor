@@ -6,6 +6,8 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 
+from mpfmonitor.core.playfield import Shape
+
 import os
 
 
@@ -21,8 +23,9 @@ class InspectorWindow(QWidget):
         self.draw_ui()
         self.attach_signals()
 
-        self.already_hidden = False
-        self.added_index = 0
+        self.enable_non_default_widgets(enabled=False)
+
+        self.last_pf_widget = None
 
     def draw_ui(self):
         # Load ui file from ./ui/
@@ -39,6 +42,9 @@ class InspectorWindow(QWidget):
     def attach_signals(self):
         self.ui.toggle_inspector_button.clicked.connect(self.toggle_inspector_mode)
 
+        self.ui.shape_combo_box.currentIndexChanged.connect(self.shape_combobox_changed)
+        self.ui.rotationDial.valueChanged.connect(self.dial_changed)
+
         self.ui.size_slider.valueChanged.connect(self.slider_drag)  # Doesn't save value, just for live preview
         self.ui.size_slider.sliderReleased.connect(self.slider_changed)  # Saves value on release
         self.ui.size_spinbox.valueChanged.connect(self.spinbox_changed)
@@ -54,6 +60,7 @@ class InspectorWindow(QWidget):
                 self.log.debug('Inspector mode toggled ON')
             else:
                 self.log.debug('Inspector mode toggled OFF')
+                self.enable_non_default_widgets(enabled=False)
                 self.clear_last_selected_device()
 
     def register_set_inspector_val_cb(self, cb):
@@ -62,17 +69,30 @@ class InspectorWindow(QWidget):
 
     def update_last_selected(self, pf_widget=None):
         if pf_widget is not None:
+            self.enable_non_default_widgets(enabled=True)
+
             self.last_pf_widget = pf_widget
+
+            # Update the label to show name of last selected
             text = '"' + str(self.last_pf_widget.name) + '" Size:'
             self.ui.device_group_box.setTitle(text)
+
+            # Update the size slider and spinbox
             self.ui.size_slider.setValue(self.last_pf_widget.size * 100)
             self.ui.size_spinbox.setValue(self.last_pf_widget.size)
+
+            # Update the shape combo box
+            self.ui.shape_combo_box.setCurrentIndex(self.last_pf_widget.shape.value)
+
+            # Update the rotation dial
+            rotation = int(self.last_pf_widget.angle / 10) + 18
+            self.ui.rotationDial.setValue(rotation)
 
 
     def slider_drag(self):
         # For live preview
         new_size = self.ui.size_slider.value() / 100  # convert from int to float
-        self.resize_last_device(new_size=new_size, save=False)
+        self.update_last_device(new_size=new_size, save=False)
 
     def slider_changed(self):
         new_size = self.ui.size_slider.value() / 100  # convert from int to float
@@ -87,9 +107,21 @@ class InspectorWindow(QWidget):
         # Update slider value
         self.ui.size_slider.setValue(new_size*100)
 
-        self.resize_last_device(new_size=new_size)
+        self.update_last_device(new_size=new_size)
 
+    def dial_changed(self):
+        rot_value = self.ui.rotationDial.value() * 10
+        # Offset the dial by 180
+        rot_value = (rot_value - 180) % 360
+        # self.rotate_last_device(rotation=rot_value, save=False)
+        self.update_last_device(rotation=rot_value, save=True)
 
+    def shape_combobox_changed(self):
+        # scb = QComboBox()
+        # scb.currentIndex()
+        shape_index = self.ui.shape_combo_box.currentIndex()
+        print("combo: " + str(Shape(shape_index)))
+        self.update_last_device(shape=Shape(shape_index), save=True)
 
     def clear_last_selected_device(self):
         # Must be called AFTER spinbox valueChanged is set. Otherwise slider will not follow
@@ -97,19 +129,40 @@ class InspectorWindow(QWidget):
         # self.last_selected_label.setText("Default Device Size:")
         self.ui.device_group_box.setTitle("Default Device:")
         self.last_pf_widget = None
-        self.ui.size_spinbox.setValue(self.mpfmon.pf_device_size) # Reset the value to the stored default.
+        self.ui.size_spinbox.setValue(self.mpfmon.pf_device_size)  # Reset the value to the stored default.
 
 
-    def resize_last_device(self, new_size=None, save=True):
-        new_size = round(new_size, 3)
+    def enable_non_default_widgets(self, enabled=False):
+        if self.ui is not None:
+            self.ui.rotationDial.setEnabled(enabled)
+            self.ui.shape_combo_box.setEnabled(enabled)
+
+
+    def update_last_device(self, new_size=None, rotation=None, shape=None, save=True):
+        # Check that there is a last widget
         if self.last_pf_widget is not None:
-            self.last_pf_widget.set_size(new_size)
-            self.last_pf_widget.update_pos(save=save)
-            self.mpfmon.view.resizeEvent()
 
-        else:   # Change the default size.
-            self.mpfmon.pf_device_size = new_size
-            self.mpfmon.config["device_size"] = new_size
+            if new_size is not None:
+                new_size = round(new_size, 3)
+
+                self.last_pf_widget.set_size(new_size)
+                self.last_pf_widget.update_pos(save=save)
+                self.mpfmon.view.resizeEvent()
+
+            if rotation is not None:
+                self.last_pf_widget.set_rotation(rotation)
+                self.last_pf_widget.update_pos(save=save)
+                self.mpfmon.view.resizeEvent()
+
+            if shape is not None:
+                self.last_pf_widget.set_shape(shape=shape)
+                self.last_pf_widget.update_pos(save=save)
+                self.mpfmon.view.resizeEvent()
+
+        else:
+            if new_size is not None:
+                self.mpfmon.pf_device_size = new_size
+                self.mpfmon.config["device_size"] = new_size
 
             if save:
                 self.resize_all_devices()  # Apply new sizes to all devices without default sizes
@@ -129,7 +182,7 @@ class InspectorWindow(QWidget):
 
             # Redraw the device without saving
             default_size = self.mpfmon.pf_device_size
-            self.resize_last_device(new_size=default_size, save=False)
+            self.update_last_device(new_size=default_size, save=False)
 
             # Update the device info and clear saved size data
             self.last_pf_widget.resize_to_default(force=True)

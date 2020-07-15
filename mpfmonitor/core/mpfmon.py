@@ -57,6 +57,8 @@ class MainWindow(QTreeView):
         self.setWindowTitle("Devices")
 
         self.pf_device_size = self.config.get("device_size", .02)
+        if not isinstance(self.pf_device_size, float):  # Protect against corrupted device size
+            self.pf_device_size = .02
 
         self.device_states = dict()
         self.device_type_widgets = dict()

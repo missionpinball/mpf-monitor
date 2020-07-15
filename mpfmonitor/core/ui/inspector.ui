@@ -60,16 +60,6 @@
        <property name="verticalSpacing">
         <number>20</number>
        </property>
-       <item row="0" column="0">
-        <widget class="QPushButton" name="toggle_inspector_button">
-         <property name="text">
-          <string>Toggle Device Inspector</string>
-         </property>
-         <property name="checkable">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="0">
         <widget class="QGroupBox" name="device_group_box">
          <property name="title">
@@ -105,7 +95,10 @@
            </widget>
           </item>
           <item row="0" column="1">
-           <widget class="QComboBox" name="shapeComboBox">
+           <widget class="QComboBox" name="shape_combo_box">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
             <item>
              <property name="text">
               <string>Device Default</string>
@@ -114,6 +107,11 @@
             <item>
              <property name="text">
               <string>Square</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Rectangle</string>
              </property>
             </item>
             <item>
@@ -156,6 +154,9 @@
           </item>
           <item row="1" column="1">
            <widget class="QDial" name="rotationDial">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
             <property name="maximumSize">
              <size>
               <width>50</width>
@@ -163,10 +164,13 @@
              </size>
             </property>
             <property name="maximum">
-             <number>360</number>
+             <number>36</number>
+            </property>
+            <property name="singleStep">
+             <number>1</number>
             </property>
             <property name="value">
-             <number>180</number>
+             <number>18</number>
             </property>
             <property name="orientation">
              <enum>Qt::Horizontal</enum>
@@ -181,7 +185,7 @@
              <bool>true</bool>
             </property>
             <property name="notchTarget">
-             <double>45.000000000000000</double>
+             <double>6.000000000000000</double>
             </property>
             <property name="notchesVisible">
              <bool>true</bool>
@@ -261,6 +265,22 @@
            </widget>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QPushButton" name="toggle_inspector_button">
+         <property name="text">
+          <string>Toggle Device Inspector</string>
+         </property>
+         <property name="checkable">
+          <bool>true</bool>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+         <property name="default">
+          <bool>false</bool>
+         </property>
         </widget>
        </item>
       </layout>
