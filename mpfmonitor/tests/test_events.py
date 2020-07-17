@@ -71,6 +71,7 @@ class TestEventWindowFunctions(unittest.TestCase):
 
 app = QApplication(sys.argv)
 
+
 class TestEvents(unittest.TestCase):
     @classmethod
     def setUpClass(self):

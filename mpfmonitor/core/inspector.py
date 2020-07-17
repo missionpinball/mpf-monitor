@@ -35,11 +35,15 @@ class InspectorWindow(QWidget):
         self.ui.setWindowTitle('Inspector')
 
         self.ui.move(self.mpfmon.local_settings.value('windows/inspector/pos',
-                                                   QPoint(1100, 500)))
+                                                   QPoint(1100, 465)))
         self.ui.resize(self.mpfmon.local_settings.value('windows/inspector/size',
-                                                     QSize(300, 300)))
+                                                     QSize(300, 340)))
 
     def attach_signals(self):
+        self.attach_inspector_tab_signals()
+        self.attach_monitor_tab_signals()
+
+    def attach_inspector_tab_signals(self):
         self.ui.toggle_inspector_button.clicked.connect(self.toggle_inspector_mode)
 
         self.ui.shape_combo_box.currentIndexChanged.connect(self.shape_combobox_changed)
@@ -51,6 +55,22 @@ class InspectorWindow(QWidget):
 
         self.ui.reset_to_defaults_button.clicked.connect(self.force_resize_last_device)
         self.ui.delete_last_device_button.clicked.connect(self.delete_last_device)
+
+    def attach_monitor_tab_signals(self):
+        self.ui.toggle_device_win_button.setChecked(self.mpfmon.toggle_device_window_action.isChecked())
+        self.ui.toggle_device_win_button.stateChanged.connect(self.mpfmon.toggle_device_window)
+
+        self.ui.toggle_event_win_button.setChecked(self.mpfmon.toggle_event_window_action.isChecked())
+        self.ui.toggle_event_win_button.stateChanged.connect(self.mpfmon.toggle_event_window)
+
+        self.ui.toggle_pf_win_button.setChecked(self.mpfmon.toggle_pf_window_action.isChecked())
+        self.ui.toggle_pf_win_button.stateChanged.connect(self.mpfmon.toggle_pf_window)
+
+        self.ui.toggle_mode_win_button.setChecked(self.mpfmon.toggle_mode_window_action.isChecked())
+        self.ui.toggle_mode_win_button.stateChanged.connect(self.mpfmon.toggle_mode_window)
+
+        self.ui.exit_on_close_button.setChecked(self.mpfmon.get_local_settings_bool('settings/exit-on-close'))
+        self.ui.exit_on_close_button.stateChanged.connect(self.mpfmon.toggle_exit_on_close)
 
     def toggle_inspector_mode(self):
         inspector_enabled = not self.mpfmon.inspector_enabled

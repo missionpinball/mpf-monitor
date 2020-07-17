@@ -15,7 +15,6 @@ class TestableModeNoGUI(ModeWindow):
         self.model = None
 
 
-
 class TestModeWindowFunctions(unittest.TestCase):
 
     def setUp(self):
@@ -180,8 +179,6 @@ class TestModeWindowGUI(unittest.TestCase):
         # Set the filter to a non-unique string and check it returns 2 matches
         self.mode_window.ui.filterLineEdit.setText(modes_in[2][0])
         self.assertEqual(self.mode_window.filtered_model.rowCount(), 2)
-
-
 
 
 if __name__ == '__main__':

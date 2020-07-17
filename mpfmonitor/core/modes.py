@@ -30,7 +30,7 @@ class ModeWindow(QWidget):
         self.ui.move(self.mpfmon.local_settings.value('windows/modes/pos',
                                                    QPoint(1100, 200)))
         self.ui.resize(self.mpfmon.local_settings.value('windows/modes/size',
-                                                     QSize(300, 250)))
+                                                     QSize(300, 240)))
 
         # Fix sort combobox verbiage
         self.ui.sortComboBox.setItemText(1, "Priority ▴")
@@ -99,7 +99,6 @@ class ModeWindow(QWidget):
             self.filtered_model.sort(0, Qt.AscendingOrder)
         elif index == 4:  # Name down
             self.filtered_model.sort(0, Qt.DescendingOrder)
-
 
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()
