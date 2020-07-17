@@ -135,7 +135,6 @@ class PfWidget(QGraphicsItem):
                       self.device_size, self.device_size)
 
     def set_shape(self, shape):
-        print("set: " + str(shape))
         if isinstance(shape, Shape):
             self.shape = shape
         else:

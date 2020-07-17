@@ -20,23 +20,7 @@ class TestableInspectorNoGUI(InspectorWindow):
         # self.attach_signals()
 
 
-
-class InspectorTestsNonGUI(unittest.TestCase):
-
-    def test_cb_register(self):
-        inspector = TestableInspectorNoGUI()
-        inspector.registered_inspector_cb = False
-
-        callback = MagicMock()
-        inspector.register_set_inspector_val_cb(cb=callback)
-
-        # Check that the mocked callback is registered properly
-        inspector.set_inspector_val_cb(True)
-
-        self.assertTrue(inspector.registered_inspector_cb)
-        inspector.set_inspector_val_cb.assert_called_once_with(True)
-
-
+class InspectorMode(unittest.TestCase):
     def test_toggle_inspector_mode_on(self):
         mock_mpfmon = MagicMock()
         mock_mpfmon.inspector_enabled = False
@@ -69,6 +53,21 @@ class InspectorTestsNonGUI(unittest.TestCase):
         # Test clear_last_selected_device was actually called
         inspector.clear_last_selected_device.assert_called_once()
 
+    def test_cb_register(self):
+        inspector = TestableInspectorNoGUI()
+        inspector.registered_inspector_cb = False
+
+        callback = MagicMock()
+        inspector.register_set_inspector_val_cb(cb=callback)
+
+        # Check that the mocked callback is registered properly
+        inspector.set_inspector_val_cb(True)
+
+        self.assertTrue(inspector.registered_inspector_cb)
+        inspector.set_inspector_val_cb.assert_called_once_with(True)
+
+class InspectorDeviceManipulation(unittest.TestCase):
+
     def test_update_last_selected(self):
         inspector = TestableInspectorNoGUI()
         # Mock ui to check that the ui is updated
@@ -91,6 +90,20 @@ class InspectorTestsNonGUI(unittest.TestCase):
         inspector.ui.device_group_box.setTitle.assert_called_once_with('"LastName" Size:')
         inspector.ui.size_slider.setValue.assert_called_once_with(widget_size * 100)
         inspector.ui.size_spinbox.setValue.assert_called_once_with(widget_size)
+
+    def test_delete_last_device(self):
+        inspector = TestableInspectorNoGUI()
+
+        inspector.last_pf_widget = MagicMock()
+        inspector.clear_last_selected_device = MagicMock()
+
+        inspector.delete_last_device()
+
+        inspector.last_pf_widget.destroy.assert_called_once()
+        inspector.clear_last_selected_device.assert_called_once()
+
+
+class InspectorDeviceResizing(unittest.TestCase):
 
     def test_resize_default_device_default_no_save(self):
         mock_mpfmon = MagicMock()
@@ -146,16 +159,56 @@ class InspectorTestsNonGUI(unittest.TestCase):
 
         mock_mpfmon.view.resizeEvent.assert_called_once()  # Re draw the playfield
 
-    def test_delete_last_device(self):
-        inspector = TestableInspectorNoGUI()
+
+class InspectorDeviceRotation(unittest.TestCase):
+
+    def test_rotate_device_without_save(self):
+        mock_mpfmon = MagicMock()
+        inspector = TestableInspectorNoGUI(mpfmon_mock=mock_mpfmon)
+
+        rotation = 90
 
         inspector.last_pf_widget = MagicMock()
-        inspector.clear_last_selected_device = MagicMock()
+        inspector.update_last_device(rotation=rotation, save=False)
+        inspector.last_pf_widget.set_rotation.assert_called_once_with(rotation)
+        inspector.last_pf_widget.update_pos.assert_called_once_with(save=False)
 
-        inspector.delete_last_device()
+    def test_rotate_device_with_save(self):
+        mock_mpfmon = MagicMock()
+        inspector = TestableInspectorNoGUI(mpfmon_mock=mock_mpfmon)
 
-        inspector.last_pf_widget.destroy.assert_called_once()
-        inspector.clear_last_selected_device.assert_called_once()
+        rotation = 90
+
+        inspector.last_pf_widget = MagicMock()
+        inspector.update_last_device(rotation=rotation, save=True)
+        inspector.last_pf_widget.set_rotation.assert_called_once_with(rotation)
+        inspector.last_pf_widget.update_pos.assert_called_once_with(save=True)
+
+
+class InspectorDeviceShape(unittest.TestCase):
+    from mpfmonitor.core.playfield import Shape
+
+    def test_device_shape_without_save(self):
+        mock_mpfmon = MagicMock()
+        inspector = TestableInspectorNoGUI(mpfmon_mock=mock_mpfmon)
+
+        shape = Shape.TRIANGLE
+
+        inspector.last_pf_widget = MagicMock()
+        inspector.update_last_device(shape=shape, save=False)
+        inspector.last_pf_widget.set_shape.assert_called_once_with(shape=shape)
+        inspector.last_pf_widget.update_pos.assert_called_once_with(save=False)
+
+    def test_device_shape_with_save(self):
+        mock_mpfmon = MagicMock()
+        inspector = TestableInspectorNoGUI(mpfmon_mock=mock_mpfmon)
+
+        shape = Shape.TRIANGLE
+
+        inspector.last_pf_widget = MagicMock()
+        inspector.update_last_device(shape=shape, save=True)
+        inspector.last_pf_widget.set_shape.assert_called_once_with(shape=shape)
+        inspector.last_pf_widget.update_pos.assert_called_once_with(save=True)
 
 
 if __name__ == '__main__':
