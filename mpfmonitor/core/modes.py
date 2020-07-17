@@ -67,23 +67,6 @@ class ModeWindow(QWidget):
         self.ui.tableView.setColumnHidden(2, True)
         self.rootNode = self.model.invisibleRootItem()
 
-    def add_event_to_model(self, event_name, event_type, event_callback,
-                             event_kwargs, registered_handlers):
-        assert(self.model is not None)
-        from_bcp = event_kwargs.pop('_from_bcp', False)
-
-        name = QStandardItem(event_name)
-        kwargs = QStandardItem(str(event_kwargs))
-        padded_priority = QStandardItem(str(self.kwargs).zfill(10))
-        self.model.insertRow(0, [name, kwargs, padded_priority])
-
-        self.ui.tableView.resizeColumnToContents(0)
-        self.ui.tableView.resizeColumnToContents(1)
-
-        if not self.already_hidden:
-            self.ui.tableView.setColumnHidden(2, True)
-            self.already_hidden = True
-
     def process_mode_update(self, running_modes):
         """Update mode list."""
         self.model.clear()

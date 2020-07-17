@@ -6,8 +6,70 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from unittest.mock import MagicMock
 from mpfmonitor.core.events import *
 
-app = QApplication(sys.argv)
 
+class TestableEventNoGUI(EventWindow):
+    def __init__(self, mpfmon_mock=None):
+        if mpfmon_mock is not None:
+            self.mpfmon = mpfmon_mock
+
+        self.ui = None
+        self.model = None
+
+        self.already_hidden = False
+        self.added_index = 0
+
+
+class TestEventWindowFunctions(unittest.TestCase):
+
+    def setUp(self):
+        self.event_window = TestableEventNoGUI()
+
+        self.event_window.ui = MagicMock()
+        self.event_window.model = MagicMock()
+        self.event_window.filtered_model = MagicMock()
+
+        self.mock_event_kwargs = MagicMock()
+        self.mock_event_kwargs.__str__ = MagicMock(return_value='{args}')
+        self.mock_event_kwargs.pop.return_value(False)
+
+    def test_add_event_to_model(self):
+        self.assertEqual(self.event_window.already_hidden, False)
+
+        self.event_window.add_event_to_model("event1", None, None, self.mock_event_kwargs, None)
+
+        self.event_window.model.insertRow.assert_called_once()
+        self.assertEqual(self.event_window.already_hidden, True)
+        
+    def test_filter_text(self):
+        string_in = "filter_string_test"
+        expected_string_out = "*filter_string_test*"
+
+        self.event_window.filter_text(string=string_in)
+
+        self.event_window.filtered_model.setFilterWildcard.assert_called_once_with(expected_string_out)
+
+    def test_change_sort_default(self):
+        self.event_window.change_sort()
+        self.event_window.filtered_model.sort.assert_called_once_with(2, Qt.DescendingOrder)
+
+    def test_change_sort_time_down(self):
+        self.event_window.change_sort(1)
+        self.event_window.filtered_model.sort.assert_called_once_with(2, Qt.DescendingOrder)
+
+    def test_change_sort_time_up(self):
+        self.event_window.change_sort(2)
+        self.event_window.filtered_model.sort.assert_called_once_with(2, Qt.AscendingOrder)
+
+    def test_change_sort_name_up(self):
+        self.event_window.change_sort(3)
+        self.event_window.filtered_model.sort.assert_called_once_with(0, Qt.AscendingOrder)
+
+    def test_change_sort_name_down(self):
+        self.event_window.change_sort(4)
+        self.event_window.filtered_model.sort.assert_called_once_with(0, Qt.DescendingOrder)
+
+
+app = QApplication(sys.argv)
 
 class TestEvents(unittest.TestCase):
     @classmethod
