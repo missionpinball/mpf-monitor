@@ -22,10 +22,10 @@ from mpfmonitor.core.inspector import InspectorWindow
 
 
 
-class MainWindow(QTreeView):
+class MPFMonitor():
     def __init__(self, app, machine_path, thread_stopper, parent=None, testing=False):
 
-        super().__init__(parent)
+        # super().__init__(parent)
 
         self.log = logging.getLogger('Core')
 
@@ -43,51 +43,43 @@ class MainWindow(QTreeView):
         self.config_file = os.path.join(self.machine_path, "monitor",
                                         "monitor.yaml")
         self.playfield_image_file = os.path.join(self.machine_path,
-                                        "monitor", "playfield.jpg")
+                                                 "monitor", "playfield.jpg")
 
         self.local_settings = QSettings("mpf", "mpf-monitor")
 
         self.load_config()
 
-        self.move(self.local_settings.value('windows/devices/pos',
-                                            QPoint(200, 200)))
-        self.resize(self.local_settings.value('windows/devices/size',
-                                            QSize(300, 600)))
-
-        self.setWindowTitle("Devices")
+        self.device_window = DeviceWindow(self)
 
         self.pf_device_size = self.config.get("device_size", .02)
         if not isinstance(self.pf_device_size, float):  # Protect against corrupted device size
             self.pf_device_size = .02
 
-        self.device_states = dict()
-        self.device_type_widgets = dict()
-
         self.bcp = BCPClient(self, self.receive_queue,
                              self.sending_queue, 'localhost', 5051,
                              simulate=testing, cache=False)
 
-        self.tick_timer = QTimer(self)
+        self.tick_timer = QTimer(self.device_window)
         self.tick_timer.setInterval(20)
         self.tick_timer.timeout.connect(self.tick)
         self.tick_timer.start()
 
-        self.toggle_pf_window_action = QAction('&Playfield', self,
+        self.toggle_pf_window_action = QAction('&Playfield', self.device_window,
                                         statusTip='Show the playfield window',
                                         triggered=self.toggle_pf_window)
         self.toggle_pf_window_action.setCheckable(True)
 
-        self.toggle_device_window_action = QAction('&Devices', self,
+        self.toggle_device_window_action = QAction('&Devices', self.device_window,
                                         statusTip='Show the device window',
                                         triggered=self.toggle_device_window)
         self.toggle_device_window_action.setCheckable(True)
 
-        self.toggle_event_window_action = QAction('&Events', self,
+        self.toggle_event_window_action = QAction('&Events', self.device_window,
                                         statusTip='Show the events window',
                                         triggered=self.toggle_event_window)
         self.toggle_event_window_action.setCheckable(True)
 
-        self.toggle_mode_window_action = QAction('&Modes', self,
+        self.toggle_mode_window_action = QAction('&Modes', self.device_window,
                                         statusTip='Show the mode window',
                                         triggered=self.toggle_mode_window)
         self.toggle_mode_window_action.setCheckable(True)
@@ -103,17 +95,6 @@ class MainWindow(QTreeView):
                                                  QPoint(800, 200)))
         self.view.resize(self.local_settings.value('windows/pf/size',
                                                    QSize(300, 600)))
-
-        self.treeview = self
-        self.model = DeviceTreeModel(self)
-        self.rootNode = self.model.root
-        self.treeview.setDragDropMode(QAbstractItemView.DragOnly)
-        self.treeview.setItemDelegate(DeviceDelegate())
-        self.header().setSectionResizeMode(QHeaderView.ResizeToContents)
-        self.header().setStretchLastSection(False)
-        self.treeview.setModel(self.model)
-
-        self.sort_by_time = True
 
         self.event_window = EventWindow(self)
 
@@ -162,11 +143,11 @@ class MainWindow(QTreeView):
             self.toggle_pf_window_action.setChecked(True)
 
     def toggle_device_window(self):
-        if self.treeview.isVisible():
-            self.treeview.hide()
+        if self.device_window.isVisible():
+            self.device_window.hide()
             self.toggle_device_window_action.setChecked(False)
         else:
-            self.treeview.show()
+            self.device_window.show()
             self.toggle_device_window_action.setChecked(True)
 
     def toggle_event_window(self):
@@ -228,7 +209,7 @@ class MainWindow(QTreeView):
         while not self.receive_queue.empty():
             cmd, kwargs = self.receive_queue.get_nowait()
             if cmd == 'device':
-                self.process_device_update(**kwargs)
+                self.device_window.process_device_update(**kwargs)
                 device_update = True
             elif cmd == 'monitored_event':
                 # self.process_event_update(**kwargs)
@@ -240,56 +221,7 @@ class MainWindow(QTreeView):
                 self.reset_connection()
                 self.bcp.send("reset_complete")
         if device_update:
-            self.model.refreshData()
-
-    def process_mode_update(self, running_modes):
-        """Update mode list."""
-        self.mode_window.model.clear()
-
-        for mode in running_modes:
-            mode_name = QStandardItem(mode[0])
-            mode_prio = QStandardItem(str(mode[1]))
-            self.mode_window.model.insertRow(0, [mode_name, mode_prio])
-
-        # Reset the headers for the tree. For some reason clear() wipes these too.
-        self.mode_window.model.setHeaderData(0, Qt.Horizontal, "Mode")
-        self.mode_window.model.setHeaderData(1, Qt.Horizontal, "Priority")
-
-    def process_device_update(self, name, state, changes, type):
-        self.log.debug("Device Update: {}.{}: {}".format(type, name, state))
-
-        if type not in self.device_states:
-            self.device_states[type] = dict()
-            node = DeviceNode(type, "", "", self.rootNode)
-            self.device_type_widgets[type] = node
-            self.model.insertRow(0, QModelIndex())
-            self.rootNode.sortChildren(time=self.sort_by_time)
-
-        if name not in self.device_states[type]:
-
-            node = DeviceNode(name, "", "", self.device_type_widgets[type])
-            self.device_states[type][name] = node
-            self.device_type_widgets[type].sortChildren(time=self.sort_by_time)
-
-            self.pf.create_widget_from_config(node, type, name)
-
-        self.device_states[type][name].setData(state)
-        self.model.setData(self.model.index(0, 0, QModelIndex()), None)
-
-    def process_event_update(self, event_name, event_type, event_callback,
-                             event_kwargs, registered_handlers):
-
-        from_bcp = event_kwargs.pop('_from_bcp', False)
-
-        name = QStandardItem(event_name)
-        kwargs = QStandardItem(str(event_kwargs))
-        # ev_time = QStandardItem(time.time())
-        self.event_window.model.insertRow(0, [name, kwargs])
-
-        # for rh in registered_handlers:
-        #     rh_name = QStandardItem(rh[0])
-        #     rh_kwargs = QStandardItem(rh[1])
-        #     self.event_window.model.index(0, 0).appendRow([rh_name, rh_kwargs])
+            self.device_window.model.refreshData()
 
     def about(self):
         QMessageBox.about(self, "About MPF Monitor",
@@ -333,7 +265,7 @@ class MainWindow(QTreeView):
     def write_local_settings(self):
 
         monitor_windows = {
-            'devices': self,
+            'devices': self.device_window,
             'pf': self.view,
             'modes': self.mode_window,
             'events': self.event_window,
@@ -358,5 +290,5 @@ class MainWindow(QTreeView):
 def run(machine_path, thread_stopper, testing=False):
 
     app = QApplication(sys.argv)
-    MainWindow(app, machine_path, thread_stopper, testing=testing)
+    MPFMonitor(app, machine_path, thread_stopper, testing=testing)
     app.exec_()

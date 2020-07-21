@@ -1,10 +1,12 @@
 import logging
 import time
+import os
 
 # will change these to specific imports once code is more final
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+from PyQt5 import uic
 
 class DeviceNode(object):
     def __init__(self, name, state, description, parent=None):
@@ -87,7 +89,7 @@ class DeviceTreeModel(QAbstractItemModel):
 
         self.treeView = parent
         self.headers = ['Item', 'State', 'Description']
-        self.treeView.setAlternatingRowColors(True)
+        # self.treeView.setAlternatingRowColors(True)
 
         # try:
         #     self.root.header().resizeSection(0, 200)
@@ -226,6 +228,9 @@ class DeviceTreeModel(QAbstractItemModel):
 
 
 class DeviceDelegate(QStyledItemDelegate):
+    def __init__(self):
+        self.size = None
+        super().__init__()
 
     def paint(self, painter, view, index):
         super().paint(painter, view, index)
@@ -339,5 +344,118 @@ class DeviceDelegate(QStyledItemDelegate):
         if text:
             painter.drawText(view.rect.x() + x_offset, view.rect.y() + 12,
                              str(text))
+            self.size = QSize(len(text) * 10, 20)
 
         painter.restore()
+
+    def sizeHint(self, QStyleOptionViewItem, QModelIndex):
+        if self.size:
+            return self.size
+        else:
+            return super().sizeHint(QStyleOptionViewItem, QModelIndex)
+
+
+class DeviceWindow(QWidget):
+
+    def __init__(self, mpfmon):
+        self.mpfmon = mpfmon
+        super().__init__()
+        self.ui = None
+        self.model = None
+        self.draw_ui()
+        self.attach_model()
+        self.attach_signals()
+
+        self.log = logging.getLogger('Core')
+
+        self.already_hidden = False
+        self.added_index = 0
+
+        self.device_states = dict()
+        self.device_type_widgets = dict()
+
+        self.sort_by_time = True
+
+    def draw_ui(self):
+        # Load ui file from ./ui/
+        ui_path = os.path.join(os.path.dirname(__file__), "ui", "searchable_tree.ui")
+        self.ui = uic.loadUi(ui_path, self)
+
+        self.ui.setWindowTitle('Devices')
+
+        self.ui.move(self.mpfmon.local_settings.value('windows/devices/pos',
+                                            QPoint(200, 200)))
+        self.ui.resize(self.mpfmon.local_settings.value('windows/devices/size',
+                                              QSize(300, 600)))
+
+        # Disable option "Sort", select first item.
+        # TODO: Store and load selected sort index to local_settings
+        self.ui.sortComboBox.model().item(0).setEnabled(False)
+        self.ui.sortComboBox.setCurrentIndex(1)
+        self.ui.treeView.setAlternatingRowColors(True)
+
+    def attach_signals(self):
+        assert (self.ui is not None)
+        self.ui.treeView.expanded.connect(self.resize_columns_to_content)
+        self.ui.treeView.collapsed.connect(self.resize_columns_to_content)
+        # self.ui.filterLineEdit.textChanged.connect(self.filter_text)
+        # self.ui.sortComboBox.currentIndexChanged.connect(self.change_sort)
+
+    def attach_model(self):
+        assert (self.ui is not None)
+        self.treeview = self.ui.treeView
+        self.model = DeviceTreeModel(self)
+        self.rootNode = self.model.root
+        self.treeview.setDragDropMode(QAbstractItemView.DragOnly)
+        self.treeview.setItemDelegateForColumn(1, DeviceDelegate())
+        self.treeview.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+        self.treeview.header().setStretchLastSection(False)
+        self.treeview.setModel(self.model)
+
+    def resize_columns_to_content(self):
+        self.ui.treeView.resizeColumnToContents(0)
+        self.ui.treeView.resizeColumnToContents(1)
+
+    def process_device_update(self, name, state, changes, type):
+        self.log.debug("Device Update: {}.{}: {}".format(type, name, state))
+
+        if type not in self.device_states:
+            self.device_states[type] = dict()
+            node = DeviceNode(type, "", "", self.rootNode)
+            self.device_type_widgets[type] = node
+            self.model.insertRow(0, QModelIndex())
+            self.rootNode.sortChildren(time=self.sort_by_time)
+
+        if name not in self.device_states[type]:
+
+            node = DeviceNode(name, "", "", self.device_type_widgets[type])
+            self.device_states[type][name] = node
+            self.device_type_widgets[type].sortChildren(time=self.sort_by_time)
+
+            self.mpfmon.pf.create_widget_from_config(node, type, name)
+
+        self.device_states[type][name].setData(state)
+        self.model.setData(self.model.index(0, 0, QModelIndex()), None)
+
+    def filter_text(self, string):
+        wc_string = "*" + str(string) + "*"
+        self.filtered_model.setFilterWildcard(wc_string)
+        self.ui.treeView.resizeColumnToContents(0)
+        self.ui.treeView.resizeColumnToContents(1)
+
+    def change_sort(self, index=1):
+        # This is a bit sloppy and probably should be reworked.
+        if index == 1:  # Received up
+            self.filtered_model.sort(2, Qt.DescendingOrder)
+        elif index == 2:  # Received down
+            self.filtered_model.sort(2, Qt.AscendingOrder)
+        elif index == 3:  # Name up
+            self.filtered_model.sort(0, Qt.AscendingOrder)
+        elif index == 4:  # Name down
+            self.filtered_model.sort(0, Qt.DescendingOrder)
+
+    def closeEvent(self, event):
+        self.mpfmon.write_local_settings()
+        event.accept()
+        self.mpfmon.check_if_quit()
+
