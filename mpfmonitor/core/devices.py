@@ -8,6 +8,17 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 
+from enum import Enum
+
+
+class DeviceSort(Enum):
+    DEFAULT = 0
+    TIME_ASCENDING = 1
+    TIME_DESCENDING = 2
+    NAME_ASCENDING = 3
+    NAME_DESCENDING = 4
+
+
 class DeviceNode(object):
     def __init__(self, name, state, description, parent=None):
 
@@ -31,9 +42,15 @@ class DeviceNode(object):
     def data(self):
         return self._data
 
-    def sortChildren(self, time=False):
-        if not time:
+    def sortChildren(self, sort=DeviceSort.DEFAULT):
+        if sort == DeviceSort.TIME_DESCENDING:
+            self.children.sort(key=lambda x: x.time_added, reverse=True)
+        elif sort == DeviceSort.NAME_ASCENDING:
             self.children.sort(key=lambda x: x.name)
+        elif sort == DeviceSort.NAME_DESCENDING:
+            self.children.sort(key=lambda x: x.name, reverse=True)
+
+        # Handle DEFAULT, TIME_ASCENDING (default), or incorrect sort parameter
         else:
             self.children.sort(key=lambda x: x.time_added)
 
@@ -352,7 +369,9 @@ class DeviceDelegate(QStyledItemDelegate):
         if self.size:
             return self.size
         else:
-            return super().sizeHint(QStyleOptionViewItem, QModelIndex)
+            # Calling super() here seems to result in a segfault on close sometimes.
+            # return super().sizeHint(QStyleOptionViewItem, QModelIndex)
+            return QSize(80, 20)
 
 
 class DeviceWindow(QWidget):
@@ -374,7 +393,7 @@ class DeviceWindow(QWidget):
         self.device_states = dict()
         self.device_type_widgets = dict()
 
-        self.sort_by_time = True
+        self.sort_devices_by = DeviceSort.DEFAULT
 
     def draw_ui(self):
         # Load ui file from ./ui/
@@ -399,7 +418,7 @@ class DeviceWindow(QWidget):
         self.ui.treeView.expanded.connect(self.resize_columns_to_content)
         self.ui.treeView.collapsed.connect(self.resize_columns_to_content)
         # self.ui.filterLineEdit.textChanged.connect(self.filter_text)
-        # self.ui.sortComboBox.currentIndexChanged.connect(self.change_sort)
+        self.ui.sortComboBox.currentIndexChanged.connect(self.change_sort)
 
     def attach_model(self):
         assert (self.ui is not None)
@@ -424,13 +443,13 @@ class DeviceWindow(QWidget):
             node = DeviceNode(type, "", "", self.rootNode)
             self.device_type_widgets[type] = node
             self.model.insertRow(0, QModelIndex())
-            self.rootNode.sortChildren(time=self.sort_by_time)
+            self.rootNode.sortChildren(sort=self.sort_devices_by)
 
         if name not in self.device_states[type]:
 
             node = DeviceNode(name, "", "", self.device_type_widgets[type])
             self.device_states[type][name] = node
-            self.device_type_widgets[type].sortChildren(time=self.sort_by_time)
+            self.device_type_widgets[type].sortChildren(sort=self.sort_devices_by)
 
             self.mpfmon.pf.create_widget_from_config(node, type, name)
 
@@ -444,17 +463,18 @@ class DeviceWindow(QWidget):
         self.ui.treeView.resizeColumnToContents(1)
 
     def change_sort(self, index=1):
-        # This is a bit sloppy and probably should be reworked.
-        if index == 1:  # Received up
-            self.filtered_model.sort(2, Qt.DescendingOrder)
-        elif index == 2:  # Received down
-            self.filtered_model.sort(2, Qt.AscendingOrder)
-        elif index == 3:  # Name up
-            self.filtered_model.sort(0, Qt.AscendingOrder)
-        elif index == 4:  # Name down
-            self.filtered_model.sort(0, Qt.DescendingOrder)
+        self.model.layoutAboutToBeChanged.emit()
+
+        self.sort_devices_by = DeviceSort(index)
+        self.rootNode.sortChildren(sort=self.sort_devices_by)
+        for type in self.device_type_widgets:
+            self.device_type_widgets[type].sortChildren(sort=self.sort_devices_by)
+
+        self.model.layoutChanged.emit()
+        self.model.refreshData()
 
     def closeEvent(self, event):
+        super().closeEvent()
         self.mpfmon.write_local_settings()
         event.accept()
         self.mpfmon.check_if_quit()

@@ -150,6 +150,7 @@ class InspectorWindow(QWidget):
         self.ui.device_group_box.setTitle("Default Device:")
         self.last_pf_widget = None
         self.ui.size_spinbox.setValue(self.mpfmon.pf_device_size)  # Reset the value to the stored default.
+        self.enable_non_default_widgets(enabled=False)
 
 
     def enable_non_default_widgets(self, enabled=False):
