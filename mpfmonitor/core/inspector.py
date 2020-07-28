@@ -53,7 +53,7 @@ class InspectorWindow(QWidget):
         self.ui.size_slider.sliderReleased.connect(self.slider_changed)  # Saves value on release
         self.ui.size_spinbox.valueChanged.connect(self.spinbox_changed)
 
-        self.ui.reset_to_defaults_button.clicked.connect(self.force_resize_last_device)
+        self.ui.reset_to_defaults_button.clicked.connect(self.reset_defaults_last_device)
         self.ui.delete_last_device_button.clicked.connect(self.delete_last_device)
 
     def attach_monitor_tab_signals(self):
@@ -137,10 +137,7 @@ class InspectorWindow(QWidget):
         self.update_last_device(rotation=rot_value, save=True)
 
     def shape_combobox_changed(self):
-        # scb = QComboBox()
-        # scb.currentIndex()
         shape_index = self.ui.shape_combo_box.currentIndex()
-        print("combo: " + str(Shape(shape_index)))
         self.update_last_device(shape=Shape(shape_index), save=True)
 
     def clear_last_selected_device(self):
@@ -163,20 +160,23 @@ class InspectorWindow(QWidget):
         # Check that there is a last widget
         if self.last_pf_widget is not None:
 
+            update_and_resize = False
+
             if new_size is not None:
                 new_size = round(new_size, 3)
 
                 self.last_pf_widget.set_size(new_size)
-                self.last_pf_widget.update_pos(save=save)
-                self.mpfmon.view.resizeEvent()
+                update_and_resize = True
 
             if rotation is not None:
                 self.last_pf_widget.set_rotation(rotation)
-                self.last_pf_widget.update_pos(save=save)
-                self.mpfmon.view.resizeEvent()
+                update_and_resize = True
 
             if shape is not None:
                 self.last_pf_widget.set_shape(shape=shape)
+                update_and_resize = True
+
+            if update_and_resize:
                 self.last_pf_widget.update_pos(save=save)
                 self.mpfmon.view.resizeEvent()
 
@@ -198,12 +198,18 @@ class InspectorWindow(QWidget):
         else:
             self.log.info("No device selected to delete")
 
-    def force_resize_last_device(self):
+    def reset_defaults_last_device(self):
         if self.last_pf_widget is not None:
 
-            # Redraw the device without saving
+            # Redraw the device and save changes
             default_size = self.mpfmon.pf_device_size
-            self.update_last_device(new_size=default_size, save=False)
+            self.update_last_device(new_size=default_size, shape=Shape.DEFAULT,
+                                    rotation=0, save=True)
+
+            self.ui.size_spinbox.setValue(default_size)
+            self.ui.rotationDial.setValue(18)
+            self.ui.shape_combo_box.setCurrentIndex(0)
+
 
             # Update the device info and clear saved size data
             self.last_pf_widget.resize_to_default(force=True)
@@ -211,7 +217,7 @@ class InspectorWindow(QWidget):
 
             # Redraw the device
         else:
-            self.spinbox.setValue(0.07)
+            self.ui.size_spinbox.setValue(0.07)
             self.log.info("No device selected to resize")
 
     def resize_all_devices(self):
