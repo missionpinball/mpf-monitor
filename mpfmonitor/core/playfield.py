@@ -82,13 +82,18 @@ class PfPixmapItem(QGraphicsPixmapItem):
         device = event.source().selectedIndexes()[0]
         device_name = device.data()
         device_type = device.parent().data()
-        widget = self.mpfmon.device_window.device_states[device_type][device_name]
 
         drop_x = event.scenePos().x()
         drop_y = event.scenePos().y()
 
-        self.create_pf_widget(widget, device_type, device_name, drop_x,
-                              drop_y)
+        try:
+            widget = self.mpfmon.device_window.device_states[device_type][device_name]
+            self.create_pf_widget(widget, device_type, device_name, drop_x,
+                                  drop_y)
+        except KeyError:
+            self.mpfmon.log.warn("Invalid device dragged.")
+
+
 
     def create_pf_widget(self, widget, device_type, device_name, drop_x,
                          drop_y, size=None, rotation=0, shape=Shape.DEFAULT, save=True):

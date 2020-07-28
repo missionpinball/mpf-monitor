@@ -11,48 +11,72 @@ from PyQt5 import uic
 from enum import Enum
 
 
-class DeviceSort(Enum):
-    DEFAULT = 0
-    TIME_ASCENDING = 1
-    TIME_DESCENDING = 2
-    NAME_ASCENDING = 3
-    NAME_DESCENDING = 4
-
-
 class DeviceNode(object):
-    def __init__(self, name, state, description, parent=None):
 
-        self.name = name
-        self.state = state
-        self.description = description
-        self.time_added = time.perf_counter()
-
-        self.parent = parent
-        self.children = []
+    def __init__(self):
         self._callback = None
-
-        self.setParent(parent)
+        self._name = ""
         self._data = {}
+        self._type = ""
+
+        self.q_name = QStandardItem()
+        self.q_state = QStandardItem()
+        self.sub_properties = {}
+        self.sub_properties_appended = False
+
+        self.q_time_added = QStandardItem()
+        self.q_time_added.setData(time.perf_counter(), Qt.DisplayRole)
+
+    def setName(self, name):
+        self._name = name
 
     def setData(self, data):
         if self._callback:
             self._callback()
         self._data = data
+        self.get_row()
+
+
+    def setType(self, type):
+        self._type = type
+
+    def get_row(self):
+        self.q_name.setData(str(self._name), Qt.DisplayRole)
+
+        self.q_state.setData("", Qt.DisplayRole)
+
+        self.q_name.setDragEnabled(True)
+
+        if isinstance(self._data, dict):
+            state_str = str(list(self._data.values())[0])
+            if len(self._data) > 1:
+                state_str = state_str + " {…}"
+            self.q_state.setData(state_str, Qt.DisplayRole)
+
+            for row in self._data:
+                if not self.sub_properties_appended:
+                    property = QStandardItem()
+                    value = QStandardItem()
+
+                    self.sub_properties.update({row: [property, value]})
+
+                    self.q_name.appendRow(self.sub_properties.get(row))
+
+                self.sub_properties.get(row)[0].setData(str(row), Qt.DisplayRole)
+                self.sub_properties.get(row)[1].setData(str(self._data.get(row)), Qt.DisplayRole)
+
+            self.sub_properties_appended = True
+
+        self.row_data = [self.q_name, self.q_state, self.q_time_added]
+
+        return self.row_data
 
     def data(self):
+        self.q_state.emitDataChanged()
         return self._data
 
-    def sortChildren(self, sort=DeviceSort.DEFAULT):
-        if sort == DeviceSort.TIME_DESCENDING:
-            self.children.sort(key=lambda x: x.time_added, reverse=True)
-        elif sort == DeviceSort.NAME_ASCENDING:
-            self.children.sort(key=lambda x: x.name)
-        elif sort == DeviceSort.NAME_DESCENDING:
-            self.children.sort(key=lambda x: x.name, reverse=True)
-
-        # Handle DEFAULT, TIME_ASCENDING (default), or incorrect sort parameter
-        else:
-            self.children.sort(key=lambda x: x.time_added)
+    def type(self):
+        return self._type
 
     def set_change_callback(self, callback):
         if self._callback:
@@ -62,184 +86,7 @@ class DeviceNode(object):
             return old_callback
         else:
             self._callback = callback
-
-    def setParent(self, parent):
-        if parent != None:
-            self.parent = parent
-            self.parent.appendChild(self)
-        else:
-            self.parent = None
-
-    def appendChild(self, child):
-        self.children.append(child)
-
-    def appendRow(self, child):
-        self.children.append(child)
-
-    def childAtRow(self, row):
-        #if row not in self.children:
-        #    return None
-        return self.children[row]
-
-    def rowOfChild(self, child):
-        for i, item in enumerate(self.children):
-            if item == child:
-                return i
-        return -1
-
-    def removeChild(self, row):
-        value = self.children[row]
-        self.children.remove(value)
-
-        return True
-
-    def __len__(self):
-        return len(self.children)
-
-
-class DeviceTreeModel(QAbstractItemModel):
-
-    """A device tree."""
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        self.treeView = parent
-        self.headers = ['Item', 'State', 'Description']
-        # self.treeView.setAlternatingRowColors(True)
-
-        # try:
-        #     self.root.header().resizeSection(0, 200)
-        # except Exception as e:
-        #     print(e)
-
-        self.columns = 2
-
-        # Create items
-        self.root = DeviceNode('root', 'on', 'this is root', None)
-
-    def supportedDropActions(self):
-        return Qt.CopyAction | Qt.MoveAction
-
-    def flags(self, index):
-        defaultFlags = QAbstractItemModel.flags(self, index)
-
-        if index.isValid():
-            return Qt.ItemIsEditable | Qt.ItemIsDragEnabled | \
-                   Qt.ItemIsDropEnabled | defaultFlags
-
-        else:
-            return Qt.ItemIsDropEnabled | defaultFlags
-
-    def headerData(self, section, orientation, role):
-        if orientation == Qt.Horizontal and role == Qt.DisplayRole:
-            return QVariant(self.headers[section])
-        return QVariant()
-
-    def insertRow(self, row, parent):
-        return self.insertRows(row, 1, parent)
-
-    def insertRows(self, row, count, parent):
-        self.beginInsertRows(parent, row, (row + (count - 1)))
-        self.endInsertRows()
-        return True
-
-    def removeRow(self, row, parentIndex):
-        return self.removeRows(row, 1, parentIndex)
-
-    def removeRows(self, row, count, parentIndex):
-        self.beginRemoveRows(parentIndex, row, row)
-        node = self.nodeFromIndex(parentIndex)
-        node.removeChild(row)
-        self.endRemoveRows()
-        return True
-
-    def index(self, row, column, parent):
-        node = self.nodeFromIndex(parent)
-        return self.createIndex(row, column, node.childAtRow(row))
-
-    def data(self, index, role):
-        if role == Qt.DecorationRole:
-            return QVariant()
-
-        if role == Qt.TextAlignmentRole:
-            return QVariant(int(Qt.AlignTop | Qt.AlignLeft))
-
-        if role != Qt.DisplayRole:
-            return QVariant()
-
-        node = self.nodeFromIndex(index)
-
-        if index.column() == 0:
-            return QVariant(node.name)
-
-        elif index.column() == 1:
-            return QVariant(node.state)
-
-        elif index.column() == 2:
-            return QVariant(node.description)
-        else:
-            return QVariant()
-
-    def columnCount(self, parent):
-        return self.columns
-
-    def rowCount(self, parent):
-        node = self.nodeFromIndex(parent)
-        if node is None:
-            return 0
-        return len(node)
-
-    def parent(self, child):
-        if not child.isValid():
-            return QModelIndex()
-
-        node = self.nodeFromIndex(child)
-
-        if node is None:
-            return QModelIndex()
-
-        parent = node.parent
-
-        if parent is None:
-            return QModelIndex()
-
-        grandparent = parent.parent
-        if grandparent is None:
-            return QModelIndex()
-        row = grandparent.rowOfChild(parent)
-
-        assert row != - 1
-        return self.createIndex(row, 0, parent)
-
-    def nodeFromIndex(self, index):
-        return index.internalPointer() if index.isValid() else self.root
-
-    def itemFromIndex(self, index):
-        return index.internalPointer() if index.isValid() else self.root
-
-    def refreshData(self):
-        """Updates the data on all nodes, but without having to perform a full reset.
-
-        A full reset on a tree makes us lose selection and expansion states. When all we ant to do
-        is to refresh the data on the nodes without adding or removing a node, a call on
-        dataChanged() is better. But of course, Qt makes our life complicated by asking us topLeft
-        and bottomRight indexes. This is a convenience method refreshing the whole tree.
-        """
-        columnCount = self.columnCount(self.root)
-        rowCount = len(self.root.children)
-        if not rowCount:
-            return
-        topLeft = self.index(0, 0, QModelIndex())
-        bottomRight = self.index(rowCount - 1, columnCount - 1, QModelIndex())
-        self.dataChanged.emit(topLeft, bottomRight, [])
-
-    def closeEvent(self, event):
-        self.mpfmon.write_local_settings()
-        event.accept()
-        self.mpfmon.check_if_quit()
-
-
+            self.row_data[1].emitDataChanged()
 
 
 
@@ -257,76 +104,86 @@ class DeviceDelegate(QStyledItemDelegate):
         found = False
         text = ''
 
+        # src_index = index.model().mapToSource(index)
+        # src_index_model = src_index.model()
+        # print(index.data())
+        # print(src_index_model.data())
+        data = []
+        try:
+            data = index.model().itemFromIndex(index).data()
+            # src_index = index.model().mapToSource(index)
+            # data = index.model().data(src_index)
+        except:
+            pass
+
+
         num_circles = 1
+        # return
 
         if index.column() == 0:
             return
 
         try:
-            if 'color' in index.model().itemFromIndex(index).data():
-                color = index.model().itemFromIndex(index).data()['color']
+            if 'color' in data:
+                color = data['color']
                 found = True
         except TypeError:
             return
 
         try:
-            if 'brightness' in index.model().itemFromIndex(index).data():
-                color = [index.model().itemFromIndex(index).data()['brightness']]*3
+            if 'brightness' in data:
+                color = [data['brightness']]*3
                 found = True
         except TypeError:
             return
 
         try:
-            if 'state' in index.model().itemFromIndex(index).data():
-                text = str(index.model().itemFromIndex(index).data()['state'])
+            if 'state' in data:
+                text = str(data['state'])
                 found = True
         except TypeError:
             return
 
         try:
-            if 'complete' in index.model().itemFromIndex(index).data():
-                state = not index.model().itemFromIndex(index).data()[
-                    'complete']
+            if 'complete' in data:
+                state = not data['complete']
                 found = True
         except TypeError:
             return
 
         try:
-            if 'enabled' in index.model().itemFromIndex(index).data():
-                state = index.model().itemFromIndex(index).data()[
-                    'enabled']
+            if 'enabled' in data:
+                state = data['enabled']
                 found = True
         except TypeError:
             return
 
         try:
-            if 'balls' in index.model().itemFromIndex(index).data():
-                balls = index.model().itemFromIndex(index).data()['balls']
+            if 'balls' in data:
+                balls = data['balls']
                 found = True
         except TypeError:
             return
 
         try:
-            if 'balls_locked' in index.model().itemFromIndex(index).data():
-                balls = index.model().itemFromIndex(index).data()['balls_locked']
+            if 'balls_locked' in data:
+                balls = data['balls_locked']
                 found = True
         except TypeError:
             return
 
         try:
-            if 'num_balls_requested' in index.model().itemFromIndex(
-                    index).data():
+            if 'num_balls_requested' in data:
                 text += 'Requested: {} '.format(
-                    index.model().itemFromIndex(index).data()['num_balls_requested'])
+                    data['num_balls_requested'])
                 found = True
         except TypeError:
             return
 
         try:
-            if 'unexpected_balls' in index.model().itemFromIndex(
-                    index).data():
+            if 'unexpected_balls' in data:
                 text += 'Unexpected: {} '.format(
-                    index.model().itemFromIndex(index).data()['unexpected_balls'])
+                    data['unexpected_balls'])
                 found = True
         except TypeError:
             return
@@ -334,7 +191,7 @@ class DeviceDelegate(QStyledItemDelegate):
         if not found:
             return
 
-        text += " " + str(index.model().itemFromIndex(index).data())
+        text += " " + str(data)
 
         painter.save()
 
@@ -393,7 +250,6 @@ class DeviceWindow(QWidget):
         self.device_states = dict()
         self.device_type_widgets = dict()
 
-        self.sort_devices_by = DeviceSort.DEFAULT
 
     def draw_ui(self):
         # Load ui file from ./ui/
@@ -417,19 +273,27 @@ class DeviceWindow(QWidget):
         assert (self.ui is not None)
         self.ui.treeView.expanded.connect(self.resize_columns_to_content)
         self.ui.treeView.collapsed.connect(self.resize_columns_to_content)
-        # self.ui.filterLineEdit.textChanged.connect(self.filter_text)
+        self.ui.filterLineEdit.textChanged.connect(self.filter_text)
+        self.ui.filterLineEdit.setEnabled(True)
         self.ui.sortComboBox.currentIndexChanged.connect(self.change_sort)
 
     def attach_model(self):
         assert (self.ui is not None)
         self.treeview = self.ui.treeView
-        self.model = DeviceTreeModel(self)
-        self.rootNode = self.model.root
+
+        self.model = QStandardItemModel()
+        self.model.setHorizontalHeaderLabels(["Device", "Data"])
+
         self.treeview.setDragDropMode(QAbstractItemView.DragOnly)
-        self.treeview.setItemDelegateForColumn(1, DeviceDelegate())
+        # self.treeview.setItemDelegateForColumn(1, DeviceDelegate())
         self.treeview.header().setSectionResizeMode(QHeaderView.ResizeToContents)
-        self.treeview.header().setStretchLastSection(False)
-        self.treeview.setModel(self.model)
+
+        self.filtered_model = QSortFilterProxyModel(self)
+        self.filtered_model.setSourceModel(self.model)
+        self.filtered_model.setRecursiveFilteringEnabled(True)
+        self.filtered_model.setFilterCaseSensitivity(False)
+
+        self.treeview.setModel(self.filtered_model)
 
     def resize_columns_to_content(self):
         self.ui.treeView.resizeColumnToContents(0)
@@ -440,21 +304,25 @@ class DeviceWindow(QWidget):
 
         if type not in self.device_states:
             self.device_states[type] = dict()
-            node = DeviceNode(type, "", "", self.rootNode)
-            self.device_type_widgets[type] = node
-            self.model.insertRow(0, QModelIndex())
-            self.rootNode.sortChildren(sort=self.sort_devices_by)
+
+            item = QStandardItem(type)
+            self.device_type_widgets[type] = item
+
+            self.model.appendRow([item, QStandardItem(), QStandardItem(str(time.perf_counter()))])
 
         if name not in self.device_states[type]:
+            node = DeviceNode()
+            node.setName(name)
+            node.setData(state)
+            node.setType(type)
 
-            node = DeviceNode(name, "", "", self.device_type_widgets[type])
             self.device_states[type][name] = node
-            self.device_type_widgets[type].sortChildren(sort=self.sort_devices_by)
+            self.device_type_widgets[type].appendRow(node.get_row())
 
             self.mpfmon.pf.create_widget_from_config(node, type, name)
 
         self.device_states[type][name].setData(state)
-        self.model.setData(self.model.index(0, 0, QModelIndex()), None)
+        self.ui.treeView.setColumnHidden(2, True)
 
     def filter_text(self, string):
         wc_string = "*" + str(string) + "*"
@@ -464,17 +332,23 @@ class DeviceWindow(QWidget):
 
     def change_sort(self, index=1):
         self.model.layoutAboutToBeChanged.emit()
+        self.filtered_model.beginResetModel()
 
-        self.sort_devices_by = DeviceSort(index)
-        self.rootNode.sortChildren(sort=self.sort_devices_by)
-        for type in self.device_type_widgets:
-            self.device_type_widgets[type].sortChildren(sort=self.sort_devices_by)
+        # This is a bit sloppy and probably should be reworked.
+        if index == 1:  # Received up
+            self.filtered_model.sort(2, Qt.AscendingOrder)
+        elif index == 2:  # Received down
+            self.filtered_model.sort(2, Qt.DescendingOrder)
+        elif index == 3:  # Name up
+            self.filtered_model.sort(0, Qt.AscendingOrder)
+        elif index == 4:  # Name down
+            self.filtered_model.sort(0, Qt.DescendingOrder)
 
+        self.filtered_model.endResetModel()
         self.model.layoutChanged.emit()
-        self.model.refreshData()
 
     def closeEvent(self, event):
-        super().closeEvent()
+        super().closeEvent(event)
         self.mpfmon.write_local_settings()
         event.accept()
         self.mpfmon.check_if_quit()

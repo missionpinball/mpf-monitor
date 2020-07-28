@@ -34,10 +34,10 @@
      <item row="0" column="0">
       <widget class="QLineEdit" name="filterLineEdit">
        <property name="enabled">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
        <property name="toolTip">
-        <string>Coming soon</string>
+        <string>Search for devices</string>
        </property>
        <property name="statusTip">
         <string/>
@@ -99,9 +99,6 @@
          <height>0</height>
         </size>
        </property>
-       <property name="toolTip">
-        <string>Coming soon</string>
-       </property>
        <property name="autoFillBackground">
         <bool>true</bool>
        </property>
@@ -119,6 +116,12 @@
        </property>
        <property name="showDropIndicator" stdset="0">
         <bool>false</bool>
+       </property>
+       <property name="dragEnabled">
+        <bool>false</bool>
+       </property>
+       <property name="dragDropMode">
+        <enum>QAbstractItemView::DragOnly</enum>
        </property>
        <property name="alternatingRowColors">
         <bool>true</bool>

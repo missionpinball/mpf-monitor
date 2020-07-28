@@ -220,8 +220,6 @@ class MPFMonitor():
             elif cmd == 'reset':
                 self.reset_connection()
                 self.bcp.send("reset_complete")
-        if device_update:
-            self.device_window.model.refreshData()
 
     def about(self):
         QMessageBox.about(self, "About MPF Monitor",
