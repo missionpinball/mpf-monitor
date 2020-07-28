@@ -39,8 +39,8 @@ class BCPClient(object):
 
         self.mpfmon.log.info('Looking for MPF at %s:%s', self.interface, self.port)
 
-        self.reconnect_timer = QTimer(self.mpfmon)
-        self.simulator_timer = QTimer(self.mpfmon)
+        self.reconnect_timer = QTimer(self.mpfmon.device_window)
+        self.simulator_timer = QTimer(self.mpfmon.device_window)
 
 
         self.simulator_messages = []

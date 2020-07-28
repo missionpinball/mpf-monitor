@@ -8,6 +8,18 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from enum import Enum
+
+
+class Shape(Enum):
+    DEFAULT = 0
+    SQUARE = 1
+    RECTANGLE = 2
+    CIRCLE = 3
+    TRIANGLE = 4
+    ARROW = 5
+    FLIPPER = 6
+
 
 class PfView(QGraphicsView):
 
@@ -47,6 +59,9 @@ class PfPixmapItem(QGraphicsPixmapItem):
             x = self.mpfmon.config[device_type][device_name]['x']
             y = self.mpfmon.config[device_type][device_name]['y']
             default_size = self.mpfmon.pf_device_size
+            shape_str = self.mpfmon.config[device_type][device_name].get('shape', 'DEFAULT')
+            shape = Shape[str(shape_str).upper()]
+            rotation = self.mpfmon.config[device_type][device_name].get('rotation', 0)
             size = self.mpfmon.config[device_type][device_name].get('size', default_size)
 
         except KeyError:
@@ -55,7 +70,8 @@ class PfPixmapItem(QGraphicsPixmapItem):
         x *= self.mpfmon.scene.width()
         y *= self.mpfmon.scene.height()
 
-        self.create_pf_widget(widget, device_type, device_name, x, y, size=size, save=False)
+        self.create_pf_widget(widget, device_type, device_name, x, y,
+                              size=size, rotation=rotation, shape=shape, save=False)
 
     def dragEnterEvent(self, event):
         event.acceptProposedAction()
@@ -66,18 +82,23 @@ class PfPixmapItem(QGraphicsPixmapItem):
         device = event.source().selectedIndexes()[0]
         device_name = device.data()
         device_type = device.parent().data()
-        widget = self.mpfmon.device_states[device_type][device_name]
 
         drop_x = event.scenePos().x()
         drop_y = event.scenePos().y()
 
-        self.create_pf_widget(widget, device_type, device_name, drop_x,
-                              drop_y)
+        try:
+            widget = self.mpfmon.device_window.device_states[device_type][device_name]
+            self.create_pf_widget(widget, device_type, device_name, drop_x,
+                                  drop_y)
+        except KeyError:
+            self.mpfmon.log.warn("Invalid device dragged.")
+
+
 
     def create_pf_widget(self, widget, device_type, device_name, drop_x,
-                         drop_y, size=None, save=True):
+                         drop_y, size=None, rotation=0, shape=Shape.DEFAULT, save=True):
         w = PfWidget(self.mpfmon, widget, device_type, device_name, drop_x,
-                     drop_y, size=size, save=save)
+                     drop_y, size=size, rotation=rotation, shape=shape, save=save)
 
         self.mpfmon.scene.addItem(w)
 
@@ -85,7 +106,8 @@ class PfPixmapItem(QGraphicsPixmapItem):
 
 class PfWidget(QGraphicsItem):
 
-    def __init__(self, mpfmon, widget, device_type, device_name, x, y, size=None, save=True):
+    def __init__(self, mpfmon, widget, device_type, device_name, x, y,
+                 size=None, rotation=0, shape=Shape.DEFAULT, save=True):
         super().__init__()
 
         self.widget = widget
@@ -94,6 +116,8 @@ class PfWidget(QGraphicsItem):
         self.move_in_progress = True
         self.device_type = device_type
         self.set_size(size=size)
+        self.shape = shape
+        self.angle = rotation
 
         self.setToolTip('{}: {}'.format(self.device_type, self.name))
         self.setAcceptedMouseButtons(Qt.LeftButton | Qt.RightButton)
@@ -114,6 +138,16 @@ class PfWidget(QGraphicsItem):
     def boundingRect(self):
         return QRectF(self.device_size / -2, self.device_size / -2,
                       self.device_size, self.device_size)
+
+    def set_shape(self, shape):
+        if isinstance(shape, Shape):
+            self.shape = shape
+        else:
+            self.shape = Shape.DEFAULT
+
+    def set_rotation(self, angle=0):
+        angle = angle % 360
+        self.angle = angle
 
     def set_size(self, size=None):
         if size is None:
@@ -160,29 +194,96 @@ class PfWidget(QGraphicsItem):
 
         return corrected
 
-    def paint(self, painter, option, widget=None):
-        if self.device_type == 'light':
-            color = self.color_gamma(self.widget.data()['color'])
+    def set_colored_brush(self, device_type, widget):
+        if device_type == 'light':
+            color = self.color_gamma(widget.data()['color'])
 
-            painter.setRenderHint(QPainter.Antialiasing, True)
-            painter.setPen(QPen(Qt.white, 3, Qt.SolidLine))
-            painter.setBrush(QBrush(QColor(*color), Qt.SolidPattern))
-            painter.drawEllipse(self.device_size / -2, self.device_size / -2,
-                                self.device_size, self.device_size)
-
-        elif self.device_type == 'switch':
-            state = self.widget.data()['state']
+        elif device_type == 'switch':
+            state = widget.data()['state']
 
             if state:
                 color = [0, 255, 0]
             else:
                 color = [0, 0, 0]
 
-            painter.setRenderHint(QPainter.Antialiasing, True)
-            painter.setPen(QPen(Qt.white, 3, Qt.SolidLine))
-            painter.setBrush(QBrush(QColor(*color), Qt.SolidPattern))
-            painter.drawRect(self.device_size / -2, self.device_size / -2,
-                             self.device_size, self.device_size)
+        return QBrush(QColor(*color), Qt.SolidPattern)
+
+    def paint(self, painter, option, widget=None):
+
+        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setPen(QPen(Qt.white, 3, Qt.SolidLine))
+        painter.rotate(self.angle)
+
+        brush = self.set_colored_brush(self.device_type, self.widget)
+        painter.setBrush(brush)
+
+        draw_shape = self.shape
+
+        # Preserve legacy and regular use
+        if draw_shape == Shape.DEFAULT:
+            if self.device_type == 'light':
+                draw_shape = Shape.CIRCLE
+            elif self.device_type == 'switch':
+                draw_shape = Shape.SQUARE
+
+        # Draw based on the shape we want, not device type.
+        if draw_shape == Shape.CIRCLE:
+            painter.drawEllipse(self.device_size / -2, self.device_size / -2,
+                                self.device_size, self.device_size)
+
+        elif draw_shape == Shape.SQUARE:
+            aspect_ratio = 1  # Smaller for taller rectangles, larger for wider rectangles
+            painter.drawRect((self.device_size * aspect_ratio) / -2, self.device_size / -2,
+                             self.device_size * aspect_ratio, self.device_size)
+
+        elif draw_shape == Shape.RECTANGLE:
+            aspect_ratio = .4  # Smaller for taller rectangles, larger for wider rectangles
+            painter.drawRect((self.device_size * aspect_ratio) / -2, self.device_size / -2,
+                             self.device_size * aspect_ratio, self.device_size)
+
+        elif draw_shape == Shape.TRIANGLE:
+            aspect_ratio = 1
+            scale = .6
+            points = QPolygon([
+                QPoint(0, self.device_size * scale * -1),
+                QPoint(self.device_size * scale * -1, ((self.device_size * scale) / 2) * aspect_ratio),
+                QPoint(self.device_size * scale, ((self.device_size * scale) / 2) * aspect_ratio),
+            ])
+            painter.drawPolygon(points)
+
+        elif draw_shape == Shape.ARROW:
+            """
+            Vertex  1: x=0   y=-10 
+            Vertex  2: x=-5  y=0
+            Vertex  3: x=-2  y=0
+            Vertex  4: x=-2  y=5
+            Vertex  5: x=2   y=5
+            Vertex  6: x=2   y=0
+            Vertex  7: x=5   y=0
+            """
+
+            aspect_ratio = 1
+            scale = .8
+            points = QPolygon([
+                QPoint(0, self.device_size * scale * -1),
+                QPoint(self.device_size * scale / -2, 0),
+                QPoint(self.device_size * scale / -4, 0),
+                QPoint(self.device_size * scale / -4, self.device_size * scale / 2),
+                QPoint(self.device_size * scale / 4, self.device_size * scale / 2),
+                QPoint(self.device_size * scale / 4, 0),
+                QPoint(self.device_size * scale / 2, 0)
+            ])
+            painter.drawPolygon(points)
+
+        elif draw_shape == Shape.FLIPPER:
+            aspect_ratio = 5
+            scale = .7
+            points = QPolygon([
+                QPoint(0, self.device_size * scale * -1),
+                QPoint(self.device_size * scale * -1, ((self.device_size * scale) / 2) * aspect_ratio),
+                QPoint(self.device_size * scale, ((self.device_size * scale) / 2) * aspect_ratio),
+            ])
+            painter.drawPolygon(points)
 
     def notify(self, destroy=False, resize=False):
         self.update()
@@ -259,8 +360,37 @@ class PfWidget(QGraphicsItem):
         self.mpfmon.config[self.device_type][self.name]['x'] = x
         self.mpfmon.config[self.device_type][self.name]['y'] = y
 
+        # Only save the shape if it is different than the  default
+        conf_shape_str = self.mpfmon.config[self.device_type][self.name].get('shape', 'DEFAULT')
+        conf_shape = Shape[str(conf_shape_str).upper()]
+
+        if self.shape is not conf_shape:
+            if self.shape is not Shape.DEFAULT:
+                self.mpfmon.config[self.device_type][self.name]['shape'] = self.shape.name
+            else:
+                try:
+                    self.mpfmon.config[self.device_type][self.name].pop('shape')
+                except:
+                    pass
+
+        # Only save the rotation if it has been changed
+        conf_angle = self.mpfmon.config[self.device_type][self.name].get('angle', -1)
+
+        if self.angle is not conf_angle:
+            if self.angle != 0:
+                self.mpfmon.config[self.device_type][self.name]['rotation'] = self.angle
+            else:
+                try:
+                    self.mpfmon.config[self.device_type][self.name].pop('rotation')
+                except:
+                    pass
+
         # Only save the size if it is different than the top level default
-        if self.size is not self.mpfmon.pf_device_size:
+        default_size = self.mpfmon.pf_device_size
+        conf_size = self.mpfmon.config[self.device_type][self.name].get('size', default_size)
+
+        if self.size is not conf_size \
+                and self.size is not self.mpfmon.pf_device_size:
             self.mpfmon.config[self.device_type][self.name]['size'] = self.size
 
         if save:
