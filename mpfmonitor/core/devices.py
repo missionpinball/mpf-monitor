@@ -274,7 +274,6 @@ class DeviceWindow(QWidget):
         self.ui.treeView.expanded.connect(self.resize_columns_to_content)
         self.ui.treeView.collapsed.connect(self.resize_columns_to_content)
         self.ui.filterLineEdit.textChanged.connect(self.filter_text)
-        self.ui.filterLineEdit.setEnabled(True)
         self.ui.sortComboBox.currentIndexChanged.connect(self.change_sort)
 
     def attach_model(self):
