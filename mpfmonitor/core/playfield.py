@@ -195,6 +195,7 @@ class PfWidget(QGraphicsItem):
         return corrected
 
     def set_colored_brush(self, device_type, widget):
+        color = [0, 0, 0]
         if device_type == 'light':
             color = self.color_gamma(widget.data()['color'])
 
@@ -203,6 +204,21 @@ class PfWidget(QGraphicsItem):
 
             if state:
                 color = [0, 255, 0]
+            else:
+                color = [0, 0, 0]
+
+        elif device_type == 'diverter':
+            state = widget.data()['active']
+
+            if state:
+                color = [128, 0, 255]
+            else:
+                color = [0, 0, 0]
+        else:
+            # Get first parameter and draw as white if it evaluates True
+            state = bool(list(widget.data().values())[0])
+            if state:
+                color = [255, 255, 255]
             else:
                 color = [0, 0, 0]
 
@@ -223,7 +239,14 @@ class PfWidget(QGraphicsItem):
         if draw_shape == Shape.DEFAULT:
             if self.device_type == 'light':
                 draw_shape = Shape.CIRCLE
+
             elif self.device_type == 'switch':
+                draw_shape = Shape.SQUARE
+
+            elif self.device_type == 'diverter':
+                draw_shape = Shape.TRIANGLE
+
+            else:  # Draw any other devices as square by default
                 draw_shape = Shape.SQUARE
 
         # Draw based on the shape we want, not device type.
