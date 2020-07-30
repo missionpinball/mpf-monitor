@@ -35,7 +35,12 @@ class BCPClient(object):
 
         self.simulate = simulate
         self.caching_enabled = cache
-        self.cache_file_location = os.path.join(self.mpfmon.machine_path, "monitor", "cache.txt")
+
+        try:
+            self.cache_file_location = os.path.join(self.mpfmon.machine_path, "monitor", "cache.txt")
+        except FileNotFoundError:
+            self.simulate = False
+            self.caching_enabled = False
 
         self.mpfmon.log.info('Looking for MPF at %s:%s', self.interface, self.port)
 
@@ -71,7 +76,13 @@ class BCPClient(object):
         if enable:
             self.simulate = True
             if self.caching_enabled:
-                self.cache_file = open(self.cache_file_location, "r")
+                try:
+                    self.cache_file = open(self.cache_file_location, "r")
+                except FileNotFoundError:
+                    self.log.warn("Caching enabled but no cache file found.")
+                    self.simulate = False
+                    self.caching_enabled = False
+                    self.enable_simulator(False)
         else:
             self.simulate = False
             if self.caching_enabled:

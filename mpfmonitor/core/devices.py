@@ -285,7 +285,9 @@ class DeviceWindow(QWidget):
 
         self.treeview.setDragDropMode(QAbstractItemView.DragOnly)
         # self.treeview.setItemDelegateForColumn(1, DeviceDelegate())
-        self.treeview.header().setSectionResizeMode(QHeaderView.ResizeToContents)
+
+        # Resizing to contents causes huge performance losses. Only resize when rows expanded or collapsed.
+        # self.treeview.header().setSectionResizeMode(QHeaderView.ResizeToContents)
 
         self.filtered_model = QSortFilterProxyModel(self)
         self.filtered_model.setSourceModel(self.model)
