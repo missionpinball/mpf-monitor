@@ -8,8 +8,6 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 
-from enum import Enum
-
 
 class DeviceNode(object):
 
@@ -27,52 +25,54 @@ class DeviceNode(object):
         self.q_time_added = QStandardItem()
         self.q_time_added.setData(time.perf_counter(), Qt.DisplayRole)
 
+        self.q_name.setDragEnabled(True)
+        self.q_state.setData("", Qt.DisplayRole)
+
     def setName(self, name):
         self._name = name
+        self.q_name.setData(str(self._name), Qt.DisplayRole)
+        self.q_state.emitDataChanged()
 
     def setData(self, data):
+        """Set data of device."""
+        if data == self._data:
+            # do nothing if data did not change
+            return
+
+        if not isinstance(data, dict):
+            data = {}
+
         if self._callback:
             self._callback()
-        self._data = data
-        self.get_row()
 
+        self._data = data
+
+        state_str = str(list(self._data.values())[0])
+        if len(self._data) > 1:
+            state_str = state_str + " {…}"
+        self.q_state.setData(state_str, Qt.DisplayRole)
+
+        for row in self._data:
+            if not self.sub_properties_appended:
+                q_property = QStandardItem()
+                q_value = QStandardItem()
+                self.sub_properties.update({row: [q_property, q_value]})
+                self.q_name.appendRow(self.sub_properties.get(row))
+
+            self.sub_properties.get(row)[0].setData(str(row), Qt.DisplayRole)
+            self.sub_properties.get(row)[1].setData(str(self._data.get(row)), Qt.DisplayRole)
+
+        self.sub_properties_appended = True
+        self.q_state.emitDataChanged()
 
     def setType(self, type):
         self._type = type
+        self.q_state.emitDataChanged()
 
     def get_row(self):
-        self.q_name.setData(str(self._name), Qt.DisplayRole)
-
-        self.q_state.setData("", Qt.DisplayRole)
-
-        self.q_name.setDragEnabled(True)
-
-        if isinstance(self._data, dict):
-            state_str = str(list(self._data.values())[0])
-            if len(self._data) > 1:
-                state_str = state_str + " {…}"
-            self.q_state.setData(state_str, Qt.DisplayRole)
-
-            for row in self._data:
-                if not self.sub_properties_appended:
-                    property = QStandardItem()
-                    value = QStandardItem()
-
-                    self.sub_properties.update({row: [property, value]})
-
-                    self.q_name.appendRow(self.sub_properties.get(row))
-
-                self.sub_properties.get(row)[0].setData(str(row), Qt.DisplayRole)
-                self.sub_properties.get(row)[1].setData(str(self._data.get(row)), Qt.DisplayRole)
-
-            self.sub_properties_appended = True
-
-        self.row_data = [self.q_name, self.q_state, self.q_time_added]
-
-        return self.row_data
+        return [self.q_name, self.q_state, self.q_time_added]
 
     def data(self):
-        self.q_state.emitDataChanged()
         return self._data
 
     def type(self):
@@ -86,9 +86,7 @@ class DeviceNode(object):
             return old_callback
         else:
             self._callback = callback
-            self.row_data[1].emitDataChanged()
-
-
+            self.q_state.emitDataChanged()
 
 
 class DeviceDelegate(QStyledItemDelegate):
@@ -321,8 +319,9 @@ class DeviceWindow(QWidget):
             self.device_type_widgets[type].appendRow(node.get_row())
 
             self.mpfmon.pf.create_widget_from_config(node, type, name)
+        else:
+            self.device_states[type][name].setData(state)
 
-        self.device_states[type][name].setData(state)
         self.ui.treeView.setColumnHidden(2, True)
 
     def filter_text(self, string):
