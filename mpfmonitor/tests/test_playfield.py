@@ -160,46 +160,44 @@ class TestPfWidgetColorFuncs(unittest.TestCase):
     def test_color_gamma(self):
         color_in = [0, 128, 255]
         expected_color_out = [0, 203, 255]  # Manually calculated 128 -> 203
-        color_out = self.widget.color_gamma(color=color_in)
+        color_out = DeviceNode._calculate_color_gamma_correction(color=color_in)
 
         self.assertEqual(color_out, expected_color_out, 'Gamma does not match expected value')
 
     def test_colored_brush_light(self):
-        device_type = 'light'
-        mock_widget = MagicMock()
-
         color_in = [0, 128, 255]
-        expected_q_brush_out = QBrush(QColor(*color_in), Qt.SolidPattern)
+        expected_color_out = [0, 203, 255]  # Manually calculated 128 -> 203
+        device_type = 'light'
+        mock_widget = DeviceNode()
+        mock_widget.setData({"color": color_in})
+        mock_widget.setType(device_type)
 
-        self.widget.color_gamma = MagicMock()
-        self.widget.color_gamma.return_value = color_in
+        expected_q_brush_out = QBrush(QColor(*expected_color_out), Qt.SolidPattern)
+        q_brush_out = mock_widget.get_colored_brush()
 
-        q_brush_out = self.widget.set_colored_brush(device_type=device_type, widget=mock_widget)
-
-        self.widget.color_gamma.assert_called_once()
         self.assertEqual(q_brush_out, expected_q_brush_out, 'Brush is not returning correct value')
 
     def test_colored_brush_switch_off(self):
-        mock_widget = MagicMock()
-        mock_widget.data.return_value = {'state': False}
-
         device_type = 'switch'
-        color_in = [0, 0, 0]
-        expected_q_brush_out = QBrush(QColor(*color_in), Qt.SolidPattern)
+        expected_color_out = [0, 0, 0]
+        mock_widget = DeviceNode()
+        mock_widget.setData({'state': False})
+        mock_widget.setType(device_type)
 
-        q_brush_out = self.widget.set_colored_brush(device_type=device_type, widget=mock_widget)
+        expected_q_brush_out = QBrush(QColor(*expected_color_out), Qt.SolidPattern)
+        q_brush_out = mock_widget.get_colored_brush()
 
         self.assertEqual(q_brush_out, expected_q_brush_out, 'Brush is not returning correct value')
 
     def test_colored_brush_switch_on(self):
-        mock_widget = MagicMock()
-        mock_widget.data.return_value = {'state': True}
-
         device_type = 'switch'
-        color_in = [0, 255, 0]
-        expected_q_brush_out = QBrush(QColor(*color_in), Qt.SolidPattern)
+        expected_color_out = [0, 255, 0]
+        mock_widget = DeviceNode()
+        mock_widget.setData({'state': True})
+        mock_widget.setType(device_type)
 
-        q_brush_out = self.widget.set_colored_brush(device_type=device_type, widget=mock_widget)
+        expected_q_brush_out = QBrush(QColor(*expected_color_out), Qt.SolidPattern)
+        q_brush_out = mock_widget.get_colored_brush()
 
         self.assertEqual(q_brush_out, expected_q_brush_out, 'Brush is not returning correct value')
 

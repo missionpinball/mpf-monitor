@@ -20,6 +20,7 @@ class TestableDeviceWindowNoGUI(DeviceWindow):
 
         self.device_states = dict()
         self.device_type_widgets = dict()
+        self._debug_enabled = False
 
 class TestDeviceWindowFunctions(unittest.TestCase):
     def setUp(self):
