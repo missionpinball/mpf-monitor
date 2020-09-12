@@ -8,14 +8,23 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
 
+BRUSH_WHITE = QBrush(QColor(255, 255, 255), Qt.SolidPattern)
+BRUSH_GREEN = QBrush(QColor(0, 255, 0), Qt.SolidPattern)
+BRUSH_BLACK = QBrush(QColor(0, 0, 0), Qt.SolidPattern)
+BRUSH_DARK_PURPLE = QBrush(QColor(128, 0, 255), Qt.SolidPattern)
 
-class DeviceNode(object):
+
+class DeviceNode:
+
+    __slots__ = ["_callback", "_name", "_data", "_type", "_brush", "q_name", "q_state", "sub_properties",
+                 "sub_properties_appended", "q_time_added"]
 
     def __init__(self):
         self._callback = None
         self._name = ""
         self._data = {}
         self._type = ""
+        self._brush = BRUSH_BLACK
 
         self.q_name = QStandardItem()
         self.q_state = QStandardItem()
@@ -64,9 +73,11 @@ class DeviceNode(object):
 
         self.sub_properties_appended = True
         self.q_state.emitDataChanged()
+        self._brush = self._calculate_colored_brush()
 
     def setType(self, type):
         self._type = type
+        self._brush = self._calculate_colored_brush()
         self.q_state.emitDataChanged()
 
     def get_row(self):
@@ -77,6 +88,63 @@ class DeviceNode(object):
 
     def type(self):
         return self._type
+
+    def get_colored_brush(self) -> QBrush:
+        """Return colored brush for device."""
+        return self._brush
+
+    @staticmethod
+    def _calculate_color_gamma_correction(color):
+        """Perform gamma correction.
+
+        Feel free to fiddle with these constants until it feels right
+        With gamma = 0.5 and constant a = 18, the top 54 values are lost,
+        but the bottom 25% feels much more normal.
+        """
+        gamma = 0.5
+        a = 18
+        corrected = []
+
+        for value in color:
+            value = int(pow(value, gamma) * a)
+            if value > 255:
+                value = 255
+            corrected.append(value)
+
+        return corrected
+
+    def _calculate_colored_brush(self):
+        if self._type == 'light':
+            color = self.data()['color']
+            if color == [0, 0, 0]:
+                # shortcut for black
+                return BRUSH_BLACK
+            color = self._calculate_color_gamma_correction(color)
+
+        elif self._type == 'switch':
+            state = self.data()['state']
+
+            if state:
+                return BRUSH_GREEN
+            else:
+                return BRUSH_BLACK
+
+        elif self._type == 'diverter':
+            state = self.data()['active']
+
+            if state:
+                return BRUSH_DARK_PURPLE
+            else:
+                return BRUSH_BLACK
+        else:
+            # Get first parameter and draw as white if it evaluates True
+            state = bool(list(self.data().values())[0])
+            if state:
+                return BRUSH_WHITE
+            else:
+                return BRUSH_BLACK
+
+        return QBrush(QColor(*color), Qt.SolidPattern)
 
     def set_change_callback(self, callback):
         if self._callback:
@@ -231,6 +299,9 @@ class DeviceDelegate(QStyledItemDelegate):
 
 class DeviceWindow(QWidget):
 
+    __slots__ = ["mpfmn", "ui", "model", "log", "already_hidden", "added_index", "device_states",
+                 "device_type_widgets", "_debug_enabled"]
+
     def __init__(self, mpfmon):
         self.mpfmon = mpfmon
         super().__init__()
@@ -247,7 +318,7 @@ class DeviceWindow(QWidget):
 
         self.device_states = dict()
         self.device_type_widgets = dict()
-
+        self._debug_enabled = self.log.isEnabledFor(logging.DEBUG)
 
     def draw_ui(self):
         # Load ui file from ./ui/
@@ -299,7 +370,9 @@ class DeviceWindow(QWidget):
         self.ui.treeView.resizeColumnToContents(1)
 
     def process_device_update(self, name, state, changes, type):
-        self.log.debug("Device Update: {}.{}: {}".format(type, name, state))
+        del changes
+        if self._debug_enabled:
+            self.log.debug("Device Update: %s.%s: %s", type, name, state)
 
         if type not in self.device_states:
             self.device_states[type] = dict()

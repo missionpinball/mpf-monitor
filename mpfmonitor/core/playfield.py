@@ -10,6 +10,8 @@ from PyQt5.QtWidgets import *
 
 from enum import Enum
 
+from mpfmonitor.core.devices import DeviceNode
+
 
 class Shape(Enum):
     DEFAULT = 0
@@ -52,7 +54,26 @@ class PfPixmapItem(QGraphicsPixmapItem):
 
         self.mpfmon = mpfmon
         self.setAcceptDrops(True)
+        self._height = None
+        self._width = None
 
+    def invalidate_size(self):
+        self._height = None
+        self._width = None
+
+    @property
+    def height(self):
+        """Return the height of the scene."""
+        if self._height is None:
+            self._height = self.mpfmon.scene.height()
+        return self._height
+
+    @property
+    def width(self):
+        """Return the width of the scene."""
+        if self._width is None:
+            self._width = self.mpfmon.scene.width()
+        return self._width
 
     def create_widget_from_config(self, widget, device_type, device_name):
         try:
@@ -60,15 +81,15 @@ class PfPixmapItem(QGraphicsPixmapItem):
             y = self.mpfmon.config[device_type][device_name]['y']
             default_size = self.mpfmon.pf_device_size
             shape_str = self.mpfmon.config[device_type][device_name].get('shape', 'DEFAULT')
-            shape = Shape[str(shape_str).upper()]
+            shape = Shape[shape_str]
             rotation = self.mpfmon.config[device_type][device_name].get('rotation', 0)
             size = self.mpfmon.config[device_type][device_name].get('size', default_size)
 
         except KeyError:
             return
 
-        x *= self.mpfmon.scene.width()
-        y *= self.mpfmon.scene.height()
+        x *= self.width
+        y *= self.height
 
         self.create_pf_widget(widget, device_type, device_name, x, y,
                               size=size, rotation=rotation, shape=shape, save=False)
@@ -93,8 +114,6 @@ class PfPixmapItem(QGraphicsPixmapItem):
         except KeyError:
             self.mpfmon.log.warn("Invalid device dragged.")
 
-
-
     def create_pf_widget(self, widget, device_type, device_name, drop_x,
                          drop_y, size=None, rotation=0, shape=Shape.DEFAULT, save=True):
         w = PfWidget(self.mpfmon, widget, device_type, device_name, drop_x,
@@ -103,14 +122,13 @@ class PfPixmapItem(QGraphicsPixmapItem):
         self.mpfmon.scene.addItem(w)
 
 
-
 class PfWidget(QGraphicsItem):
 
     def __init__(self, mpfmon, widget, device_type, device_name, x, y,
                  size=None, rotation=0, shape=Shape.DEFAULT, save=True):
         super().__init__()
 
-        self.widget = widget
+        self.widget = widget    # type: DeviceNode
         self.mpfmon = mpfmon
         self.name = device_name
         self.move_in_progress = True
@@ -125,6 +143,7 @@ class PfWidget(QGraphicsItem):
         self.update_pos(save)
         self.click_start = 0
         self.release_switch = False
+        self.pen = QPen(Qt.white, 3, Qt.SolidLine)
 
         self.log = logging.getLogger('Core')
 
@@ -174,64 +193,13 @@ class PfWidget(QGraphicsItem):
 
         self.update_pos(save=False)  # Do not save at this point. Let it be saved elsewhere. This reduces writes.
 
-    def color_gamma(self, color):
-
-        """
-        Feel free to fiddle with these constants until it feels right
-        With gamma = 0.5 and constant a = 18, the top 54 values are lost,
-        but the bottom 25% feels much more normal.
-        """
-
-        gamma = 0.5
-        a = 18
-        corrected = []
-
-        for value in color:
-            value = int(pow(value, gamma) * a)
-            if value > 255:
-                value = 255
-            corrected.append(value)
-
-        return corrected
-
-    def set_colored_brush(self, device_type, widget):
-        color = [0, 0, 0]
-        if device_type == 'light':
-            color = self.color_gamma(widget.data()['color'])
-
-        elif device_type == 'switch':
-            state = widget.data()['state']
-
-            if state:
-                color = [0, 255, 0]
-            else:
-                color = [0, 0, 0]
-
-        elif device_type == 'diverter':
-            state = widget.data()['active']
-
-            if state:
-                color = [128, 0, 255]
-            else:
-                color = [0, 0, 0]
-        else:
-            # Get first parameter and draw as white if it evaluates True
-            state = bool(list(widget.data().values())[0])
-            if state:
-                color = [255, 255, 255]
-            else:
-                color = [0, 0, 0]
-
-        return QBrush(QColor(*color), Qt.SolidPattern)
-
     def paint(self, painter, option, widget=None):
-
+        """Paint this widget to the playfield."""
         painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setPen(QPen(Qt.white, 3, Qt.SolidLine))
+        painter.setPen(self.pen)
         painter.rotate(self.angle)
 
-        brush = self.set_colored_brush(self.device_type, self.widget)
-        painter.setBrush(brush)
+        painter.setBrush(self.widget.get_colored_brush())
 
         draw_shape = self.shape
 
@@ -314,9 +282,8 @@ class PfWidget(QGraphicsItem):
         if destroy:
             self.destroy()
 
-
     def destroy(self):
-        self.log.debug("Destroy device: " + self.name)
+        self.log.debug("Destroy device: %s", self.name)
         self.mpfmon.scene.removeItem(self)
         self.delete_from_config()
 
@@ -340,25 +307,24 @@ class PfWidget(QGraphicsItem):
                     self.release_switch = False
                 else:
                     self.send_to_inspector_window()
-                    self.log.debug('Switch ' + self.name + ' right clicked')
+                    self.log.debug('Switch %s right clicked', self.name)
             elif event.buttons() & Qt.LeftButton:
                 if not self.get_val_inspector_enabled():
                     self.mpfmon.bcp.send('switch', name=self.name, state=-1)
                     self.release_switch = True
                 else:
                     self.send_to_inspector_window()
-                    self.log.debug('Switch ' + self.name + ' clicked')
+                    self.log.debug('Switch %s clicked', self.name)
 
         else:
             if event.buttons() & Qt.RightButton:
                 if self.get_val_inspector_enabled():
                     self.send_to_inspector_window()
-                    self.log.debug(str(self.device_type) + ' ' + self.name + ' right clicked')
+                    self.log.debug('%s %s right clicked', self.device_type, self.name)
             elif event.buttons() & Qt.LeftButton:
                 if self.get_val_inspector_enabled():
                     self.send_to_inspector_window()
-                    self.log.debug(str(self.device_type) + ' ' + self.name + ' clicked')
-
+                    self.log.debug('%s %s clicked', self.device_type, self.name)
 
     def mouseReleaseEvent(self, event):
         if self.move_in_progress and time.time() - self.click_start > .5:

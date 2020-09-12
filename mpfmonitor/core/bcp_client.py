@@ -52,10 +52,6 @@ class BCPClient(object):
         self.simulator_msg_timer = []
         self.enable_simulator(enable=self.simulate)
 
-
-
-
-
     def register_timer(self):
         if self.simulate:
             self.reconnect_timer.stop()

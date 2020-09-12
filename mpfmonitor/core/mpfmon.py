@@ -5,6 +5,8 @@ import os
 import time
 
 # will change these to specific imports once code is more final
+from collections import deque
+
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -193,6 +195,7 @@ class MPFMonitor():
                 self.playfield.setPixmap(self.playfield_image.scaled(
                     self.playfield.size(), Qt.KeepAspectRatio,
                     Qt.SmoothTransformation))
+                self.pf.invalidate_size()
         except AttributeError:
             pass
 
@@ -204,13 +207,14 @@ class MPFMonitor():
         Check the queue to see if BCP has any messages to process.
         If any devices have updated, refresh the model data.
         """
+        # get the complete queue
+        with self.receive_queue.mutex:
+            local_queue = self.receive_queue.queue
+            self.receive_queue.queue = deque()
 
-        device_update = False
-        while not self.receive_queue.empty():
-            cmd, kwargs = self.receive_queue.get_nowait()
+        for cmd, kwargs in local_queue:
             if cmd == 'device':
                 self.device_window.process_device_update(**kwargs)
-                device_update = True
             elif cmd == 'monitored_event':
                 self.event_window.add_event_to_model(**kwargs)
             elif cmd in ('mode_start', 'mode_stop', 'mode_list'):

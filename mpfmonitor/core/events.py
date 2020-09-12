@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import *
 from PyQt5 import uic
 
 import os
-import time
+
 
 class EventWindow(QWidget):
 
@@ -37,12 +37,10 @@ class EventWindow(QWidget):
         self.ui.sortComboBox.model().item(0).setEnabled(False)
         self.ui.sortComboBox.setCurrentIndex(1)
 
-
     def attach_signals(self):
         assert (self.ui is not None)
         self.ui.filterLineEdit.textChanged.connect(self.filter_text)
         self.ui.sortComboBox.currentIndexChanged.connect(self.change_sort)
-
 
     def attach_model(self):
         self.model = QStandardItemModel(0, 2)
@@ -96,7 +94,6 @@ class EventWindow(QWidget):
             self.filtered_model.sort(0, Qt.AscendingOrder)
         elif index == 4:  # Name down
             self.filtered_model.sort(0, Qt.DescendingOrder)
-
 
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()
