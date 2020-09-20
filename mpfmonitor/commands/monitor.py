@@ -40,8 +40,7 @@ class Command(object):
                             help="The name of a config file to load. Note "
                                  "this is a config for the monitor itself, "
                                  "not an MPF config.yaml. Default is "
-                                 "monitor.yaml. Multiple files can be used "
-                                 "via a comma-separated list (no spaces between)")
+                                 "monitor.")
 
         parser.add_argument("-v",
                             action="store_const", dest="loglevel", const=logging.DEBUG,
@@ -63,8 +62,7 @@ class Command(object):
                                  "folder>/mpfmonitor.yaml")
 
         args = parser.parse_args(args)
-
-        args.configfile = Util.string_to_list(args.configfile)
+        args.configfile = "{}.yaml".format(args.configfile)
 
         # Configure logging. Creates a logfile and logs to the console.
         # Formatting options are documented here:
@@ -103,7 +101,7 @@ class Command(object):
         thread_stopper = threading.Event()
 
         try:
-            run(machine_path=machine_path, thread_stopper=thread_stopper)
+            run(machine_path=machine_path, thread_stopper=thread_stopper, config_file=args.configfile)
             logging.info("MPF Monitor run loop ended.")
         except Exception as e:
             logging.exception(str(e))

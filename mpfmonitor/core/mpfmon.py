@@ -25,7 +25,7 @@ from mpfmonitor.core.inspector import InspectorWindow
 
 
 class MPFMonitor():
-    def __init__(self, app, machine_path, thread_stopper, parent=None, testing=False):
+    def __init__(self, app, machine_path, thread_stopper, config_file, parent=None, testing=False):
 
         # super().__init__(parent)
 
@@ -43,7 +43,7 @@ class MPFMonitor():
         self.config = None
         self.layout = None
         self.config_file = os.path.join(self.machine_path, "monitor",
-                                        "monitor.yaml")
+                                        config_file)
         self.playfield_image_file = os.path.join(self.machine_path,
                                                  "monitor", "playfield.jpg")
 
@@ -293,5 +293,5 @@ class MPFMonitor():
 def run(machine_path, thread_stopper, testing=False):
 
     app = QApplication(sys.argv)
-    MPFMonitor(app, machine_path, thread_stopper, testing=testing)
+    MPFMonitor(app, machine_path, thread_stopper, config_file, testing=testing)
     app.exec_()
