@@ -290,7 +290,7 @@ class MPFMonitor():
 
 
 
-def run(machine_path, thread_stopper, testing=False):
+def run(machine_path, thread_stopper, config_file, testing=False):
 
     app = QApplication(sys.argv)
     MPFMonitor(app, machine_path, thread_stopper, config_file, testing=testing)
