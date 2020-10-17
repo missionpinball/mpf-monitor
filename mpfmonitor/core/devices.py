@@ -17,7 +17,7 @@ BRUSH_DARK_PURPLE = QBrush(QColor(128, 0, 255), Qt.SolidPattern)
 class DeviceNode:
 
     __slots__ = ["_callback", "_name", "_data", "_type", "_brush", "q_name", "q_state", "sub_properties",
-                 "sub_properties_appended", "q_time_added"]
+                 "sub_properties_appended", "q_time_added", "log"]
 
     def __init__(self):
         self._callback = None
@@ -37,9 +37,12 @@ class DeviceNode:
         self.q_name.setDragEnabled(True)
         self.q_state.setData("", Qt.DisplayRole)
 
+        self.log = logging.getLogger('Device')
+
     def setName(self, name):
         self._name = name
         self.q_name.setData(str(self._name), Qt.DisplayRole)
+        self.log = logging.getLogger('Device {}'.format(self._name))
         self.q_state.emitDataChanged()
 
     def setData(self, data):
@@ -93,8 +96,7 @@ class DeviceNode:
         """Return colored brush for device."""
         return self._brush
 
-    @staticmethod
-    def _calculate_color_gamma_correction(color):
+    def _calculate_color_gamma_correction(self, color):
         """Perform gamma correction.
 
         Feel free to fiddle with these constants until it feels right
@@ -106,6 +108,10 @@ class DeviceNode:
         corrected = []
 
         for value in color:
+            if value < 0 or value > 255:
+                self.log.warning("Got value %s for brightness which outside the expected range", value)
+                value = 0
+
             value = int(pow(value, gamma) * a)
             if value > 255:
                 value = 255
