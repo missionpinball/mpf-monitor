@@ -160,7 +160,11 @@ class TestPfWidgetColorFuncs(unittest.TestCase):
     def test_color_gamma(self):
         color_in = [0, 128, 255]
         expected_color_out = [0, 203, 255]  # Manually calculated 128 -> 203
-        color_out = DeviceNode._calculate_color_gamma_correction(color=color_in)
+
+        mock_widget = DeviceNode()
+        mock_widget.setData({"color": color_in})
+        mock_widget.setType('light')
+        color_out = mock_widget._calculate_color_gamma_correction(color=color_in)
 
         self.assertEqual(color_out, expected_color_out, 'Gamma does not match expected value')
 

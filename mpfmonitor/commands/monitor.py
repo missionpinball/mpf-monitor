@@ -11,6 +11,9 @@ import time
 
 import errno
 
+# import functiontrace
+# functiontrace.trace()
+
 
 class Command(object):
 
