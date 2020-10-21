@@ -58,7 +58,7 @@ install_requires = ['ruamel.yaml==0.15.100',
 # PyQt5 wheels are Python 3.5 only
 # PyQt5 binaries for Python 3.4 on Windows: https://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.5.1/
 if sys.version_info.major == 3 and sys.version_info.minor == 5:
-    install_requires += ['PyQt5']
+    install_requires += ['PyQt5==5.14.2']
 
 # README.md is not included in the build packages.
 try:
