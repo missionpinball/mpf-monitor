@@ -127,14 +127,11 @@ class MPFMonitor():
 
         self.inspector_window.register_set_inspector_val_cb(self.set_inspector_mode)
 
-
         self.menu_bar = QMenuBar()
         self.view_menu = self.menu_bar.addMenu("&View")
         self.view_menu.addAction(self.toggle_pf_window_action)
         self.view_menu.addAction(self.toggle_device_window_action)
         self.view_menu.addAction(self.toggle_event_window_action)
-
-
 
     def toggle_pf_window(self):
         if self.view.isVisible():
@@ -212,11 +209,13 @@ class MPFMonitor():
             local_queue = self.receive_queue.queue
             self.receive_queue.queue = deque()
 
+        added_events = False
         for cmd, kwargs in local_queue:
             if cmd == 'device':
                 self.device_window.process_device_update(**kwargs)
             elif cmd == 'monitored_event':
                 self.event_window.add_event_to_model(**kwargs)
+                added_events = True
             elif cmd in ('mode_start', 'mode_stop', 'mode_list'):
                 if 'running_modes' not in kwargs:
                     # ignore mode_start/stop on newer MPF versions
@@ -225,6 +224,9 @@ class MPFMonitor():
             elif cmd == 'reset':
                 self.reset_connection()
                 self.bcp.send("reset_complete")
+
+        if added_events:
+            self.event_window.update_events()
 
     def about(self):
         QMessageBox.about(self, "About MPF Monitor",

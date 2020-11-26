@@ -10,6 +10,7 @@ class EventWindow(QWidget):
 
     def __init__(self, mpfmon):
         self.mpfmon = mpfmon
+        self.filtered_model = None
         super().__init__()
         self.ui = None
         self.model = None
@@ -62,15 +63,19 @@ class EventWindow(QWidget):
 
     def add_event_to_model(self, event_name, event_type, event_callback,
                              event_kwargs, registered_handlers):
+        """Add an event."""
         assert(self.model is not None)
-        from_bcp = event_kwargs.pop('_from_bcp', False)
+        # remove _from_bcp arg
+        event_kwargs.pop('_from_bcp', False)
 
         name = QStandardItem(event_name)
         kwargs = QStandardItem(str(event_kwargs))
         time_added = QStandardItem(str(self.added_index).zfill(10))
-        self.added_index = self.added_index+1
+        self.added_index += 1
         self.model.insertRow(0, [name, kwargs, time_added])
 
+    def update_events(self):
+        """Update view."""
         self.ui.tableView.resizeColumnToContents(0)
         self.ui.tableView.resizeColumnToContents(1)
 
