@@ -21,7 +21,7 @@ from mpfmonitor.core.bcp_client import BCPClient
 from mpfmonitor.core.events import EventWindow
 from mpfmonitor.core.modes import ModeWindow
 from mpfmonitor.core.inspector import InspectorWindow
-
+from mpfmonitor.core.variables import VariableWindow
 
 
 class MPFMonitor():
@@ -99,6 +99,9 @@ class MPFMonitor():
                                                    QSize(300, 600)))
 
         self.event_window = EventWindow(self)
+
+        self.variable_window = VariableWindow(self)
+        self.variable_window.show()
 
         self.mode_window = ModeWindow(self)
 
@@ -224,6 +227,10 @@ class MPFMonitor():
             elif cmd == 'reset':
                 self.reset_connection()
                 self.bcp.send("reset_complete")
+            elif cmd == 'player_variable':
+                self.variable_window.update_variable("player", kwargs["name"], kwargs["value"])
+            elif cmd == 'machine_variable':
+                self.variable_window.update_variable("machine", kwargs["name"], kwargs["value"])
 
         if added_events:
             self.event_window.update_events()

@@ -112,6 +112,8 @@ class BCPClient(object):
         self.sending_queue.put('monitor_start?category=devices')
         self.sending_queue.put('monitor_start?category=events')
         self.sending_queue.put('monitor_start?category=modes')
+        self.sending_queue.put('monitor_start?category=machine_vars')
+        self.sending_queue.put('monitor_start?category=player_vars')
 
     def create_socket_threads(self):
         """Creates and starts the sending and receiving threads for the BCP
