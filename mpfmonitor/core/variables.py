@@ -21,6 +21,7 @@ class VariableWindow(QWidget):
         self.added_index = 0
 
         self.variables = {}
+        self.variables_type = {}
 
     def draw_ui(self):
         # Load ui file from ./ui/
@@ -72,9 +73,10 @@ class VariableWindow(QWidget):
 
     def update_variable(self, type, variable, value):
         """Update variables."""
-        if variable in self.variables:
+        if variable in self.variables and type == self.variables_type[variable]:
             self.variables[variable].setData(str(value), Qt.DisplayRole)
         else:
+            self.variables_type[variable] = type
             value_model = QStandardItem(str(value))
             self.variables[variable] = value_model
             self.model.insertRow(0, [QStandardItem(type), QStandardItem(str(variable)), value_model])
