@@ -5,6 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
+from mpfmonitor._version import __version__, __mpf_version_required__
 
 from mpfmonitor.core.playfield import Shape
 
@@ -38,6 +39,11 @@ class InspectorWindow(QWidget):
                                                    QPoint(1100, 465)))
         self.ui.resize(self.mpfmon.local_settings.value('windows/inspector/size',
                                                      QSize(300, 340)))
+
+        mpf_monitor_version = "MPF Monitor Version: {}".format(__version__)
+        self.ui.mpf_monitor_version.setText(mpf_monitor_version)
+        mpf_required_version = "MPF Required Version: {} or greater".format(__mpf_version_required__)
+        self.ui.mpf_required_version.setText(mpf_required_version)
 
     def attach_signals(self):
         self.attach_inspector_tab_signals()

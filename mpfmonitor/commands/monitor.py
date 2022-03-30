@@ -10,6 +10,7 @@ from datetime import datetime
 import time
 
 import errno
+from mpfmonitor._version import __version__
 
 # import functiontrace
 # functiontrace.trace()
@@ -99,7 +100,7 @@ class Command(object):
 
         from mpfmonitor.core.mpfmon import run
 
-        logging.info("Loading MPF Monitor")
+        logging.info("Loading MPF Monitor Version {}".format(__version__))
 
         thread_stopper = threading.Event()
 
