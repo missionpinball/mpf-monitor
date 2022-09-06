@@ -16,12 +16,13 @@ jobs:
           python-version: 3.8
         - os: windows-latest
           python-version: 3.9
-        - os: ubuntu-22.04
-          python-version: 3.7
-        - os: ubuntu-22.04
-          python-version: 3.8
-        - os: ubuntu-22.04
-          python-version: 3.9
+        # I can't figure out how to get this to run on linux, feel free anyone to figure out and fix! :)
+        # - os: ubuntu-22.04
+        #   python-version: 3.7
+        # - os: ubuntu-22.04
+        #   python-version: 3.8
+        # - os: ubuntu-22.04
+        #   python-version: 3.9
         - os: macos-latest
           python-version: 3.7
         - os: macos-latest
@@ -42,7 +43,7 @@ jobs:
         if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
+          sudo apt-get install -y '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
           sudo apt-get install -y qt6-base-dev
 
       - name: Install mpf-monitor
