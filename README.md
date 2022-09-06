@@ -3,7 +3,7 @@ MPF Monitor (mpf-monitor)
 
 <img align="right" width="300" src="mpf-monitor-logo.png"/>
 
-This package is for Mission Pinball Framework (MPF) Monitor
+This package is for the Mission Pinball Framework (MPF) Monitor
 (mpf-monitor).
 
 The MPF monitor is a graphical app that connects to a live running
@@ -13,7 +13,7 @@ drag-and-drop devices to their proper locations so you can interact with
 your machine when you're not near your physical machine.
 
 The MPF Monitor can run on Windows, Mac, and Linux. It uses PyQt6
-(Python bindings for Qt5) for its visual framework.
+(Python bindings for Qt6) for its visual framework.
 
 Installation & Instructions
 ---------------------------
