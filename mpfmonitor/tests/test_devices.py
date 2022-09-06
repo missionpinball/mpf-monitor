@@ -1,8 +1,8 @@
 import unittest
 import threading
 import sys
-from PyQt5.QtTest import QTest
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt6.QtTest import QTest
+from PyQt6 import QtCore, QtGui, QtWidgets
 from unittest.mock import MagicMock, patch, NonCallableMock
 from mpfmonitor.core.devices import *
 
@@ -76,23 +76,23 @@ class TestDeviceWindowFunctions(unittest.TestCase):
 
     def test_change_sort_default(self):
         self.device_window.change_sort()
-        self.device_window.filtered_model.sort.assert_called_once_with(2, Qt.AscendingOrder)
+        self.device_window.filtered_model.sort.assert_called_once_with(2, Qt.SortOrder.AscendingOrder)
 
     def test_change_sort_time_down(self):
         self.device_window.change_sort(1)
-        self.device_window.filtered_model.sort.assert_called_once_with(2, Qt.AscendingOrder)
+        self.device_window.filtered_model.sort.assert_called_once_with(2, Qt.SortOrder.AscendingOrder)
 
     def test_change_sort_time_up(self):
         self.device_window.change_sort(2)
-        self.device_window.filtered_model.sort.assert_called_once_with(2, Qt.DescendingOrder)
+        self.device_window.filtered_model.sort.assert_called_once_with(2, Qt.SortOrder.DescendingOrder)
 
     def test_change_sort_name_up(self):
         self.device_window.change_sort(3)
-        self.device_window.filtered_model.sort.assert_called_once_with(0, Qt.AscendingOrder)
+        self.device_window.filtered_model.sort.assert_called_once_with(0, Qt.SortOrder.AscendingOrder)
 
     def test_change_sort_name_down(self):
         self.device_window.change_sort(4)
-        self.device_window.filtered_model.sort.assert_called_once_with(0, Qt.DescendingOrder)
+        self.device_window.filtered_model.sort.assert_called_once_with(0, Qt.SortOrder.DescendingOrder)
 
 
 

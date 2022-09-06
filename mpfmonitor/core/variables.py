@@ -1,7 +1,7 @@
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5 import uic
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
+from PyQt6.QtWidgets import *
+from PyQt6 import uic
 
 import os
 import time
@@ -55,9 +55,9 @@ class VariableWindow(QWidget):
     def attach_model(self):
         self.model = QStandardItemModel(0, 3)
 
-        self.model.setHeaderData(0, Qt.Horizontal, "Type")
-        self.model.setHeaderData(1, Qt.Horizontal, "Variable Name")
-        self.model.setHeaderData(2, Qt.Horizontal, "Value")
+        self.model.setHeaderData(0, Qt.Orientation.Horizontal, "Type")
+        self.model.setHeaderData(1, Qt.Orientation.Horizontal, "Variable Name")
+        self.model.setHeaderData(2, Qt.Orientation.Horizontal, "Value")
 
         self.filtered_model = QSortFilterProxyModel(self)
         self.filtered_model.setSourceModel(self.model)
@@ -73,7 +73,7 @@ class VariableWindow(QWidget):
     def update_variable(self, type, variable, value):
         """Update variables."""
         if variable in self.variables:
-            self.variables[variable].setData(str(value), Qt.DisplayRole)
+            self.variables[variable].setData(str(value), Qt.ItemDataRole.DisplayRole)
         else:
             value_model = QStandardItem(str(value))
             self.variables[variable] = value_model
@@ -88,13 +88,13 @@ class VariableWindow(QWidget):
     def change_sort(self, index=1):
         # This is a bit sloppy and probably should be reworked.
         if index == 1:  # Name up
-            self.filtered_model.sort(1, Qt.DescendingOrder)
+            self.filtered_model.sort(1, Qt.SortOrder.DescendingOrder)
         elif index == 2:  # Name down
-            self.filtered_model.sort(1, Qt.AscendingOrder)
+            self.filtered_model.sort(1, Qt.SortOrder.AscendingOrder)
         elif index == 3:  # Value up
-            self.filtered_model.sort(2, Qt.AscendingOrder)
+            self.filtered_model.sort(2, Qt.SortOrder.AscendingOrder)
         elif index == 4:  # Value down
-            self.filtered_model.sort(2, Qt.DescendingOrder)
+            self.filtered_model.sort(2, Qt.SortOrder.DescendingOrder)
 
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()

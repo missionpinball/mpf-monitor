@@ -7,9 +7,9 @@ import time
 # will change these to specific imports once code is more final
 from collections import deque
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
+from PyQt6.QtWidgets import *
 
 import ruamel.yaml as yaml
 
@@ -193,7 +193,7 @@ class MPFMonitor():
         try:
             if source is self.playfield and event.type() == QEvent.Resize:
                 self.playfield.setPixmap(self.playfield_image.scaled(
-                    self.playfield.size(), Qt.KeepAspectRatio,
+                    self.playfield.size(), Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.SmoothTransformation))
                 self.pf.invalidate_size()
         except AttributeError:
@@ -303,4 +303,4 @@ def run(machine_path, thread_stopper, config_file, testing=False):
 
     app = QApplication(sys.argv)
     MPFMonitor(app, machine_path, thread_stopper, config_file, testing=testing)
-    app.exec_()
+    app.exec()
