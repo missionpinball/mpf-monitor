@@ -9,7 +9,6 @@ jobs:
   build_wheels:
     name: Push new release to PyPI
     runs-on: macos-latest
-    needs: [tests]
 
     steps:
       - name: Checkout mpf-monitor
