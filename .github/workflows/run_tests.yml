@@ -38,9 +38,12 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Setup Ubuntu
+      - name: install Ubuntu dependencies
         if: matrix.os == 'ubuntu-22.04'
-        run: sudo apt-get update && sudo apt-get install -y qt6-base-dev
+        run: |
+          sudo apt-get update
+          sudo apt-get install '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
+          sudo apt-get install -y qt6-base-dev
 
       - name: Install mpf-monitor
         run: |
