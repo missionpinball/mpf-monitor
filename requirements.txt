@@ -1,4 +1,0 @@
-mpf>=0.54.0.dev45
-PyQt6==5.15.0
-PyQt6-sip==12.8.0
-PyQt6-stubs==5.14.2.2
