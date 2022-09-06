@@ -23,7 +23,7 @@ jobs:
       - name: Install mpf-monitor
         run: |
           pip install --upgrade pip setuptools wheel build
-          pip install mpf
+          pip install 'mpf>=0.56.0-dev33'
           pip install -e .
 
       - name: Run tests
