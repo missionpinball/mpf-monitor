@@ -54,7 +54,7 @@ class TestEventWindowFunctions(unittest.TestCase):
 
     def test_change_sort_time_down(self):
         self.event_window.change_sort(1)
-        self.event_window.filtered_model.sort.assert_called_once_with(2, Qt.SortOrder.PyQt6Order)
+        self.event_window.filtered_model.sort.assert_called_once_with(2, Qt.SortOrder.DescendingOrder)
 
     def test_change_sort_time_up(self):
         self.event_window.change_sort(2)

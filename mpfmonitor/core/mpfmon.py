@@ -194,7 +194,7 @@ class MPFMonitor():
             if source is self.playfield and event.type() == QEvent.Resize:
                 self.playfield.setPixmap(self.playfield_image.scaled(
                     self.playfield.size(), Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.SmoothTransformation))
+                    Qt.TransformationMode.SmoothTransformation))
                 self.pf.invalidate_size()
         except AttributeError:
             pass
