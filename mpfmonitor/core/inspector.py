@@ -1,10 +1,10 @@
 import logging
 
 # will change these to specific imports once code is more final
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5 import uic
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
+from PyQt6.QtWidgets import *
+from PyQt6 import uic
 
 from mpfmonitor.core.playfield import Shape
 

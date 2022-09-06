@@ -1,0 +1,84 @@
+name: Test on all platforms
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+    name: Test Python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - os: windows-latest
+          python-version: 3.7
+        - os: windows-latest
+          python-version: 3.8
+        - os: windows-latest
+          python-version: 3.9
+        # I can't figure out how to get this to run on linux, feel free anyone to figure out and fix! :)
+        # - os: ubuntu-22.04
+        #   python-version: 3.7
+        # - os: ubuntu-22.04
+        #   python-version: 3.8
+        # - os: ubuntu-22.04
+        #   python-version: 3.9
+        - os: macos-latest
+          python-version: 3.7
+        - os: macos-latest
+          python-version: 3.8
+        - os: macos-latest
+          python-version: 3.9
+
+    steps:
+      - name: Checkout mpf-monitor
+        uses: actions/checkout@v3
+
+      - name: Setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: install Ubuntu dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y '^libxcb.*-dev' libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev libxkbcommon-dev libxkbcommon-x11-dev
+          sudo apt-get install -y qt6-base-dev
+
+      - name: Install mpf-monitor
+        run: |
+          pip install --upgrade pip setuptools wheel build coveralls
+          pip install mpf
+          pip install -e .
+
+      - name: Lint with flake8
+        run: |
+          pip install flake8 pytest
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      - name: Run tests
+        run: coverage run -m unittest discover -s mpfmonitor/tests
+
+      - name: Upload coverage data to coveralls.io
+        run: coveralls --service=github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COVERALLS_FLAG_NAME: ${{ matrix.python-version }}-${{ matrix.os }}
+          COVERALLS_PARALLEL: true
+
+  coveralls:
+    name: Indicate completion to coveralls.io
+    needs: tests
+    runs-on: ubuntu-latest
+    container: python:3-slim
+    steps:
+    - name: Finished
+      run: |
+        pip3 install --upgrade coveralls
+        coveralls --service=github --finish
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

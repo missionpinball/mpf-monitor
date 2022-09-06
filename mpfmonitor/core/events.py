@@ -1,7 +1,7 @@
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5 import uic
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
+from PyQt6.QtWidgets import *
+from PyQt6 import uic
 
 import os
 
@@ -46,9 +46,9 @@ class EventWindow(QWidget):
     def attach_model(self):
         self.model = QStandardItemModel(0, 2)
 
-        self.model.setHeaderData(0, Qt.Horizontal, "Event")
-        self.model.setHeaderData(1, Qt.Horizontal, "Data")
-        # self.model.setHeaderData(2, Qt.Horizontal, "Time")
+        self.model.setHeaderData(0, Qt.Orientation.Horizontal, "Event")
+        self.model.setHeaderData(1, Qt.Orientation.Horizontal, "Data")
+        # self.model.setHeaderData(2, Qt.Orientation.Horizontal, "Time")
 
         self.filtered_model = QSortFilterProxyModel(self)
         self.filtered_model.setSourceModel(self.model)
@@ -92,13 +92,13 @@ class EventWindow(QWidget):
     def change_sort(self, index=1):
         # This is a bit sloppy and probably should be reworked.
         if index == 1:  # Received up
-            self.filtered_model.sort(2, Qt.DescendingOrder)
+            self.filtered_model.sort(2, Qt.SortOrder.DescendingOrder)
         elif index == 2:  # Received down
-            self.filtered_model.sort(2, Qt.AscendingOrder)
+            self.filtered_model.sort(2, Qt.SortOrder.AscendingOrder)
         elif index == 3:  # Name up
-            self.filtered_model.sort(0, Qt.AscendingOrder)
+            self.filtered_model.sort(0, Qt.SortOrder.AscendingOrder)
         elif index == 4:  # Name down
-            self.filtered_model.sort(0, Qt.DescendingOrder)
+            self.filtered_model.sort(0, Qt.SortOrder.DescendingOrder)
 
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()
