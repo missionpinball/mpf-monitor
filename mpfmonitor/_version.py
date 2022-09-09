@@ -1,5 +1,5 @@
 # mpf-monitor
-__version__ = '0.56.0-dev.4'
+__version__ = '0.56.0-dev.5'
 __short_version__ = '0.56'
 __bcp_version__ = '1.1'
 __config_version__ = '5'

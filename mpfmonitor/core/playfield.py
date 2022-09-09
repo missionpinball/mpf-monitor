@@ -195,7 +195,7 @@ class PfWidget(QGraphicsItem):
 
     def paint(self, painter, option, widget=None):
         """Paint this widget to the playfield."""
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         painter.setPen(self.pen)
         painter.rotate(self.angle)
 

@@ -267,7 +267,7 @@ class DeviceDelegate(QStyledItemDelegate):
 
         painter.save()
 
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         painter.setPen(QPen(QColor(100, 100, 100), 1, Qt.PenStyle.SolidLine))
 
         if color:
