@@ -58,7 +58,7 @@ jobs:
       run: pip install --pre --find-links=dist mpf-monitor
 
     - name: Run tests
-      run: python -m unittest discover -s mpfmonitor/tests
+      run: python -m unittest discover mpfmonitor.tests
 
   publish_to_pypi:  # only if this release has a tag and is a push from us (e.g. not a pull request)
     name: Publish to PYPI
