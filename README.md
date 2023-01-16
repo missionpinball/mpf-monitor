@@ -19,16 +19,22 @@ Installation & Instructions
 ---------------------------
 
 Full instructions for installing and using the MPF monitor are included
-in the MPF documentation here:
-
-http://docs.missionpinball.org/en/latest/tools/monitor
+in the MPF documentation here: https://docs.missionpinball.org/
 
 <img src="mpf-monitor-screenshot.jpg"/>
 
+Support
+-------
+
+MPF is open source and has no official support. Some MPF users follow the MPF-users Google group: https://groups.google.com/forum/#!forum/mpf-users. Individual hardware providers may provide additional support for users of their hardware.
+
+Contributing
+------------
+
+MPF is a passion project created and maintained by volunteers. If you're a Python coder, documentation writer, or pinball maker, feel free to make a change and submit a pull request. For more information about contributing see the [Contributing Code](http://docs.missionpinball.org/en/latest/about/contributing_to_mpf.html)
+and [Contributing Documentation](http://docs.missionpinball.org/en/latest/about/contributing_to_mpf_docs.html) pages.
+
 License
 -------
-* MPF and the MPF Monitor are released under the terms of the MIT
-  License. Please refer to the LICENSE file for details.
-* The MIT license basically means you can do anything you want,
-  including using it for commercial projects. You don't have to pay us
-  or share your changes if you don't want to.
+
+MPF and related projects are released under the MIT License. Refer to the LICENSE file for details. Docs are released under Creative Commons CC BY 4.0.
