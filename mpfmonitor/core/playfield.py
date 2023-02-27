@@ -219,26 +219,26 @@ class PfWidget(QGraphicsItem):
 
         # Draw based on the shape we want, not device type.
         if draw_shape == Shape.CIRCLE:
-            painter.drawEllipse(self.device_size / -2, self.device_size / -2,
-                                self.device_size, self.device_size)
+            painter.drawEllipse(int(self.device_size / -2), int(self.device_size / -2),
+                                int(self.device_size), int(self.device_size))
 
         elif draw_shape == Shape.SQUARE:
             aspect_ratio = 1  # Smaller for taller rectangles, larger for wider rectangles
-            painter.drawRect((self.device_size * aspect_ratio) / -2, self.device_size / -2,
-                             self.device_size * aspect_ratio, self.device_size)
+            painter.drawRect(int((self.device_size * aspect_ratio) / -2), int(self.device_size / -2),
+                             int(self.device_size * aspect_ratio), int(self.device_size))
 
         elif draw_shape == Shape.RECTANGLE:
             aspect_ratio = .4  # Smaller for taller rectangles, larger for wider rectangles
-            painter.drawRect((self.device_size * aspect_ratio) / -2, self.device_size / -2,
-                             self.device_size * aspect_ratio, self.device_size)
+            painter.drawRect(int((self.device_size * aspect_ratio) / -2), int(self.device_size / -2),
+                             int(self.device_size * aspect_ratio), int(self.device_size))
 
         elif draw_shape == Shape.TRIANGLE:
             aspect_ratio = 1
             scale = .6
             points = QPolygon([
-                QPoint(0, self.device_size * scale * -1),
-                QPoint(self.device_size * scale * -1, ((self.device_size * scale) / 2) * aspect_ratio),
-                QPoint(self.device_size * scale, ((self.device_size * scale) / 2) * aspect_ratio),
+                QPoint(0, int(self.device_size * scale * -1)),
+                QPoint(int(self.device_size * scale * -1), int(((self.device_size * scale) / 2) * aspect_ratio)),
+                QPoint(int(self.device_size * scale), int(((self.device_size * scale) / 2) * aspect_ratio)),
             ])
             painter.drawPolygon(points)
 
@@ -256,13 +256,13 @@ class PfWidget(QGraphicsItem):
             aspect_ratio = 1
             scale = .8
             points = QPolygon([
-                QPoint(0, self.device_size * scale * -1),
-                QPoint(self.device_size * scale / -2, 0),
-                QPoint(self.device_size * scale / -4, 0),
-                QPoint(self.device_size * scale / -4, self.device_size * scale / 2),
-                QPoint(self.device_size * scale / 4, self.device_size * scale / 2),
-                QPoint(self.device_size * scale / 4, 0),
-                QPoint(self.device_size * scale / 2, 0)
+                QPoint(0, int(self.device_size * scale * -1)),
+                QPoint(int(self.device_size * scale / -2), 0),
+                QPoint(int(self.device_size * scale / -4), 0),
+                QPoint(int(self.device_size * scale / -4), int(self.device_size * scale / 2)),
+                QPoint(int(self.device_size * scale / 4), int(self.device_size * scale / 2)),
+                QPoint(int(self.device_size * scale / 4), 0),
+                QPoint(int(self.device_size * scale / 2), 0)
             ])
             painter.drawPolygon(points)
 
@@ -270,9 +270,9 @@ class PfWidget(QGraphicsItem):
             aspect_ratio = 5
             scale = .7
             points = QPolygon([
-                QPoint(0, self.device_size * scale * -1),
-                QPoint(self.device_size * scale * -1, ((self.device_size * scale) / 2) * aspect_ratio),
-                QPoint(self.device_size * scale, ((self.device_size * scale) / 2) * aspect_ratio),
+                QPoint(0, int(self.device_size * scale * -1)),
+                QPoint(int(self.device_size * scale * -1), ((int(self.device_size * scale) / 2) * aspect_ratio)),
+                QPoint(int(self.device_size * scale), ((int(self.device_size * scale) / 2) * aspect_ratio)),
             ])
             painter.drawPolygon(points)
 

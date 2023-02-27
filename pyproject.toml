@@ -21,8 +21,8 @@ classifiers=[
     "Topic :: Games/Entertainment :: Arcade"
     ]
 dependencies = [
-    "ruamel.yaml == 0.15.42",  # newer than this requires compiled c lib, currently no Mac arm versions
-    "PyQt6 == 6.3.1",  # Jun 17, 2022. Tried 6.4.0 and it broke, so, meh, this is fine.
+    "ruamel.yaml >= 0.15.42",  # Feb 26, 2023 got 0.17 working
+    "PyQt6 == 6.4.2",  # Feb 26, 2023
     ]
 dynamic = ["version"]
 
