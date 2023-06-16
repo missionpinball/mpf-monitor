@@ -19,7 +19,7 @@ Installation & Instructions
 ---------------------------
 
 Full instructions for installing and using the MPF monitor are included
-in the MPF documentation here: https://docs.missionpinball.org/
+in the MPF documentation here: https://missionpinball.org/
 
 <img src="mpf-monitor-screenshot.jpg"/>
 
@@ -31,8 +31,8 @@ MPF is open source and has no official support. Some MPF users follow the MPF-us
 Contributing
 ------------
 
-MPF is a passion project created and maintained by volunteers. If you're a Python coder, documentation writer, or pinball maker, feel free to make a change and submit a pull request. For more information about contributing see the [Contributing Code](http://docs.missionpinball.org/en/latest/about/contributing_to_mpf.html)
-and [Contributing Documentation](http://docs.missionpinball.org/en/latest/about/contributing_to_mpf_docs.html) pages.
+MPF is a passion project created and maintained by volunteers. If you're a Python coder, documentation writer, or pinball maker, feel free to make a change and submit a pull request. For more information about contributing see the [Contributing Code](https://missionpinball.org/about/contributing_to_mpf/)
+and [Contributing Documentation](https://missionpinball.org/about/help_docs/) pages.
 
 License
 -------
