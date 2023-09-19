@@ -1,0 +1,51 @@
+[project]
+name = "mpf-monitor"
+description = "MPF Monitor"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [{ name = "The Mission Pinball Framework Team", email = "brian@fastpinball.com"}]
+keywords = ["pinball", "mpf"]
+classifiers=[
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Natural Language :: English",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Artistic Software",
+    "Topic :: Games/Entertainment :: Arcade"
+    ]
+dependencies = [
+    # These dependencies are not specific yet, need to test more
+    "ruamel.yaml >= 0.17.26",  # Sept 19, 2023
+    "PyQt6 >= 6.4.2",  # Sept 19, 2023
+    ]
+dynamic = ["version"]
+
+[project.urls]
+homepage = "https://missionpinball.org"
+
+[project.entry-points."mpf.command"]
+monitor = "mpfmonitor.commands.monitor:get_command"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+version = {attr = "mpfmonitor._version.__version__"}
+
+[tool.setuptools.packages.find]
+include = ["mpfmonitor*"]
+
+[build-system]
+requires = [
+    "setuptools >= 63",
+    "setuptools_scm[toml] >= 6.2",
+    ]
+build-backend = "setuptools.build_meta"

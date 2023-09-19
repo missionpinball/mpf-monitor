@@ -8,10 +8,10 @@ class TestablePfWidgetNonDrawn(PfWidget):
         if mpfmon_mock is not None:
             self.mpfmon = mpfmon_mock
 
-    """  
+    """
     __init__ of PfWidget:
-    
-    
+
+
     def __init__(self, mpfmon, widget, device_type, device_name, x, y,
                  size=None, rotation=0, shape=Shape.DEFAULT, save=True):
         super().__init__()
@@ -26,7 +26,7 @@ class TestablePfWidgetNonDrawn(PfWidget):
         self.angle = rotation
 
         self.setToolTip('{}: {}'.format(self.device_type, self.name))
-        self.setAcceptedMouseButtons(Qt.LeftButton | Qt.RightButton)
+        self.setAcceptedMouseButtons(Qt.MouseButton.LeftButton | Qt.MouseButton.RightButton)
         self.setPos(x, y)
         self.update_pos(save)
         self.click_start = 0
@@ -39,7 +39,7 @@ class TestablePfWidgetNonDrawn(PfWidget):
         if old_widget_exists:
             self.log.debug("Previous widget exists.")
             old_widget_exists(destroy=True)
-            
+
         """
 
 
@@ -176,7 +176,7 @@ class TestPfWidgetColorFuncs(unittest.TestCase):
         mock_widget.setData({"color": color_in})
         mock_widget.setType(device_type)
 
-        expected_q_brush_out = QBrush(QColor(*expected_color_out), Qt.SolidPattern)
+        expected_q_brush_out = QBrush(QColor(*expected_color_out), Qt.BrushStyle.SolidPattern)
         q_brush_out = mock_widget.get_colored_brush()
 
         self.assertEqual(q_brush_out, expected_q_brush_out, 'Brush is not returning correct value')
@@ -188,7 +188,7 @@ class TestPfWidgetColorFuncs(unittest.TestCase):
         mock_widget.setData({'state': False})
         mock_widget.setType(device_type)
 
-        expected_q_brush_out = QBrush(QColor(*expected_color_out), Qt.SolidPattern)
+        expected_q_brush_out = QBrush(QColor(*expected_color_out), Qt.BrushStyle.SolidPattern)
         q_brush_out = mock_widget.get_colored_brush()
 
         self.assertEqual(q_brush_out, expected_q_brush_out, 'Brush is not returning correct value')
@@ -200,7 +200,7 @@ class TestPfWidgetColorFuncs(unittest.TestCase):
         mock_widget.setData({'state': True})
         mock_widget.setType(device_type)
 
-        expected_q_brush_out = QBrush(QColor(*expected_color_out), Qt.SolidPattern)
+        expected_q_brush_out = QBrush(QColor(*expected_color_out), Qt.BrushStyle.SolidPattern)
         q_brush_out = mock_widget.get_colored_brush()
 
         self.assertEqual(q_brush_out, expected_q_brush_out, 'Brush is not returning correct value')
@@ -226,4 +226,3 @@ class TestPfWidgetGetAndDestroy(unittest.TestCase):
     def test_send_to_inspector_window(self):
         self.widget.send_to_inspector_window()
         self.widget.mpfmon.inspector_window_last_selected_cb.assert_called_once_with(pf_widget=self.widget)
-

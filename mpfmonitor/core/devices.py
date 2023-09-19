@@ -3,15 +3,15 @@ import time
 import os
 
 # will change these to specific imports once code is more final
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-from PyQt5 import uic
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
+from PyQt6.QtWidgets import *
+from PyQt6 import uic
 
-BRUSH_WHITE = QBrush(QColor(255, 255, 255), Qt.SolidPattern)
-BRUSH_GREEN = QBrush(QColor(0, 255, 0), Qt.SolidPattern)
-BRUSH_BLACK = QBrush(QColor(0, 0, 0), Qt.SolidPattern)
-BRUSH_DARK_PURPLE = QBrush(QColor(128, 0, 255), Qt.SolidPattern)
+BRUSH_WHITE = QBrush(QColor(255, 255, 255), Qt.BrushStyle.SolidPattern)
+BRUSH_GREEN = QBrush(QColor(0, 255, 0), Qt.BrushStyle.SolidPattern)
+BRUSH_BLACK = QBrush(QColor(0, 0, 0), Qt.BrushStyle.SolidPattern)
+BRUSH_DARK_PURPLE = QBrush(QColor(128, 0, 255), Qt.BrushStyle.SolidPattern)
 
 
 class DeviceNode:
@@ -32,16 +32,16 @@ class DeviceNode:
         self.sub_properties_appended = False
 
         self.q_time_added = QStandardItem()
-        self.q_time_added.setData(time.perf_counter(), Qt.DisplayRole)
+        self.q_time_added.setData(time.perf_counter(), Qt.ItemDataRole.DisplayRole)
 
         self.q_name.setDragEnabled(True)
-        self.q_state.setData("", Qt.DisplayRole)
+        self.q_state.setData("", Qt.ItemDataRole.DisplayRole)
 
         self.log = logging.getLogger('Device')
 
     def setName(self, name):
         self._name = name
-        self.q_name.setData(str(self._name), Qt.DisplayRole)
+        self.q_name.setData(str(self._name), Qt.ItemDataRole.DisplayRole)
         self.log = logging.getLogger('Device {}'.format(self._name))
         self.q_state.emitDataChanged()
 
@@ -62,7 +62,7 @@ class DeviceNode:
         state_str = str(list(self._data.values())[0])
         if len(self._data) > 1:
             state_str = state_str + " {…}"
-        self.q_state.setData(state_str, Qt.DisplayRole)
+        self.q_state.setData(state_str, Qt.ItemDataRole.DisplayRole)
 
         for row in self._data:
             if not self.sub_properties_appended:
@@ -71,8 +71,8 @@ class DeviceNode:
                 self.sub_properties.update({row: [q_property, q_value]})
                 self.q_name.appendRow(self.sub_properties.get(row))
 
-            self.sub_properties.get(row)[0].setData(str(row), Qt.DisplayRole)
-            self.sub_properties.get(row)[1].setData(str(self._data.get(row)), Qt.DisplayRole)
+            self.sub_properties.get(row)[0].setData(str(row), Qt.ItemDataRole.DisplayRole)
+            self.sub_properties.get(row)[1].setData(str(self._data.get(row)), Qt.ItemDataRole.DisplayRole)
 
         self.sub_properties_appended = True
         self.q_state.emitDataChanged()
@@ -150,7 +150,7 @@ class DeviceNode:
             else:
                 return BRUSH_BLACK
 
-        return QBrush(QColor(*color), Qt.SolidPattern)
+        return QBrush(QColor(*color), Qt.BrushStyle.SolidPattern)
 
     def set_change_callback(self, callback):
         if self._callback:
@@ -267,17 +267,17 @@ class DeviceDelegate(QStyledItemDelegate):
 
         painter.save()
 
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setPen(QPen(QColor(100, 100, 100), 1, Qt.SolidLine))
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setPen(QPen(QColor(100, 100, 100), 1, Qt.PenStyle.SolidLine))
 
         if color:
-            painter.setBrush(QBrush(QColor(*color), Qt.SolidPattern))
+            painter.setBrush(QBrush(QColor(*color), Qt.BrushStyle.SolidPattern))
         elif state is True:
-            painter.setBrush(QBrush(QColor(0, 255, 0), Qt.SolidPattern))
+            painter.setBrush(QBrush(QColor(0, 255, 0), Qt.BrushStyle.SolidPattern))
         elif state is False:
-            painter.setBrush(QBrush(QColor(255, 255, 255), Qt.SolidPattern))
+            painter.setBrush(QBrush(QColor(255, 255, 255), Qt.BrushStyle.SolidPattern))
         elif isinstance(balls, int):
-            painter.setBrush(QBrush(QColor(0, 255, 0), Qt.SolidPattern))
+            painter.setBrush(QBrush(QColor(0, 255, 0), Qt.BrushStyle.SolidPattern))
             num_circles = balls
 
         x_offset = 0
@@ -358,7 +358,7 @@ class DeviceWindow(QWidget):
         self.model = QStandardItemModel()
         self.model.setHorizontalHeaderLabels(["Device", "Data"])
 
-        self.treeview.setDragDropMode(QAbstractItemView.DragOnly)
+        self.treeview.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
         # self.treeview.setItemDelegateForColumn(1, DeviceDelegate())
 
         # Resizing to contents causes huge performance losses. Only resize when rows expanded or collapsed.
@@ -367,7 +367,7 @@ class DeviceWindow(QWidget):
         self.filtered_model = QSortFilterProxyModel(self)
         self.filtered_model.setSourceModel(self.model)
         self.filtered_model.setRecursiveFilteringEnabled(True)
-        self.filtered_model.setFilterCaseSensitivity(False)
+        self.filtered_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
 
         self.treeview.setModel(self.filtered_model)
 
@@ -415,13 +415,13 @@ class DeviceWindow(QWidget):
 
         # This is a bit sloppy and probably should be reworked.
         if index == 1:  # Received up
-            self.filtered_model.sort(2, Qt.AscendingOrder)
+            self.filtered_model.sort(2, Qt.SortOrder.AscendingOrder)
         elif index == 2:  # Received down
-            self.filtered_model.sort(2, Qt.DescendingOrder)
+            self.filtered_model.sort(2, Qt.SortOrder.DescendingOrder)
         elif index == 3:  # Name up
-            self.filtered_model.sort(0, Qt.AscendingOrder)
+            self.filtered_model.sort(0, Qt.SortOrder.AscendingOrder)
         elif index == 4:  # Name down
-            self.filtered_model.sort(0, Qt.DescendingOrder)
+            self.filtered_model.sort(0, Qt.SortOrder.DescendingOrder)
 
         self.filtered_model.endResetModel()
         self.model.layoutChanged.emit()
@@ -431,4 +431,3 @@ class DeviceWindow(QWidget):
         self.mpfmon.write_local_settings()
         event.accept()
         self.mpfmon.check_if_quit()
-

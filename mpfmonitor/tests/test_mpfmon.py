@@ -1,8 +1,8 @@
 import unittest
 import threading
 import os
-from PyQt5.QtCore import Qt
-from PyQt5.QtTest import QTest
+from PyQt6.QtCore import Qt
+from PyQt6.QtTest import QTest
 from mpfmonitor.core.mpfmon import *
 
 

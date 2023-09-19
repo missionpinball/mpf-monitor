@@ -1,9 +1,7 @@
 # mpf-monitor
-__version__ = '0.56.0-dev.2'
-__short_version__ = '0.56'
+__version__ = '0.57.0.dev2'
+__short_version__ = '0.57'
 __bcp_version__ = '1.1'
-__config_version__ = '5'
-__mpf_version_required__ = '0.56.0-dev.1'
+__config_version__ = '6'
 
-version = "MPF Monitor v{} (config_version={}, BCP v{}, Requires MPF v{})".format(
-    __version__, __config_version__, __bcp_version__, __mpf_version_required__)
+version = f"MPF Monitor v{__version__} (config_version={__config_version__}, BCP v{__bcp_version__})"

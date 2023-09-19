@@ -4,9 +4,9 @@ import logging
 import time
 
 # will change these to specific imports once code is more final
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
+from PyQt6.QtWidgets import *
 
 from enum import Enum
 
@@ -33,7 +33,7 @@ class PfView(QGraphicsView):
         self.set_inspector_mode_title(inspect=False)
 
     def resizeEvent(self, event=None):
-        self.fitInView(self.mpfmon.pf, Qt.KeepAspectRatio)
+        self.fitInView(self.mpfmon.pf, Qt.AspectRatioMode.KeepAspectRatio)
 
     def set_inspector_mode_title(self, inspect=False):
         if inspect:
@@ -138,12 +138,12 @@ class PfWidget(QGraphicsItem):
         self.angle = rotation
 
         self.setToolTip('{}: {}'.format(self.device_type, self.name))
-        self.setAcceptedMouseButtons(Qt.LeftButton | Qt.RightButton)
+        self.setAcceptedMouseButtons(Qt.MouseButton.LeftButton | Qt.MouseButton.RightButton)
         self.setPos(x, y)
         self.update_pos(save)
         self.click_start = 0
         self.release_switch = False
-        self.pen = QPen(Qt.white, 3, Qt.SolidLine)
+        self.pen = QPen(Qt.GlobalColor.white, 3, Qt.PenStyle.SolidLine)
 
         self.log = logging.getLogger('Core')
 
@@ -195,7 +195,7 @@ class PfWidget(QGraphicsItem):
 
     def paint(self, painter, option, widget=None):
         """Paint this widget to the playfield."""
-        painter.setRenderHint(QPainter.Antialiasing, True)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         painter.setPen(self.pen)
         painter.rotate(self.angle)
 
@@ -219,26 +219,26 @@ class PfWidget(QGraphicsItem):
 
         # Draw based on the shape we want, not device type.
         if draw_shape == Shape.CIRCLE:
-            painter.drawEllipse(self.device_size / -2, self.device_size / -2,
-                                self.device_size, self.device_size)
+            painter.drawEllipse(int(self.device_size / -2), int(self.device_size / -2),
+                                int(self.device_size), int(self.device_size))
 
         elif draw_shape == Shape.SQUARE:
             aspect_ratio = 1  # Smaller for taller rectangles, larger for wider rectangles
-            painter.drawRect((self.device_size * aspect_ratio) / -2, self.device_size / -2,
-                             self.device_size * aspect_ratio, self.device_size)
+            painter.drawRect(int((self.device_size * aspect_ratio) / -2), int(self.device_size / -2),
+                             int(self.device_size * aspect_ratio), int(self.device_size))
 
         elif draw_shape == Shape.RECTANGLE:
             aspect_ratio = .4  # Smaller for taller rectangles, larger for wider rectangles
-            painter.drawRect((self.device_size * aspect_ratio) / -2, self.device_size / -2,
-                             self.device_size * aspect_ratio, self.device_size)
+            painter.drawRect(int((self.device_size * aspect_ratio) / -2), int(self.device_size / -2),
+                             int(self.device_size * aspect_ratio), int(self.device_size))
 
         elif draw_shape == Shape.TRIANGLE:
             aspect_ratio = 1
             scale = .6
             points = QPolygon([
-                QPoint(0, self.device_size * scale * -1),
-                QPoint(self.device_size * scale * -1, ((self.device_size * scale) / 2) * aspect_ratio),
-                QPoint(self.device_size * scale, ((self.device_size * scale) / 2) * aspect_ratio),
+                QPoint(0, int(self.device_size * scale * -1)),
+                QPoint(int(self.device_size * scale * -1), int(((self.device_size * scale) / 2) * aspect_ratio)),
+                QPoint(int(self.device_size * scale), int(((self.device_size * scale) / 2) * aspect_ratio)),
             ])
             painter.drawPolygon(points)
 
@@ -256,13 +256,13 @@ class PfWidget(QGraphicsItem):
             aspect_ratio = 1
             scale = .8
             points = QPolygon([
-                QPoint(0, self.device_size * scale * -1),
-                QPoint(self.device_size * scale / -2, 0),
-                QPoint(self.device_size * scale / -4, 0),
-                QPoint(self.device_size * scale / -4, self.device_size * scale / 2),
-                QPoint(self.device_size * scale / 4, self.device_size * scale / 2),
-                QPoint(self.device_size * scale / 4, 0),
-                QPoint(self.device_size * scale / 2, 0)
+                QPoint(0, int(self.device_size * scale * -1)),
+                QPoint(int(self.device_size * scale / -2), 0),
+                QPoint(int(self.device_size * scale / -4), 0),
+                QPoint(int(self.device_size * scale / -4), int(self.device_size * scale / 2)),
+                QPoint(int(self.device_size * scale / 4), int(self.device_size * scale / 2)),
+                QPoint(int(self.device_size * scale / 4), 0),
+                QPoint(int(self.device_size * scale / 2), 0)
             ])
             painter.drawPolygon(points)
 
@@ -270,9 +270,9 @@ class PfWidget(QGraphicsItem):
             aspect_ratio = 5
             scale = .7
             points = QPolygon([
-                QPoint(0, self.device_size * scale * -1),
-                QPoint(self.device_size * scale * -1, ((self.device_size * scale) / 2) * aspect_ratio),
-                QPoint(self.device_size * scale, ((self.device_size * scale) / 2) * aspect_ratio),
+                QPoint(0, int(self.device_size * scale * -1)),
+                QPoint(int(self.device_size * scale * -1), ((int(self.device_size * scale) / 2) * aspect_ratio)),
+                QPoint(int(self.device_size * scale), ((int(self.device_size * scale) / 2) * aspect_ratio)),
             ])
             painter.drawPolygon(points)
 
@@ -301,14 +301,14 @@ class PfWidget(QGraphicsItem):
         self.click_start = time.time()
 
         if self.device_type == 'switch':
-            if event.buttons() & Qt.RightButton:
+            if event.buttons() & Qt.MouseButton.RightButton:
                 if not self.get_val_inspector_enabled():
                     self.mpfmon.bcp.send('switch', name=self.name, state=-1)
                     self.release_switch = False
                 else:
                     self.send_to_inspector_window()
                     self.log.debug('Switch %s right clicked', self.name)
-            elif event.buttons() & Qt.LeftButton:
+            elif event.buttons() & Qt.MouseButton.LeftButton:
                 if not self.get_val_inspector_enabled():
                     self.mpfmon.bcp.send('switch', name=self.name, state=-1)
                     self.release_switch = True
@@ -317,11 +317,11 @@ class PfWidget(QGraphicsItem):
                     self.log.debug('Switch %s clicked', self.name)
 
         else:
-            if event.buttons() & Qt.RightButton:
+            if event.buttons() & Qt.MouseButton.RightButton:
                 if self.get_val_inspector_enabled():
                     self.send_to_inspector_window()
                     self.log.debug('%s %s right clicked', self.device_type, self.name)
-            elif event.buttons() & Qt.LeftButton:
+            elif event.buttons() & Qt.MouseButton.LeftButton:
                 if self.get_val_inspector_enabled():
                     self.send_to_inspector_window()
                     self.log.debug('%s %s clicked', self.device_type, self.name)

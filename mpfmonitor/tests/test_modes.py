@@ -56,23 +56,23 @@ class TestModeWindowFunctions(unittest.TestCase):
 
     def test_change_sort_default(self):
         self.mode_window.change_sort()
-        self.mode_window.filtered_model.sort.assert_called_once_with(2, Qt.DescendingOrder)
+        self.mode_window.filtered_model.sort.assert_called_once_with(2, Qt.SortOrder.DescendingOrder)
 
     def test_change_sort_time_down(self):
         self.mode_window.change_sort(1)
-        self.mode_window.filtered_model.sort.assert_called_once_with(2, Qt.DescendingOrder)
+        self.mode_window.filtered_model.sort.assert_called_once_with(2, Qt.SortOrder.DescendingOrder)
 
     def test_change_sort_time_up(self):
         self.mode_window.change_sort(2)
-        self.mode_window.filtered_model.sort.assert_called_once_with(2, Qt.AscendingOrder)
+        self.mode_window.filtered_model.sort.assert_called_once_with(2, Qt.SortOrder.AscendingOrder)
 
     def test_change_sort_name_up(self):
         self.mode_window.change_sort(3)
-        self.mode_window.filtered_model.sort.assert_called_once_with(0, Qt.AscendingOrder)
+        self.mode_window.filtered_model.sort.assert_called_once_with(0, Qt.SortOrder.AscendingOrder)
 
     def test_change_sort_name_down(self):
         self.mode_window.change_sort(4)
-        self.mode_window.filtered_model.sort.assert_called_once_with(0, Qt.DescendingOrder)
+        self.mode_window.filtered_model.sort.assert_called_once_with(0, Qt.SortOrder.DescendingOrder)
 
 
 app = QApplication(sys.argv)

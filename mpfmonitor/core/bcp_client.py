@@ -12,7 +12,7 @@ from datetime import datetime
 import math
 
 import mpf.core.bcp.bcp_socket_client as bcp
-from PyQt5.QtCore import QTimer
+from PyQt6.QtCore import QTimer
 
 
 class BCPClient(object):
@@ -262,4 +262,3 @@ class BCPClient(object):
         else:
             self.simulator_timer.stop()
             self.log.info("End of cached file reached.")
-
