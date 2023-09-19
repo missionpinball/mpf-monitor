@@ -55,7 +55,7 @@ jobs:
       - name: Install mpf-monitor
         run: |
           pip install --upgrade pip setuptools wheel build coveralls
-          pip install mpf
+          pip install 'mpf>=0.57.0.dev1'
           pip install -e .
 
       - name: Lint with flake8
@@ -106,7 +106,7 @@ jobs:
       - name: Install mpf-monitor
         run: |
           pip install --upgrade pip setuptools wheel build
-          pip install 'mpf>=0.57.0'
+          pip install 'mpf>=0.57.0.dev1'
           pip install -e .
 
       - name: Build wheel
