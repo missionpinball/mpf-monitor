@@ -98,7 +98,7 @@ class InspectorWindow(QWidget):
             self.ui.device_group_box.setTitle(text)
 
             # Update the size slider and spinbox
-            self.ui.size_slider.setValue(self.last_pf_widget.size * 100)
+            self.ui.size_slider.setValue(int(self.last_pf_widget.size * 100))
             self.ui.size_spinbox.setValue(self.last_pf_widget.size)
 
             # Update the shape combo box
@@ -107,7 +107,6 @@ class InspectorWindow(QWidget):
             # Update the rotation dial
             rotation = int(self.last_pf_widget.angle / 10) + 18
             self.ui.rotationDial.setValue(rotation)
-
 
     def slider_drag(self):
         # For live preview
@@ -125,7 +124,7 @@ class InspectorWindow(QWidget):
     def spinbox_changed(self):
         new_size = self.ui.size_spinbox.value()
         # Update slider value
-        self.ui.size_slider.setValue(new_size*100)
+        self.ui.size_slider.setValue(int(new_size*100))
 
         self.update_last_device(new_size=new_size)
 
