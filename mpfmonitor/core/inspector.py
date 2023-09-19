@@ -39,6 +39,11 @@ class InspectorWindow(QWidget):
         self.ui.resize(self.mpfmon.local_settings.value('windows/inspector/size',
                                                      QSize(300, 340)))
 
+        mpf_monitor_version = "MPF Monitor Version: {}".format(__version__)
+        self.ui.mpf_monitor_version.setText(mpf_monitor_version)
+        mpf_required_version = "MPF Required Version: {} or greater".format(__mpf_version_required__)
+        self.ui.mpf_required_version.setText(mpf_required_version)
+
     def attach_signals(self):
         self.attach_inspector_tab_signals()
         self.attach_monitor_tab_signals()
