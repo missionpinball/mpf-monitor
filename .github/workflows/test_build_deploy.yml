@@ -11,24 +11,30 @@ jobs:
       matrix:
         include:
         - os: windows-latest
-          python-version: 3.7
-        - os: windows-latest
           python-version: 3.8
         - os: windows-latest
           python-version: 3.9
+        - os: windows-latest
+          python-version: '3.10'
+        - os: windows-latest
+          python-version: '3.11'
         # I can't figure out how to get this to run on linux, feel free anyone to figure out and fix! :)
-        # - os: ubuntu-22.04
-        #   python-version: 3.7
         # - os: ubuntu-22.04
         #   python-version: 3.8
         # - os: ubuntu-22.04
         #   python-version: 3.9
-        - os: macos-latest
-          python-version: 3.7
+        # - os: ubuntu-22.04
+        #   python-version: '3.10'
+        # - os: ubuntu-22.04
+        #   python-version: '3.11'
         - os: macos-latest
           python-version: 3.8
         - os: macos-latest
           python-version: 3.9
+        - os: macos-latest
+          python-version: '3.10'
+        - os: macos-latest
+          python-version: '3.11'
 
     steps:
       - name: Checkout mpf-monitor
@@ -95,12 +101,12 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: 3.11
 
       - name: Install mpf-monitor
         run: |
           pip install --upgrade pip setuptools wheel build
-          pip install 'mpf>=0.56.0-dev33'
+          pip install 'mpf>=0.57.0'
           pip install -e .
 
       - name: Build wheel

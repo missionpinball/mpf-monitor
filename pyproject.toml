@@ -2,7 +2,7 @@
 name = "mpf-monitor"
 description = "MPF Monitor"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [{ name = "The Mission Pinball Framework Team", email = "brian@fastpinball.com"}]
 keywords = ["pinball", "mpf"]
@@ -10,9 +10,10 @@ classifiers=[
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Natural Language :: English",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
@@ -21,8 +22,9 @@ classifiers=[
     "Topic :: Games/Entertainment :: Arcade"
     ]
 dependencies = [
-    "ruamel.yaml >= 0.15.42",  # Feb 26, 2023 got 0.17 working
-    "PyQt6 == 6.4.2",  # Feb 26, 2023
+    # These dependencies are not specific yet, need to test more
+    "ruamel.yaml >= 0.17.26",  # Sept 19, 2023
+    "PyQt6 >= 6.4.2",  # Sept 19, 2023
     ]
 dynamic = ["version"]
 
