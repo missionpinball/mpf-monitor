@@ -86,6 +86,11 @@ class MPFMonitor():
                                         triggered=self.toggle_mode_window)
         self.toggle_mode_window_action.setCheckable(True)
 
+        self.toggle_variables_window_action = QAction('&Variables', self.device_window,
+                                        statusTip='Show the variables window',
+                                        triggered=self.toggle_mode_window)
+        self.toggle_variables_window_action.setCheckable(True)
+
         self.scene = QGraphicsScene()
 
         self.pf = PfPixmapItem(QPixmap(self.playfield_image_file), self)
@@ -100,8 +105,8 @@ class MPFMonitor():
 
         self.event_window = EventWindow(self)
 
-        self.variable_window = VariableWindow(self)
-        self.variable_window.show()
+        self.variables_window = VariableWindow(self)
+        # self.variables_window.show()
 
         self.mode_window = ModeWindow(self)
 
@@ -116,6 +121,9 @@ class MPFMonitor():
 
         if self.get_local_settings_bool('windows/modes/visible'):
             self.toggle_mode_window()
+
+        if self.get_local_settings_bool('windows/variables/visible'):
+            self.toggle_variables_window()
 
         self.exit_on_close = False
 
@@ -135,6 +143,8 @@ class MPFMonitor():
         self.view_menu.addAction(self.toggle_pf_window_action)
         self.view_menu.addAction(self.toggle_device_window_action)
         self.view_menu.addAction(self.toggle_event_window_action)
+        self.view_menu.addAction(self.toggle_mode_window_action)
+        self.view_menu.addAction(self.toggle_variables_window_action)
 
     def toggle_pf_window(self):
         if self.view.isVisible():
@@ -167,6 +177,14 @@ class MPFMonitor():
         else:
             self.mode_window.show()
             self.toggle_mode_window_action.setChecked(True)
+
+    def toggle_variables_window(self):
+        if self.variables_window.isVisible():
+            self.variables_window.hide()
+            self.toggle_variables_window_action.setChecked(False)
+        else:
+            self.variables_window.show()
+            self.toggle_variables_window_action.setChecked(True)
 
     def toggle_exit_on_close(self):
         if self.exit_on_close:
@@ -228,9 +246,9 @@ class MPFMonitor():
                 self.reset_connection()
                 self.bcp.send("reset_complete")
             elif cmd == 'player_variable':
-                self.variable_window.update_variable("player", kwargs["name"], kwargs["value"])
+                self.variables_window.update_variable("player", kwargs["name"], kwargs["value"])
             elif cmd == 'machine_variable':
-                self.variable_window.update_variable("machine", kwargs["name"], kwargs["value"])
+                self.variables_window.update_variable("machine", kwargs["name"], kwargs["value"])
 
         if added_events:
             self.event_window.update_events()

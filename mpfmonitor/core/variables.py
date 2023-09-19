@@ -20,7 +20,7 @@ class VariableWindow(QWidget):
         self.already_hidden = False
         self.added_index = 0
 
-        self.variables = {}
+        self.variables = dict()  # keys are tuples of (variable, type), values are the var's value model
 
     def draw_ui(self):
         # Load ui file from ./ui/
@@ -70,14 +70,21 @@ class VariableWindow(QWidget):
         # self.ui.tableView.setColumnHidden(2, True)
         self.rootNode = self.model.invisibleRootItem()
 
-    def update_variable(self, type, variable, value):
-        """Update variables."""
-        if variable in self.variables:
-            self.variables[variable].setData(str(value), Qt.ItemDataRole.DisplayRole)
+    def update_variable(self, var_type, variable, value):
+        """Update variables.
+
+        type: Str of what MPF type the variable is. 'machine', 'player',
+        variable: name of the variable
+        value: value of the variable
+
+        """
+
+        if (variable, var_type) in self.variables:
+            self.variables[(variable, var_type)].setData(str(value), Qt.ItemDataRole.DisplayRole)
         else:
             value_model = QStandardItem(str(value))
-            self.variables[variable] = value_model
-            self.model.insertRow(0, [QStandardItem(type), QStandardItem(str(variable)), value_model])
+            self.variables[(variable, var_type)] = value_model
+            self.model.insertRow(0, [QStandardItem(var_type), QStandardItem(str(variable)), value_model])
 
     def filter_text(self, string):
         wc_string = "*" + str(string) + "*"

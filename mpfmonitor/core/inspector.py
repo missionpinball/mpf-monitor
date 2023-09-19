@@ -69,6 +69,9 @@ class InspectorWindow(QWidget):
         self.ui.toggle_mode_win_button.setChecked(self.mpfmon.toggle_mode_window_action.isChecked())
         self.ui.toggle_mode_win_button.stateChanged.connect(self.mpfmon.toggle_mode_window)
 
+        self.ui.toggle_variables_win_button.setChecked(self.mpfmon.toggle_variables_window_action.isChecked())
+        self.ui.toggle_variables_win_button.stateChanged.connect(self.mpfmon.toggle_variables_window)
+
         self.ui.exit_on_close_button.setChecked(self.mpfmon.get_local_settings_bool('settings/exit-on-close'))
         self.ui.exit_on_close_button.stateChanged.connect(self.mpfmon.toggle_exit_on_close)
 

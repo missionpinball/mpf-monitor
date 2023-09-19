@@ -321,6 +321,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QCheckBox" name="toggle_variables_win_button">
+           <property name="text">
+            <string>Show variables window</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="Line" name="line">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
