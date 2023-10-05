@@ -22,8 +22,7 @@ classifiers=[
     "Topic :: Games/Entertainment :: Arcade"
     ]
 dependencies = [
-    # These dependencies are not specific yet, need to test more
-    "ruamel.yaml >= 0.17.26",  # Sept 19, 2023
+    # Deps that MPF Monitor needs that MPF also needs are not included here
     "PyQt6 >= 6.4.2",  # Sept 19, 2023
     ]
 dynamic = ["version"]
