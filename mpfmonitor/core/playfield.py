@@ -271,8 +271,8 @@ class PfWidget(QGraphicsItem):
             scale = .7
             points = QPolygon([
                 QPoint(0, int(self.device_size * scale * -1)),
-                QPoint(int(self.device_size * scale * -1), ((int(self.device_size * scale) / 2) * aspect_ratio)),
-                QPoint(int(self.device_size * scale), ((int(self.device_size * scale) / 2) * aspect_ratio)),
+                QPoint(int(self.device_size * scale * -1), (int((self.device_size * scale) / 2) * aspect_ratio)),
+                QPoint(int(self.device_size * scale), (int((self.device_size * scale) / 2) * aspect_ratio)),
             ])
             painter.drawPolygon(points)
 
