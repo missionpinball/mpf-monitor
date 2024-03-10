@@ -11,7 +11,7 @@ from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 
-import ruamel.yaml as yaml
+from ruamel import yaml
 
 
 
@@ -259,8 +259,9 @@ class MPFMonitor():
 
     def load_config(self):
         try:
+            _yaml = yaml.YAML(typ='safe')
             with open(self.config_file, 'r') as f:
-                self.config = yaml.safe_load(f)
+                self.config = _yaml.load(f)
         except FileNotFoundError:
                 self.config = dict()
 
