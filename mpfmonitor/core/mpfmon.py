@@ -268,7 +268,9 @@ class MPFMonitor():
     def save_config(self):
         self.log.debug("Saving config to disk")
         with open(self.config_file, 'w') as f:
-            f.write(yaml.dump(self.config, default_flow_style=False))
+            _yaml = yaml.YAML(typ='safe')
+            _yaml.default_flow_style = False
+            _yaml.dump(self.config, f)
 
     def closeEvent(self, event):
         self.write_local_settings()
