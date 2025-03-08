@@ -223,58 +223,84 @@ class PfWidget(QGraphicsItem):
                                 int(self.device_size), int(self.device_size))
 
         elif draw_shape == Shape.SQUARE:
-            aspect_ratio = 1  # Smaller for taller rectangles, larger for wider rectangles
-            painter.drawRect(int((self.device_size * aspect_ratio) / -2), int(self.device_size / -2),
-                             int(self.device_size * aspect_ratio), int(self.device_size))
+            painter.drawPolygon(self.square_polygon())
 
         elif draw_shape == Shape.RECTANGLE:
-            aspect_ratio = .4  # Smaller for taller rectangles, larger for wider rectangles
-            painter.drawRect(int((self.device_size * aspect_ratio) / -2), int(self.device_size / -2),
-                             int(self.device_size * aspect_ratio), int(self.device_size))
+            painter.drawPolygon(self.rectangle_polygon())
 
         elif draw_shape == Shape.TRIANGLE:
-            aspect_ratio = 1
-            scale = .6
-            points = QPolygon([
-                QPoint(0, int(self.device_size * scale * -1)),
-                QPoint(int(self.device_size * scale * -1), int(((self.device_size * scale) / 2) * aspect_ratio)),
-                QPoint(int(self.device_size * scale), int(((self.device_size * scale) / 2) * aspect_ratio)),
-            ])
-            painter.drawPolygon(points)
+            painter.drawPolygon(self.wide_triangle_polygon())
 
         elif draw_shape == Shape.ARROW:
-            """
-            Vertex  1: x=0   y=-10 
-            Vertex  2: x=-5  y=0
-            Vertex  3: x=-2  y=0
-            Vertex  4: x=-2  y=5
-            Vertex  5: x=2   y=5
-            Vertex  6: x=2   y=0
-            Vertex  7: x=5   y=0
-            """
-
-            aspect_ratio = 1
-            scale = .8
-            points = QPolygon([
-                QPoint(0, int(self.device_size * scale * -1)),
-                QPoint(int(self.device_size * scale / -2), 0),
-                QPoint(int(self.device_size * scale / -4), 0),
-                QPoint(int(self.device_size * scale / -4), int(self.device_size * scale / 2)),
-                QPoint(int(self.device_size * scale / 4), int(self.device_size * scale / 2)),
-                QPoint(int(self.device_size * scale / 4), 0),
-                QPoint(int(self.device_size * scale / 2), 0)
-            ])
-            painter.drawPolygon(points)
+            painter.drawPolygon(self.arrow_polygon())
 
         elif draw_shape == Shape.FLIPPER:
-            aspect_ratio = 5
-            scale = .7
-            points = QPolygon([
-                QPoint(0, int(self.device_size * scale * -1)),
-                QPoint(int(self.device_size * scale * -1), int(((self.device_size * scale) / 2) * aspect_ratio)),
-                QPoint(int(self.device_size * scale), int(((self.device_size * scale) / 2) * aspect_ratio)),
+            painter.drawPolygon(self.flipper_polygon())
+
+
+    def square_polygon(self):
+        device_size = self.device_size
+
+        return QPolygon([
+            QPoint(int(device_size * -0.5), int(device_size * -0.5)),
+            QPoint(int(device_size * 0.5), int(device_size * -0.5)),
+            QPoint(int(device_size * 0.5), int(device_size * 0.5)),
+            QPoint(int(device_size * -0.5), int(device_size * 0.5))
+        ])
+
+
+    def rectangle_polygon(self):
+        device_size = self.device_size
+        width_factor = .4
+
+        return QPolygon([
+            QPoint(int(device_size * width_factor * -0.5), int(device_size * -0.5)),
+            QPoint(int(device_size * width_factor * 0.5), int(device_size * -0.5)),
+            QPoint(int(device_size * width_factor * 0.5), int(device_size * 0.5)),
+            QPoint(int(device_size * width_factor * -0.5), int(device_size * 0.5))
+        ])
+
+    def wide_triangle_polygon(self):
+        device_size = self.device_size
+        scale = .6
+        return QPolygon([
+            QPoint(0, int(device_size * scale * -1)),
+            QPoint(int(device_size * scale * -1), int(((device_size * scale) / 2))),
+            QPoint(int(device_size * scale), int(((device_size * scale) / 2))),
+        ])
+
+    def arrow_polygon(self):
+        """
+        Vertex  1: x=0   y=-10 
+        Vertex  2: x=-5  y=0
+        Vertex  3: x=-2  y=0
+        Vertex  4: x=-2  y=5
+        Vertex  5: x=2   y=5
+        Vertex  6: x=2   y=0
+        Vertex  7: x=5   y=0
+        """
+
+        device_size = self.device_size
+        scale = .8
+        return QPolygon([
+            QPoint(0, int(device_size * scale * -1)),
+            QPoint(int(device_size * scale / -2), 0),
+            QPoint(int(device_size * scale / -4), 0),
+            QPoint(int(device_size * scale / -4), int(device_size * scale / 2)),
+            QPoint(int(device_size * scale / 4), int(device_size * scale / 2)),
+            QPoint(int(device_size * scale / 4), 0),
+            QPoint(int(device_size * scale / 2), 0)
+        ])
+
+    def flipper_polygon(self):
+        device_size = self.device_size
+        aspect_ratio = 5
+        scale = .7
+        return QPolygon([
+                QPoint(0, int(device_size * scale * -1)),
+                QPoint(int(device_size * scale * -1), int(((device_size * scale) / 2) * aspect_ratio)),
+                QPoint(int(device_size * scale), int(((device_size * scale) / 2) * aspect_ratio)),
             ])
-            painter.drawPolygon(points)
 
     def notify(self, destroy=False, resize=False):
         self.update()
