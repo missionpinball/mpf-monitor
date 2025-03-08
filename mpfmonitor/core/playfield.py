@@ -155,8 +155,19 @@ class PfWidget(QGraphicsItem):
 
 
     def boundingRect(self):
-        return QRectF(int(self.device_size / -2), int(self.device_size / -2),
-                      int(self.device_size), int(self.device_size))
+        known_points = self.points_for_draw_shape()
+        if known_points != None:
+            x_options = [sub_list[0] for sub_list in known_points]
+            x_min = min(x_options)
+            width = max(x_options) - x_min
+            y_options = [sub_list[1] for sub_list in known_points]
+            y_min = min(y_options)
+            height = max(y_options) - y_min
+            return QRectF(int(x_min * self.device_size), int(y_min * self.device_size), int(width * self.device_size), int(height * self.device_size))
+
+        else:
+            return QRectF(int(self.device_size / -2), int(self.device_size / -2),
+                          int(self.device_size), int(self.device_size))
 
     def set_shape_type(self, shape_type):
         if isinstance(shape_type, Shape):
@@ -222,34 +233,34 @@ class PfWidget(QGraphicsItem):
         painter.setBrush(self.widget.get_colored_brush())
 
         draw_shape = self.draw_shape()
-
-        shape_points = None
-        # Draw based on the shape we want, not device type.
         if draw_shape == Shape.CIRCLE:
             painter.drawEllipse(int(self.device_size / -2), int(self.device_size / -2),
                                 int(self.device_size), int(self.device_size))
+        else:
+            shape_points = self.points_for_draw_shape()
+            if shape_points != None:
+                scaled_points = map(lambda pair: QPoint(int(pair[0] * self.device_size), int(pair[1] * self.device_size)), shape_points)
+                painter.drawPolygon(QPolygon(scaled_points))
+
+    def points_for_draw_shape(self):
+        draw_shape = self.draw_shape()
+        if draw_shape == Shape.CIRCLE:
+            return None # Handle circles with drawEllipse instead
 
         elif draw_shape == Shape.SQUARE:
-            shape_points = self.square_points()
+            return self.square_points()
 
         elif draw_shape == Shape.RECTANGLE:
-            shape_points = self.rectangle_points()
+            return self.rectangle_points()
 
         elif draw_shape == Shape.TRIANGLE:
-            shape_points = self.wide_triangle_points()
+            return self.wide_triangle_points()
 
         elif draw_shape == Shape.ARROW:
-            shape_points = self.arrow_points()
+            return self.arrow_points()
 
         elif draw_shape == Shape.FLIPPER:
-            shape_points = self.tall_triangle_points()
-
-        if shape_points != None:
-            self.draw_scaled_points_poly(painter, shape_points, self.device_size)
-
-    def draw_scaled_points_poly(self, painter, points, scale_factor):
-        transformed_points = map(lambda pair: QPoint(int(pair[0] * scale_factor), int(pair[1] * scale_factor)), points)
-        painter.drawPolygon(QPolygon(transformed_points))
+            return self.tall_triangle_points()
 
     def square_points(self):
         return [[-.5, -.5], [.5, -.5], [.5, .5], [-.5, .5]]
