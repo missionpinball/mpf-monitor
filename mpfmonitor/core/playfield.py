@@ -117,7 +117,7 @@ class PfPixmapItem(QGraphicsPixmapItem):
     def create_pf_widget(self, widget, device_type, device_name, drop_x,
                          drop_y, size=None, rotation=0, shape=Shape.DEFAULT, save=True):
         w = PfWidget(self.mpfmon, widget, device_type, device_name, drop_x,
-                     drop_y, size=size, rotation=rotation, shape=shape, save=save)
+                     drop_y, size=size, rotation=rotation, shape_type=shape, save=save)
 
         self.mpfmon.scene.addItem(w)
 
@@ -125,7 +125,7 @@ class PfPixmapItem(QGraphicsPixmapItem):
 class PfWidget(QGraphicsItem):
 
     def __init__(self, mpfmon, widget, device_type, device_name, x, y,
-                 size=None, rotation=0, shape=Shape.DEFAULT, save=True):
+                 size=None, rotation=0, shape_type=Shape.DEFAULT, save=True):
         super().__init__()
 
         self.widget = widget    # type: DeviceNode
@@ -134,7 +134,7 @@ class PfWidget(QGraphicsItem):
         self.move_in_progress = True
         self.device_type = device_type
         self.set_size(size=size)
-        self.shape = shape
+        self.shape_type = shape_type
         self.angle = rotation
 
         self.setToolTip('{}: {}'.format(self.device_type, self.name))
@@ -158,11 +158,11 @@ class PfWidget(QGraphicsItem):
         return QRectF(self.device_size / -2, self.device_size / -2,
                       self.device_size, self.device_size)
 
-    def set_shape(self, shape):
-        if isinstance(shape, Shape):
-            self.shape = shape
+    def set_shape_type(self, shape_type):
+        if isinstance(shape_type, Shape):
+            self.shape_type = shape_type
         else:
-            self.shape = Shape.DEFAULT
+            self.shape_type = Shape.DEFAULT
 
     def set_rotation(self, angle=0):
         angle = angle % 360
@@ -201,7 +201,7 @@ class PfWidget(QGraphicsItem):
 
         painter.setBrush(self.widget.get_colored_brush())
 
-        draw_shape = self.shape
+        draw_shape = self.shape_type
 
         # Preserve legacy and regular use
         if draw_shape == Shape.DEFAULT:
@@ -379,9 +379,9 @@ class PfWidget(QGraphicsItem):
         conf_shape_str = self.mpfmon.config[self.device_type][self.name].get('shape', 'DEFAULT')
         conf_shape = Shape[str(conf_shape_str).upper()]
 
-        if self.shape is not conf_shape:
-            if self.shape is not Shape.DEFAULT:
-                self.mpfmon.config[self.device_type][self.name]['shape'] = self.shape.name
+        if self.shape_type is not conf_shape:
+            if self.shape_type is not Shape.DEFAULT:
+                self.mpfmon.config[self.device_type][self.name]['shape'] = self.shape_type.name
             else:
                 try:
                     self.mpfmon.config[self.device_type][self.name].pop('shape')

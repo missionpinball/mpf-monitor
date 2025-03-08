@@ -22,7 +22,7 @@ class TestablePfWidgetNonDrawn(PfWidget):
         self.move_in_progress = True
         self.device_type = device_type
         self.set_size(size=size)
-        self.shape = shape
+        self.shape_type = shape
         self.angle = rotation
 
         self.setToolTip('{}: {}'.format(self.device_type, self.name))
@@ -50,17 +50,17 @@ class TestPfWidgetParameters(unittest.TestCase):
 
     def test_shape_set_valid(self):
         shape_to_be_set = Shape.TRIANGLE
-        self.widget.set_shape(shape_to_be_set)
+        self.widget.set_shape_type(shape_to_be_set)
 
-        self.assertEqual(self.widget.shape, shape_to_be_set)
+        self.assertEqual(self.widget.shape_type, shape_to_be_set)
 
     def test_shape_set_invalid(self):
         widget = TestablePfWidgetNonDrawn()
 
         shape_to_be_set = "Not_A_Shape"
-        self.widget.set_shape(shape_to_be_set)
+        self.widget.set_shape_type(shape_to_be_set)
 
-        self.assertEqual(self.widget.shape, Shape.DEFAULT)
+        self.assertEqual(self.widget.shape_type, Shape.DEFAULT)
 
     def test_rotation_set_valid(self):
         rotation_to_be_set = 42
