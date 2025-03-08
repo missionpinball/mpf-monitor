@@ -155,8 +155,8 @@ class PfWidget(QGraphicsItem):
 
 
     def boundingRect(self):
-        return QRectF(self.device_size / -2, self.device_size / -2,
-                      self.device_size, self.device_size)
+        return QRectF(int(self.device_size / -2), int(self.device_size / -2),
+                      int(self.device_size), int(self.device_size))
 
     def set_shape_type(self, shape_type):
         if isinstance(shape_type, Shape):
@@ -193,6 +193,26 @@ class PfWidget(QGraphicsItem):
 
         self.update_pos(save=False)  # Do not save at this point. Let it be saved elsewhere. This reduces writes.
 
+    def draw_shape(self):
+        shape_result = self.shape_type
+
+        # Preserve legacy and regular use
+        if shape_result == Shape.DEFAULT:
+            if self.device_type == 'light':
+                shape_result = Shape.CIRCLE
+
+            elif self.device_type == 'switch':
+                shape_result = Shape.SQUARE
+
+            elif self.device_type == 'diverter':
+                shape_result = Shape.TRIANGLE
+
+            else:  # Draw any other devices as square by default
+                shape_result = Shape.SQUARE
+
+        return shape_result
+
+
     def paint(self, painter, option, widget=None):
         """Paint this widget to the playfield."""
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
@@ -201,106 +221,50 @@ class PfWidget(QGraphicsItem):
 
         painter.setBrush(self.widget.get_colored_brush())
 
-        draw_shape = self.shape_type
+        draw_shape = self.draw_shape()
 
-        # Preserve legacy and regular use
-        if draw_shape == Shape.DEFAULT:
-            if self.device_type == 'light':
-                draw_shape = Shape.CIRCLE
-
-            elif self.device_type == 'switch':
-                draw_shape = Shape.SQUARE
-
-            elif self.device_type == 'diverter':
-                draw_shape = Shape.TRIANGLE
-
-            else:  # Draw any other devices as square by default
-                draw_shape = Shape.SQUARE
-
+        shape_points = None
         # Draw based on the shape we want, not device type.
         if draw_shape == Shape.CIRCLE:
             painter.drawEllipse(int(self.device_size / -2), int(self.device_size / -2),
                                 int(self.device_size), int(self.device_size))
 
         elif draw_shape == Shape.SQUARE:
-            painter.drawPolygon(self.square_polygon())
+            shape_points = self.square_points()
 
         elif draw_shape == Shape.RECTANGLE:
-            painter.drawPolygon(self.rectangle_polygon())
+            shape_points = self.rectangle_points()
 
         elif draw_shape == Shape.TRIANGLE:
-            painter.drawPolygon(self.wide_triangle_polygon())
+            shape_points = self.wide_triangle_points()
 
         elif draw_shape == Shape.ARROW:
-            painter.drawPolygon(self.arrow_polygon())
+            shape_points = self.arrow_points()
 
         elif draw_shape == Shape.FLIPPER:
-            painter.drawPolygon(self.flipper_polygon())
+            shape_points = self.tall_triangle_points()
 
+        if shape_points != None:
+            self.draw_scaled_points_poly(painter, shape_points, self.device_size)
 
-    def square_polygon(self):
-        device_size = self.device_size
+    def draw_scaled_points_poly(self, painter, points, scale_factor):
+        transformed_points = map(lambda pair: QPoint(int(pair[0] * scale_factor), int(pair[1] * scale_factor)), points)
+        painter.drawPolygon(QPolygon(transformed_points))
 
-        return QPolygon([
-            QPoint(int(device_size * -0.5), int(device_size * -0.5)),
-            QPoint(int(device_size * 0.5), int(device_size * -0.5)),
-            QPoint(int(device_size * 0.5), int(device_size * 0.5)),
-            QPoint(int(device_size * -0.5), int(device_size * 0.5))
-        ])
+    def square_points(self):
+        return [[-.5, -.5], [.5, -.5], [.5, .5], [-.5, .5]]
 
+    def rectangle_points(self):
+        return [[-.2, -.5], [.2, -.5], [.2, .5], [-.2, .5]]
 
-    def rectangle_polygon(self):
-        device_size = self.device_size
-        width_factor = .4
+    def wide_triangle_points(self):
+        return [[0, -.6], [-.6, .3], [.6, .3]]
 
-        return QPolygon([
-            QPoint(int(device_size * width_factor * -0.5), int(device_size * -0.5)),
-            QPoint(int(device_size * width_factor * 0.5), int(device_size * -0.5)),
-            QPoint(int(device_size * width_factor * 0.5), int(device_size * 0.5)),
-            QPoint(int(device_size * width_factor * -0.5), int(device_size * 0.5))
-        ])
+    def arrow_points(self):
+        return [[0, -.7], [-.4, 0], [-.2, 0], [-.2, .4], [.2, .4], [.2, 0], [.4, 0]]
 
-    def wide_triangle_polygon(self):
-        device_size = self.device_size
-        scale = .6
-        return QPolygon([
-            QPoint(0, int(device_size * scale * -1)),
-            QPoint(int(device_size * scale * -1), int(((device_size * scale) / 2))),
-            QPoint(int(device_size * scale), int(((device_size * scale) / 2))),
-        ])
-
-    def arrow_polygon(self):
-        """
-        Vertex  1: x=0   y=-10 
-        Vertex  2: x=-5  y=0
-        Vertex  3: x=-2  y=0
-        Vertex  4: x=-2  y=5
-        Vertex  5: x=2   y=5
-        Vertex  6: x=2   y=0
-        Vertex  7: x=5   y=0
-        """
-
-        device_size = self.device_size
-        scale = .8
-        return QPolygon([
-            QPoint(0, int(device_size * scale * -1)),
-            QPoint(int(device_size * scale / -2), 0),
-            QPoint(int(device_size * scale / -4), 0),
-            QPoint(int(device_size * scale / -4), int(device_size * scale / 2)),
-            QPoint(int(device_size * scale / 4), int(device_size * scale / 2)),
-            QPoint(int(device_size * scale / 4), 0),
-            QPoint(int(device_size * scale / 2), 0)
-        ])
-
-    def flipper_polygon(self):
-        device_size = self.device_size
-        aspect_ratio = 5
-        scale = .7
-        return QPolygon([
-                QPoint(0, int(device_size * scale * -1)),
-                QPoint(int(device_size * scale * -1), int(((device_size * scale) / 2) * aspect_ratio)),
-                QPoint(int(device_size * scale), int(((device_size * scale) / 2) * aspect_ratio)),
-            ])
+    def tall_triangle_points(self):
+        return [[0, -.3], [-.3, .7], [.3, .7]]
 
     def notify(self, destroy=False, resize=False):
         self.update()
