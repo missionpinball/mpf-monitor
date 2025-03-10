@@ -29,9 +29,9 @@ class VariableWindow(QWidget):
 
         self.ui.setWindowTitle('Player/Machine Variables')
 
-        self.ui.move(self.mpfmon.local_settings.value('windows/modes/pos',
+        self.ui.move(self.mpfmon.local_settings.value('windows/variables/pos',
                                                    QPoint(1100, 200)))
-        self.ui.resize(self.mpfmon.local_settings.value('windows/modes/size',
+        self.ui.resize(self.mpfmon.local_settings.value('windows/variables/size',
                                                      QSize(300, 240)))
 
         # Fix sort combobox verbiage
