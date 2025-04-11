@@ -38,10 +38,10 @@ jobs:
 
     steps:
       - name: Checkout mpf-monitor
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -96,10 +96,10 @@ jobs:
 
     steps:
       - name: Checkout mpf-monitor
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: 3.11
 
@@ -112,7 +112,7 @@ jobs:
       - name: Build wheel
         run: python -m build
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: mpf-monitor-wheels
           path: ./dist/*.*
@@ -129,7 +129,7 @@ jobs:
       id-token: write
     steps:
     - name: Download wheels
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: mpf-monitor-wheels
         path: dist
