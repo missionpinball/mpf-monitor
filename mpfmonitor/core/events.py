@@ -42,6 +42,7 @@ class EventWindow(QWidget):
         assert (self.ui is not None)
         self.ui.filterLineEdit.textChanged.connect(self.filter_text)
         self.ui.sortComboBox.currentIndexChanged.connect(self.change_sort)
+        self.ui.clear_button.clicked.connect(self.clear_log)
 
     def attach_model(self):
         self.model = QStandardItemModel(0, 2)
@@ -99,6 +100,10 @@ class EventWindow(QWidget):
             self.filtered_model.sort(0, Qt.SortOrder.AscendingOrder)
         elif index == 4:  # Name down
             self.filtered_model.sort(0, Qt.SortOrder.DescendingOrder)
+
+    def clear_log(self):
+        #clears the log of events
+        self.model.clear()
 
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()
