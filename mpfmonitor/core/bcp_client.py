@@ -5,6 +5,7 @@ import queue
 import socket
 import threading
 import os
+import time
 
 import select
 
@@ -30,6 +31,7 @@ class BCPClient(object):
         self.socket = None
         self.sending_thread = None
         self.receive_thread = None
+        self.connection_thread_running = False
         self.done = False
         self.last_time = datetime.now()
 
@@ -44,17 +46,50 @@ class BCPClient(object):
 
         self.mpfmon.log.info('Looking for MPF at %s:%s', self.interface, self.port)
 
-        self.reconnect_timer = QTimer(self.mpfmon.device_window)
+        #self.reconnect_timer = QTimer(self.mpfmon.device_window)
         self.simulator_timer = QTimer(self.mpfmon.device_window)
-
 
         self.simulator_messages = []
         self.simulator_msg_timer = []
         self.enable_simulator(enable=self.simulate)
 
+    def start_connect_thread(self):
+        """Starts the connection process in a separate thread."""
+        if not self.connection_thread_running:
+            self.connection_thread_running = True
+            self.connection_thread = threading.Thread(target=self.connection_thread, daemon=True)
+            self.connection_thread.start()
+
+    def connection_thread(self):
+        """The main loop for the BCP client running in a separate thread."""
+        #self.log.info("start connection_thread")
+        while not self.mpfmon.thread_stopper.is_set():
+            if not self.connected:
+                #self.log.info("Attempting to connect to MPF...")                
+                self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    
+                try:
+                    self.socket.connect((self.interface, self.port))
+                    self.socket.settimeout(0.1) # Set a small timeout for non-blocking operations
+                    self.connected = True
+                    self.log.info("Connected to MPF.")
+                except socket.error as e:
+                    #self.log.info(f"Connection failed: {e}. Retrying in 1 second...")
+                    self.connected = False
+                    time.sleep(1)
+                    continue
+
+                if self.connected:
+                    if self.create_socket_threads():
+                        self.start_monitoring()
+            else:
+                time.sleep(1)
+
+
     def register_timer(self):
         if self.simulate:
-            self.reconnect_timer.stop()
+            #self.reconnect_timer.stop()
 
             self.simulator_init()
 
@@ -63,10 +98,11 @@ class BCPClient(object):
             self.simulator_timer.start()
         else:
             self.simulator_timer.stop()
-
-            self.reconnect_timer.setInterval(1000)
-            self.reconnect_timer.timeout.connect(self.connect_to_mpf)
-            self.reconnect_timer.start()
+            self.start_connect_thread()
+            # self.reconnect_timer.setInterval(1000)
+            # self.reconnect_timer.timeout.connect(self.start_connect)
+            # self.log.info("start reconnect timer")
+            # self.reconnect_timer.start()
 
     def enable_simulator(self, enable=True):
         if enable:
@@ -87,26 +123,28 @@ class BCPClient(object):
         self.start_time = datetime.now()
         self.register_timer()
 
-    def connect_to_mpf(self, *args):
-        del args
+    # def connect_to_mpf(self, *args):
+    #     self.log.info("connect_to_mpf")
+    #     del args
 
-        if self.connected:
-            return
+    #     if self.connected:
+    #         return
 
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    #     self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #     self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        try:
-            self.socket.connect((self.interface, self.port))
-            self.connected = True
-            # self.mc.reset_connection()
-            self.log.info("Connected to MPF")
+    #     try:
+    #         self.socket.connect((self.interface, self.port))
+    #         self.connected = True
+    #         # self.mc.reset_connection()
+    #         self.log.info("Connected to MPF")
 
-        except socket.error:
-            self.socket = None
+    #     except socket.error:
+    #         self.socket = None
 
-        if self.create_socket_threads():
-            self.start_monitoring()
+
+    #     if self.create_socket_threads():
+    #         self.start_monitoring()
 
     def start_monitoring(self):
         self.sending_queue.put('monitor_start?category=devices')
