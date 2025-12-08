@@ -31,8 +31,8 @@ MPF is open source and has no official support. Some MPF users follow the MPF-us
 Contributing
 ------------
 
-MPF is a passion project created and maintained by volunteers. If you're a Python coder, documentation writer, or pinball maker, feel free to make a change and submit a pull request. For more information about contributing see the [Contributing Code](https://missionpinball.org/about/contributing_to_mpf/)
-and [Contributing Documentation](https://missionpinball.org/about/help_docs/) pages.
+MPF is a passion project created and maintained by volunteers. If you're a Python coder, documentation writer, or pinball maker, feel free to make a change and submit a pull request. For more information about contributing see the [Contributing Code](https://missionpinball.org/latest/about/contributing_to_mpf/)
+and [Contributing Documentation](https://missionpinball.org/latest/about/help_docs/) pages.
 
 License
 -------
