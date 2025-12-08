@@ -196,7 +196,7 @@ class InspectorDeviceShape(unittest.TestCase):
 
         inspector.last_pf_widget = MagicMock()
         inspector.update_last_device(shape=shape, save=False)
-        inspector.last_pf_widget.set_shape.assert_called_once_with(shape=shape)
+        inspector.last_pf_widget.set_shape_type.assert_called_once_with(shape_type=shape)
         inspector.last_pf_widget.update_pos.assert_called_once_with(save=False)
 
     def test_device_shape_with_save(self):
@@ -207,7 +207,7 @@ class InspectorDeviceShape(unittest.TestCase):
 
         inspector.last_pf_widget = MagicMock()
         inspector.update_last_device(shape=shape, save=True)
-        inspector.last_pf_widget.set_shape.assert_called_once_with(shape=shape)
+        inspector.last_pf_widget.set_shape_type.assert_called_once_with(shape_type=shape)
         inspector.last_pf_widget.update_pos.assert_called_once_with(save=True)
 
 
