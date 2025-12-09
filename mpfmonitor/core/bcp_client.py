@@ -46,7 +46,6 @@ class BCPClient(object):
 
         self.mpfmon.log.info('Looking for MPF at %s:%s', self.interface, self.port)
 
-        #self.reconnect_timer = QTimer(self.mpfmon.device_window)
         self.simulator_timer = QTimer(self.mpfmon.device_window)
 
         self.simulator_messages = []
@@ -62,10 +61,8 @@ class BCPClient(object):
 
     def connection_thread(self):
         """The main loop for the BCP client running in a separate thread."""
-        #self.log.info("start connection_thread")
         while not self.mpfmon.thread_stopper.is_set():
             if not self.connected:
-                #self.log.info("Attempting to connect to MPF...")
                 self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 try:
@@ -74,7 +71,6 @@ class BCPClient(object):
                     self.connected = True
                     self.log.info("Connected to MPF.")
                 except socket.error as e:
-                    #self.log.info(f"Connection failed: {e}. Retrying in 1 second...")
                     self.connected = False
                     time.sleep(1)
                     continue
@@ -88,20 +84,13 @@ class BCPClient(object):
 
     def register_timer(self):
         if self.simulate:
-            #self.reconnect_timer.stop()
-
             self.simulator_init()
-
             self.simulator_timer.setInterval(100)
             self.simulator_timer.timeout.connect(self.simulate_received)
             self.simulator_timer.start()
         else:
             self.simulator_timer.stop()
             self.start_connect_thread()
-            # self.reconnect_timer.setInterval(1000)
-            # self.reconnect_timer.timeout.connect(self.start_connect)
-            # self.log.info("start reconnect timer")
-            # self.reconnect_timer.start()
 
     def enable_simulator(self, enable=True):
         if enable:
@@ -121,29 +110,6 @@ class BCPClient(object):
 
         self.start_time = datetime.now()
         self.register_timer()
-
-    # def connect_to_mpf(self, *args):
-    #     self.log.info("connect_to_mpf")
-    #     del args
-
-    #     if self.connected:
-    #         return
-
-    #     self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #     self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-    #     try:
-    #         self.socket.connect((self.interface, self.port))
-    #         self.connected = True
-    #         # self.mc.reset_connection()
-    #         self.log.info("Connected to MPF")
-
-    #     except socket.error:
-    #         self.socket = None
-
-
-    #     if self.create_socket_threads():
-    #         self.start_monitoring()
 
     def start_monitoring(self):
         self.sending_queue.put('monitor_start?category=devices')
