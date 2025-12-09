@@ -65,10 +65,9 @@ class BCPClient(object):
         #self.log.info("start connection_thread")
         while not self.mpfmon.thread_stopper.is_set():
             if not self.connected:
-                #self.log.info("Attempting to connect to MPF...")                
+                #self.log.info("Attempting to connect to MPF...")
                 self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                    
                 try:
                     self.socket.connect((self.interface, self.port))
                     self.socket.settimeout(0.1) # Set a small timeout for non-blocking operations
