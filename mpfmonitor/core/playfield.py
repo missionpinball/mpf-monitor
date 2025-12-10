@@ -117,7 +117,7 @@ class PfPixmapItem(QGraphicsPixmapItem):
     def create_pf_widget(self, widget, device_type, device_name, drop_x,
                          drop_y, size=None, rotation=0, shape=Shape.DEFAULT, save=True):
         w = PfWidget(self.mpfmon, widget, device_type, device_name, drop_x,
-                     drop_y, size=size, rotation=rotation, shape=shape, save=save)
+                     drop_y, size=size, rotation=rotation, shape_type=shape, save=save)
 
         self.mpfmon.scene.addItem(w)
 
@@ -125,7 +125,7 @@ class PfPixmapItem(QGraphicsPixmapItem):
 class PfWidget(QGraphicsItem):
 
     def __init__(self, mpfmon, widget, device_type, device_name, x, y,
-                 size=None, rotation=0, shape=Shape.DEFAULT, save=True):
+                 size=None, rotation=0, shape_type=Shape.DEFAULT, save=True):
         super().__init__()
 
         self.widget = widget    # type: DeviceNode
@@ -134,7 +134,7 @@ class PfWidget(QGraphicsItem):
         self.move_in_progress = True
         self.device_type = device_type
         self.set_size(size=size)
-        self.shape = shape
+        self.shape_type = shape_type
         self.angle = rotation
 
         self.setToolTip('{}: {}'.format(self.device_type, self.name))
@@ -155,14 +155,25 @@ class PfWidget(QGraphicsItem):
 
 
     def boundingRect(self):
-        return QRectF(self.device_size / -2, self.device_size / -2,
-                      self.device_size, self.device_size)
+        known_points = self.points_for_draw_shape()
+        if known_points != None:
+            x_options = [sub_list[0] for sub_list in known_points]
+            x_min = min(x_options)
+            width = max(x_options) - x_min
+            y_options = [sub_list[1] for sub_list in known_points]
+            y_min = min(y_options)
+            height = max(y_options) - y_min
+            return QRectF(int(x_min * self.device_size), int(y_min * self.device_size), int(width * self.device_size), int(height * self.device_size))
 
-    def set_shape(self, shape):
-        if isinstance(shape, Shape):
-            self.shape = shape
         else:
-            self.shape = Shape.DEFAULT
+            return QRectF(int(self.device_size / -2), int(self.device_size / -2),
+                          int(self.device_size), int(self.device_size))
+
+    def set_shape_type(self, shape_type):
+        if isinstance(shape_type, Shape):
+            self.shape_type = shape_type
+        else:
+            self.shape_type = Shape.DEFAULT
 
     def set_rotation(self, angle=0):
         angle = angle % 360
@@ -193,6 +204,26 @@ class PfWidget(QGraphicsItem):
 
         self.update_pos(save=False)  # Do not save at this point. Let it be saved elsewhere. This reduces writes.
 
+    def draw_shape(self):
+        shape_result = self.shape_type
+
+        # Preserve legacy and regular use
+        if shape_result == Shape.DEFAULT:
+            if self.device_type == 'light':
+                shape_result = Shape.CIRCLE
+
+            elif self.device_type == 'switch':
+                shape_result = Shape.SQUARE
+
+            elif self.device_type == 'diverter':
+                shape_result = Shape.TRIANGLE
+
+            else:  # Draw any other devices as square by default
+                shape_result = Shape.SQUARE
+
+        return shape_result
+
+
     def paint(self, painter, option, widget=None):
         """Paint this widget to the playfield."""
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
@@ -201,80 +232,50 @@ class PfWidget(QGraphicsItem):
 
         painter.setBrush(self.widget.get_colored_brush())
 
-        draw_shape = self.shape
-
-        # Preserve legacy and regular use
-        if draw_shape == Shape.DEFAULT:
-            if self.device_type == 'light':
-                draw_shape = Shape.CIRCLE
-
-            elif self.device_type == 'switch':
-                draw_shape = Shape.SQUARE
-
-            elif self.device_type == 'diverter':
-                draw_shape = Shape.TRIANGLE
-
-            else:  # Draw any other devices as square by default
-                draw_shape = Shape.SQUARE
-
-        # Draw based on the shape we want, not device type.
+        draw_shape = self.draw_shape()
         if draw_shape == Shape.CIRCLE:
             painter.drawEllipse(int(self.device_size / -2), int(self.device_size / -2),
                                 int(self.device_size), int(self.device_size))
+        else:
+            shape_points = self.points_for_draw_shape()
+            if shape_points != None:
+                scaled_points = map(lambda pair: QPoint(int(pair[0] * self.device_size), int(pair[1] * self.device_size)), shape_points)
+                painter.drawPolygon(QPolygon(scaled_points))
+
+    def points_for_draw_shape(self):
+        draw_shape = self.draw_shape()
+        if draw_shape == Shape.CIRCLE:
+            return None # Handle circles with drawEllipse instead
 
         elif draw_shape == Shape.SQUARE:
-            aspect_ratio = 1  # Smaller for taller rectangles, larger for wider rectangles
-            painter.drawRect(int((self.device_size * aspect_ratio) / -2), int(self.device_size / -2),
-                             int(self.device_size * aspect_ratio), int(self.device_size))
+            return self.square_points()
 
         elif draw_shape == Shape.RECTANGLE:
-            aspect_ratio = .4  # Smaller for taller rectangles, larger for wider rectangles
-            painter.drawRect(int((self.device_size * aspect_ratio) / -2), int(self.device_size / -2),
-                             int(self.device_size * aspect_ratio), int(self.device_size))
+            return self.rectangle_points()
 
         elif draw_shape == Shape.TRIANGLE:
-            aspect_ratio = 1
-            scale = .6
-            points = QPolygon([
-                QPoint(0, int(self.device_size * scale * -1)),
-                QPoint(int(self.device_size * scale * -1), int(((self.device_size * scale) / 2) * aspect_ratio)),
-                QPoint(int(self.device_size * scale), int(((self.device_size * scale) / 2) * aspect_ratio)),
-            ])
-            painter.drawPolygon(points)
+            return self.wide_triangle_points()
 
         elif draw_shape == Shape.ARROW:
-            """
-            Vertex  1: x=0   y=-10 
-            Vertex  2: x=-5  y=0
-            Vertex  3: x=-2  y=0
-            Vertex  4: x=-2  y=5
-            Vertex  5: x=2   y=5
-            Vertex  6: x=2   y=0
-            Vertex  7: x=5   y=0
-            """
-
-            aspect_ratio = 1
-            scale = .8
-            points = QPolygon([
-                QPoint(0, int(self.device_size * scale * -1)),
-                QPoint(int(self.device_size * scale / -2), 0),
-                QPoint(int(self.device_size * scale / -4), 0),
-                QPoint(int(self.device_size * scale / -4), int(self.device_size * scale / 2)),
-                QPoint(int(self.device_size * scale / 4), int(self.device_size * scale / 2)),
-                QPoint(int(self.device_size * scale / 4), 0),
-                QPoint(int(self.device_size * scale / 2), 0)
-            ])
-            painter.drawPolygon(points)
+            return self.arrow_points()
 
         elif draw_shape == Shape.FLIPPER:
-            aspect_ratio = 5
-            scale = .7
-            points = QPolygon([
-                QPoint(0, int(self.device_size * scale * -1)),
-                QPoint(int(self.device_size * scale * -1), int(((self.device_size * scale) / 2) * aspect_ratio)),
-                QPoint(int(self.device_size * scale), int(((self.device_size * scale) / 2) * aspect_ratio)),
-            ])
-            painter.drawPolygon(points)
+            return self.tall_triangle_points()
+
+    def square_points(self):
+        return [[-.5, -.5], [.5, -.5], [.5, .5], [-.5, .5]]
+
+    def rectangle_points(self):
+        return [[-.2, -.5], [.2, -.5], [.2, .5], [-.2, .5]]
+
+    def wide_triangle_points(self):
+        return [[0, -.6], [-.6, .3], [.6, .3]]
+
+    def arrow_points(self):
+        return [[0, -.7], [-.4, 0], [-.2, 0], [-.2, .4], [.2, .4], [.2, 0], [.4, 0]]
+
+    def tall_triangle_points(self):
+        return [[0, -.3], [-.3, .7], [.3, .7]]
 
     def notify(self, destroy=False, resize=False):
         self.update()
@@ -353,9 +354,9 @@ class PfWidget(QGraphicsItem):
         conf_shape_str = self.mpfmon.config[self.device_type][self.name].get('shape', 'DEFAULT')
         conf_shape = Shape[str(conf_shape_str).upper()]
 
-        if self.shape is not conf_shape:
-            if self.shape is not Shape.DEFAULT:
-                self.mpfmon.config[self.device_type][self.name]['shape'] = self.shape.name
+        if self.shape_type is not conf_shape:
+            if self.shape_type is not Shape.DEFAULT:
+                self.mpfmon.config[self.device_type][self.name]['shape'] = self.shape_type.name
             else:
                 try:
                     self.mpfmon.config[self.device_type][self.name].pop('shape')

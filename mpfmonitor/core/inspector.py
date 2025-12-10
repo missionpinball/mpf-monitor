@@ -110,7 +110,7 @@ class InspectorWindow(QWidget):
             self.ui.size_spinbox.setValue(self.last_pf_widget.size)
 
             # Update the shape combo box
-            self.ui.shape_combo_box.setCurrentIndex(self.last_pf_widget.shape.value)
+            self.ui.shape_combo_box.setCurrentIndex(self.last_pf_widget.shape_type.value)
 
             # Update the rotation dial
             rotation = int(self.last_pf_widget.angle / 10) + 18
@@ -180,7 +180,7 @@ class InspectorWindow(QWidget):
                 update_and_resize = True
 
             if shape is not None:
-                self.last_pf_widget.set_shape(shape=shape)
+                self.last_pf_widget.set_shape_type(shape_type=shape)
                 update_and_resize = True
 
             if update_and_resize:

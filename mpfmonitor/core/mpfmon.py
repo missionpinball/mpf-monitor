@@ -91,7 +91,7 @@ class MPFMonitor():
 
         self.toggle_variables_window_action = QAction('&Variables', self.device_window,
                                         statusTip='Show the variables window',
-                                        triggered=self.toggle_mode_window)
+                                        triggered=self.toggle_variables_window)
         self.toggle_variables_window_action.setCheckable(True)
 
         self.scene = QGraphicsScene()
@@ -305,7 +305,8 @@ class MPFMonitor():
             'pf': self.view,
             'modes': self.mode_window,
             'events': self.event_window,
-            'inspector': self.inspector_window
+            'inspector': self.inspector_window,
+            'variables': self.variables_window,
         }
 
         for window in monitor_windows.keys():

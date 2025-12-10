@@ -14,6 +14,8 @@ classifiers=[
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Natural Language :: English",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
@@ -24,6 +26,7 @@ classifiers=[
 dependencies = [
     # Deps that MPF Monitor needs that MPF also needs are not included here
     "PyQt6 >= 6.4.2",  # Sept 19, 2023
+    "Pillow >= 10.4.0",  # Dec 7, 2025
     ]
 dynamic = ["version"]
 
