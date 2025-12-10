@@ -46,8 +46,11 @@ class MPFMonitor():
                                         config_file)
         self.playfield_image_file = os.path.join(self.machine_path,
                                                  "monitor", "playfield.jpg")
+        self.settings_file = os.path.join(self.machine_path,
+                                                 "monitor", "settings.ini")
 
-        self.local_settings = QSettings("mpf", "mpf-monitor")
+        QSettings.setDefaultFormat(QSettings.Format.IniFormat)
+        self.local_settings = QSettings(self.settings_file, QSettings.Format.IniFormat)
 
         self.load_config()
 
