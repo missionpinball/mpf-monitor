@@ -25,7 +25,7 @@ from mpfmonitor.core.variables import VariableWindow
 
 
 class MPFMonitor():
-    def __init__(self, app, machine_path, thread_stopper, config_file, parent=None, testing=False):
+    def __init__(self, app, machine_path, thread_stopper, config_file, ip_addr=None, parent=None, testing=False):
 
         # super().__init__(parent)
 
@@ -42,6 +42,7 @@ class MPFMonitor():
         self.app = app
         self.config = None
         self.layout = None
+        self.mpf_ip_addr = ip_addr
         self.config_file = os.path.join(self.machine_path, "monitor",
                                         config_file)
         self.playfield_image_file = os.path.join(self.machine_path,
@@ -60,8 +61,12 @@ class MPFMonitor():
         if not isinstance(self.pf_device_size, float):  # Protect against corrupted device size
             self.pf_device_size = .02
 
+        #Command line takes priority over settings file. If command line is None, then read the settings file.
+        if (self.mpf_ip_addr == None):            
+            #if mpf_ip_address is not in the settings file, then localhost will be used
+            self.mpf_ip_addr = self.local_settings.value("settings/mpf-ip-address", "localhost")
         self.bcp = BCPClient(self, self.receive_queue,
-                             self.sending_queue, 'localhost', 5051,
+                             self.sending_queue, self.mpf_ip_addr, 5051,
                              simulate=testing, cache=False)
 
         self.tick_timer = QTimer(self.device_window)
@@ -324,8 +329,8 @@ class MPFMonitor():
 
 
 
-def run(machine_path, thread_stopper, config_file, testing=False):
+def run(machine_path, thread_stopper, config_file, ip_addr="localhost", testing=False):
 
     app = QApplication(sys.argv)
-    MPFMonitor(app, machine_path, thread_stopper, config_file, testing=testing)
+    MPFMonitor(app, machine_path, thread_stopper, config_file, ip_addr, testing=testing)
     app.exec()

@@ -64,6 +64,11 @@ class Command(object):
                             help="The MPF Monitor default config file. "
                                  "Default is <mpf-monitor install "
                                  "folder>/mpfmonitor.yaml")
+        
+        parser.add_argument("-ip",
+                            action="store", dest="mpfipaddr",
+                            help="The MPF IP Address "
+                                 "Default is localhost ")
 
         args = parser.parse_args(args)
         args.configfile = "{}.yaml".format(args.configfile)
@@ -105,7 +110,7 @@ class Command(object):
         thread_stopper = threading.Event()
 
         try:
-            run(machine_path=machine_path, thread_stopper=thread_stopper, config_file=args.configfile)
+            run(machine_path=machine_path, thread_stopper=thread_stopper, config_file=args.configfile, ip_addr=args.mpfipaddr)
             logging.info("MPF Monitor run loop ended.")
         except Exception as e:
             logging.exception(str(e))
