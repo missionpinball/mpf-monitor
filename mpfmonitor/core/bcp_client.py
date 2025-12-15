@@ -66,7 +66,7 @@ class BCPClient(object):
                 self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 try:
-                    self.socket.connect((self.interface, self.port))
+                    self.socket.connect((self.interface, int(self.port)))
                     self.socket.settimeout(0.1) # Set a small timeout for non-blocking operations
                     self.connected = True
                     self.log.info("Connected to MPF.")

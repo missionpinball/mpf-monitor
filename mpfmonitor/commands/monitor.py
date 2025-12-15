@@ -15,7 +15,6 @@ from mpfmonitor._version import __version__
 # import functiontrace
 # functiontrace.trace()
 
-
 class Command(object):
 
     # pylint: disable-msg=too-many-locals
@@ -64,11 +63,14 @@ class Command(object):
                             help="The MPF Monitor default config file. "
                                  "Default is <mpf-monitor install "
                                  "folder>/mpfmonitor.yaml")
-        
+
         parser.add_argument("-ip",
                             action="store", dest="mpfipaddr",
-                            help="The MPF IP Address "
-                                 "Default is localhost ")
+                            help="The MPF IP Address Default is localhost")
+
+        parser.add_argument("-port",
+                            action="store", dest="mpfport",
+                            help="The MPF Port Default is 5051")
 
         args = parser.parse_args(args)
         args.configfile = "{}.yaml".format(args.configfile)
@@ -110,7 +112,11 @@ class Command(object):
         thread_stopper = threading.Event()
 
         try:
-            run(machine_path=machine_path, thread_stopper=thread_stopper, config_file=args.configfile, ip_addr=args.mpfipaddr)
+            run(machine_path=machine_path,
+                thread_stopper=thread_stopper,
+                config_file=args.configfile,
+                ip_addr=args.mpfipaddr,
+                port=args.mpfport)
             logging.info("MPF Monitor run loop ended.")
         except Exception as e:
             logging.exception(str(e))
@@ -126,7 +132,6 @@ class Command(object):
         logging.info("All child threads stopped.")
 
         sys.exit()
-
 
 def get_command():
     return 'monitor', Command
