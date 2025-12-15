@@ -13,8 +13,6 @@ from PyQt6.QtWidgets import *
 
 from ruamel import yaml
 
-
-
 from mpfmonitor.core.devices import *
 from mpfmonitor.core.playfield import *
 from mpfmonitor.core.bcp_client import BCPClient
@@ -23,9 +21,13 @@ from mpfmonitor.core.modes import ModeWindow
 from mpfmonitor.core.inspector import InspectorWindow
 from mpfmonitor.core.variables import VariableWindow
 
+def run(machine_path, thread_stopper, config_file, ip_addr="localhost", port="5051", testing=False):
+    app = QApplication(sys.argv)
+    MPFMonitor(app, machine_path, thread_stopper, config_file, ip_addr, port, testing=testing)
+    app.exec()
 
 class MPFMonitor():
-    def __init__(self, app, machine_path, thread_stopper, config_file, ip_addr=None, parent=None, testing=False):
+    def __init__(self, app, machine_path, thread_stopper, config_file, ip_addr=None, port=None, parent=None, testing=False):
 
         # super().__init__(parent)
 
@@ -43,6 +45,7 @@ class MPFMonitor():
         self.config = None
         self.layout = None
         self.mpf_ip_addr = ip_addr
+        self.mpf_port = port
         self.config_file = os.path.join(self.machine_path, "monitor",
                                         config_file)
         self.playfield_image_file = os.path.join(self.machine_path,
@@ -62,11 +65,17 @@ class MPFMonitor():
             self.pf_device_size = .02
 
         #Command line takes priority over settings file. If command line is None, then read the settings file.
-        if (self.mpf_ip_addr == None):            
-            #if mpf_ip_address is not in the settings file, then localhost will be used
+
+        #if mpf_ip_address is not in the settings file, then localhost will be used
+        if (self.mpf_ip_addr == None):
             self.mpf_ip_addr = self.local_settings.value("settings/mpf-ip-address", "localhost")
+
+        #if mpf_port is not in the settings file, then 5051 will be used
+        if (self.mpf_port == None):
+            self.mpf_port = self.local_settings.value("settings/mpf-port", "5051")
+
         self.bcp = BCPClient(self, self.receive_queue,
-                             self.sending_queue, self.mpf_ip_addr, 5051,
+                             self.sending_queue, self.mpf_ip_addr, self.mpf_port,
                              simulate=testing, cache=False)
 
         self.tick_timer = QTimer(self.device_window)
@@ -324,13 +333,3 @@ class MPFMonitor():
     def set_inspector_mode(self, enabled=False):
         self.inspector_enabled = enabled
         self.view.set_inspector_mode_title(inspect=enabled)
-
-
-
-
-
-def run(machine_path, thread_stopper, config_file, ip_addr="localhost", testing=False):
-
-    app = QApplication(sys.argv)
-    MPFMonitor(app, machine_path, thread_stopper, config_file, ip_addr, testing=testing)
-    app.exec()
