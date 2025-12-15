@@ -26,6 +26,7 @@ class VariableWindow(QWidget):
         # Load ui file from ./ui/
         ui_path = os.path.join(os.path.dirname(__file__), "ui", "searchable_table.ui")
         self.ui = uic.loadUi(ui_path, self)
+        self.ui.clear_button.hide()
 
         self.ui.setWindowTitle('Player/Machine Variables')
 
