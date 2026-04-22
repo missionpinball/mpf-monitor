@@ -21,6 +21,10 @@ class Shape(Enum):
     TRIANGLE = 4
     ARROW = 5
     FLIPPER = 6
+    PENTAGON = 7
+    HEXAGON = 8
+    OCTAGON = 9
+    STAR = 10
 
 
 class PfView(QGraphicsView):
@@ -262,8 +266,32 @@ class PfWidget(QGraphicsItem):
         elif draw_shape == Shape.FLIPPER:
             return self.tall_triangle_points()
 
+        elif draw_shape == Shape.PENTAGON:
+            return self.pentagon_points()
+
+        elif draw_shape == Shape.HEXAGON:
+            return self.hexagon_points()
+
+        elif draw_shape == Shape.OCTAGON:
+            return self.octagon_points()
+
+        elif draw_shape == Shape.STAR:
+            return self.star_points()
+
+        else:  # Square fallback
+            return self.square_points()
+
     def square_points(self):
         return [[-.5, -.5], [.5, -.5], [.5, .5], [-.5, .5]]
+
+    def pentagon_points(self):
+        return [[0, .5], [-.48, .15], [-.29, -.4], [.29, -.4], [.48, .15]]
+
+    def hexagon_points(self):
+        return [[.5, 0], [.25, .43], [-.25, .43], [-.5, 0], [-.25, -.43], [.25, -.43]]
+
+    def octagon_points(self):
+        return [[.5, 0], [.35, .35], [0, .5], [-.35, .35], [-.5, 0], [-.35, -.35], [0, -.5], [.35, -.35]]
 
     def rectangle_points(self):
         return [[-.2, -.5], [.2, -.5], [.2, .5], [-.2, .5]]
@@ -276,6 +304,9 @@ class PfWidget(QGraphicsItem):
 
     def tall_triangle_points(self):
         return [[0, -.3], [-.3, .7], [.3, .7]]
+
+    def star_points(self):
+        return [[0, -.5], [-.11, -.15], [-.48, -.15], [-.18, .06], [-.29, .4], [0, .19], [.29, .4], [.18, .06], [.48, -.15], [.11, -.15] ]
 
     def notify(self, destroy=False, resize=False):
         self.update()

@@ -134,6 +134,26 @@
               <string>Flipper</string>
              </property>
             </item>
+            <item>
+             <property name="text">
+              <string>Pentagon</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Hexagon</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Octagon</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>Star</string>
+             </property>
+            </item>
            </widget>
           </item>
           <item row="1" column="0">
