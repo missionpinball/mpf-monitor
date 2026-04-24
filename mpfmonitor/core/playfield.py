@@ -2,6 +2,7 @@ import logging
 
 # For drag and drop vs click separation
 import time
+import math
 
 # will change these to specific imports once code is more final
 from PyQt6.QtCore import *
@@ -159,19 +160,23 @@ class PfWidget(QGraphicsItem):
 
 
     def boundingRect(self):
-        known_points = self.points_for_draw_shape()
-        if known_points != None:
-            x_options = [sub_list[0] for sub_list in known_points]
-            x_min = min(x_options)
-            width = max(x_options) - x_min
-            y_options = [sub_list[1] for sub_list in known_points]
-            y_min = min(y_options)
-            height = max(y_options) - y_min
-            return QRectF(int(x_min * self.device_size), int(y_min * self.device_size), int(width * self.device_size), int(height * self.device_size))
+        shape_points = self.points_for_draw_shape()
+        scale = self.device_size
+        if shape_points != None:
+            theta = math.radians(self.angle)
+            cos_t = math.cos(theta)
+            sin_t = math.sin(theta)
+            rotated = [((x*cos_t - y*sin_t), (x*sin_t + y*cos_t)) for x, y in shape_points]
+            x_min = min(point[0] for point in rotated) * scale
+            x_max = max(point[0] for point in rotated) * scale
+            y_min = min(point[1] for point in rotated) * scale
+            y_max = max(point[1] for point in rotated) * scale
+            width = (x_max - x_min)
+            height = (y_max - y_min)
+            return QRectF(int(x_min), int(y_min), int(width), int(height))
 
         else:
-            return QRectF(int(self.device_size / -2), int(self.device_size / -2),
-                          int(self.device_size), int(self.device_size))
+            return QRectF(int(scale / -2), int(scale / -2), int(scale), int(scale))
 
     def set_shape_type(self, shape_type):
         if isinstance(shape_type, Shape):
