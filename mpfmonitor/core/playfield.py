@@ -227,6 +227,17 @@ class PfWidget(QGraphicsItem):
 
         return shape_result
 
+    def shape(self):
+        rotated = self.rotated_shape_points()
+        path = QPainterPath()
+        size = self.device_size
+        if rotated is None:
+            half_size = int(size / 2)
+            path.addEllipse(QRectF(-half_size, -half_size, size, size))
+        else:
+            path.addPolygon(QPolygonF([QPointF(x * size, y * size) for x, y in rotated]))
+
+        return path
 
     def paint(self, painter, option, widget=None):
         """Paint this widget to the playfield."""
@@ -240,13 +251,13 @@ class PfWidget(QGraphicsItem):
                                 int(self.device_size), int(self.device_size))
         else:
             shape_points = self.rotated_shape_points()
-            if shape_points != None:
+            if shape_points is not None:
                 scaled_points = map(lambda pair: QPoint(int(pair[0] * self.device_size), int(pair[1] * self.device_size)), shape_points)
                 painter.drawPolygon(QPolygon(scaled_points))
 
     def rotated_shape_points(self):
         points = self.points_for_draw_shape()
-        if points == None:
+        if points is None:
             return None
         theta = math.radians(self.angle)
         cos_t = math.cos(theta)
