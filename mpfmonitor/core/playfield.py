@@ -158,19 +158,14 @@ class PfWidget(QGraphicsItem):
             self.log.debug("Previous widget exists.")
             old_widget_exists(destroy=True)
 
-
     def boundingRect(self):
-        shape_points = self.points_for_draw_shape()
+        rotated_shape_points = self.rotated_shape_points()
         scale = self.device_size
-        if shape_points != None:
-            theta = math.radians(self.angle)
-            cos_t = math.cos(theta)
-            sin_t = math.sin(theta)
-            rotated = [((x*cos_t - y*sin_t), (x*sin_t + y*cos_t)) for x, y in shape_points]
-            x_min = min(point[0] for point in rotated) * scale
-            x_max = max(point[0] for point in rotated) * scale
-            y_min = min(point[1] for point in rotated) * scale
-            y_max = max(point[1] for point in rotated) * scale
+        if rotated_shape_points != None:
+            x_min = min(point[0] for point in rotated_shape_points) * scale
+            x_max = max(point[0] for point in rotated_shape_points) * scale
+            y_min = min(point[1] for point in rotated_shape_points) * scale
+            y_max = max(point[1] for point in rotated_shape_points) * scale
             width = (x_max - x_min)
             height = (y_max - y_min)
             return QRectF(int(x_min), int(y_min), int(width), int(height))
@@ -237,8 +232,6 @@ class PfWidget(QGraphicsItem):
         """Paint this widget to the playfield."""
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         painter.setPen(self.pen)
-        painter.rotate(self.angle)
-
         painter.setBrush(self.widget.get_colored_brush())
 
         draw_shape = self.draw_shape()
@@ -246,10 +239,19 @@ class PfWidget(QGraphicsItem):
             painter.drawEllipse(int(self.device_size / -2), int(self.device_size / -2),
                                 int(self.device_size), int(self.device_size))
         else:
-            shape_points = self.points_for_draw_shape()
+            shape_points = self.rotated_shape_points()
             if shape_points != None:
                 scaled_points = map(lambda pair: QPoint(int(pair[0] * self.device_size), int(pair[1] * self.device_size)), shape_points)
                 painter.drawPolygon(QPolygon(scaled_points))
+
+    def rotated_shape_points(self):
+        points = self.points_for_draw_shape()
+        if points == None:
+            return None
+        theta = math.radians(self.angle)
+        cos_t = math.cos(theta)
+        sin_t = math.sin(theta)
+        return [((x * cos_t - y * sin_t), (x * sin_t + y * cos_t)) for x, y in points]
 
     def points_for_draw_shape(self):
         draw_shape = self.draw_shape()
