@@ -92,6 +92,13 @@ class DeviceNode:
     def type(self):
         return self._type
 
+    def get_colored_pen(self):
+        if 'enabled' in self.data():
+            color = Qt.GlobalColor.green if self.data()['enabled'] else Qt.GlobalColor.red
+            return QPen(color, 3, Qt.PenStyle.SolidLine)
+        else:
+            return QPen(Qt.GlobalColor.white, 3, Qt.PenStyle.SolidLine)
+
     def get_colored_brush(self) -> QBrush:
         """Return colored brush for device."""
         return self._brush

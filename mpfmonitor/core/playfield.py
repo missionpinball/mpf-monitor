@@ -148,7 +148,6 @@ class PfWidget(QGraphicsItem):
         self.update_pos(save)
         self.click_start = 0
         self.release_switch = False
-        self.pen = QPen(Qt.GlobalColor.white, 3, Qt.PenStyle.SolidLine)
 
         self.log = logging.getLogger('Core')
 
@@ -242,7 +241,7 @@ class PfWidget(QGraphicsItem):
     def paint(self, painter, option, widget=None):
         """Paint this widget to the playfield."""
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        painter.setPen(self.pen)
+        painter.setPen(self.widget.get_colored_pen())
         painter.setBrush(self.widget.get_colored_brush())
 
         draw_shape = self.draw_shape()
