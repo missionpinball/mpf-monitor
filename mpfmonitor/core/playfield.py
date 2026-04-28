@@ -85,10 +85,13 @@ class PfPixmapItem(QGraphicsPixmapItem):
             x = self.mpfmon.config[device_type][device_name]['x']
             y = self.mpfmon.config[device_type][device_name]['y']
             default_size = self.mpfmon.pf_device_size
+            default_alpha = self.mpfmon.pf_device_alpha
+            default_outline = self.mpfmon.pf_device_outline
             shape_str = self.mpfmon.config[device_type][device_name].get('shape', 'DEFAULT')
             shape = Shape[shape_str]
             rotation = self.mpfmon.config[device_type][device_name].get('rotation', 0)
             size = self.mpfmon.config[device_type][device_name].get('size', default_size)
+            alpha = self.mpfmon.config[device_type][device_name].get('alpha', default_alpha)
 
         except KeyError:
             return
@@ -97,7 +100,8 @@ class PfPixmapItem(QGraphicsPixmapItem):
         y *= self.height
 
         self.create_pf_widget(widget, device_type, device_name, x, y,
-                              size=size, rotation=rotation, shape=shape, save=False)
+                              size=size, alpha=alpha, rotation=rotation,
+                              shape=shape, save=False, outline=default_outline)
 
     def dragEnterEvent(self, event):
         event.acceptProposedAction()
@@ -120,9 +124,11 @@ class PfPixmapItem(QGraphicsPixmapItem):
             self.mpfmon.log.warn("Invalid device dragged.")
 
     def create_pf_widget(self, widget, device_type, device_name, drop_x,
-                         drop_y, size=None, rotation=0, shape=Shape.DEFAULT, save=True):
+                         drop_y, size=None, alpha=255, rotation=0,
+                         outline=3, shape=Shape.DEFAULT, save=True):
         w = PfWidget(self.mpfmon, widget, device_type, device_name, drop_x,
-                     drop_y, size=size, rotation=rotation, shape_type=shape, save=save)
+                     drop_y, size=size, alpha=alpha, rotation=rotation,
+                     outline=outline, shape_type=shape, save=save)
 
         self.mpfmon.scene.addItem(w)
 
@@ -130,7 +136,8 @@ class PfPixmapItem(QGraphicsPixmapItem):
 class PfWidget(QGraphicsItem):
 
     def __init__(self, mpfmon, widget, device_type, device_name, x, y,
-                 size=None, rotation=0, shape_type=Shape.DEFAULT, save=True):
+                 size=None, alpha=255, rotation=0, outline=3,
+                 shape_type=Shape.DEFAULT, save=True):
         super().__init__()
 
         self.widget = widget    # type: DeviceNode
@@ -141,6 +148,8 @@ class PfWidget(QGraphicsItem):
         self.set_size(size=size)
         self.shape_type = shape_type
         self.angle = rotation
+        self.alpha = alpha
+        self.outline = outline
 
         self.setToolTip('{}: {}'.format(self.device_type, self.name))
         self.setAcceptedMouseButtons(Qt.MouseButton.LeftButton | Qt.MouseButton.RightButton)
@@ -241,8 +250,8 @@ class PfWidget(QGraphicsItem):
     def paint(self, painter, option, widget=None):
         """Paint this widget to the playfield."""
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
-        painter.setPen(self.widget.get_colored_pen())
-        painter.setBrush(self.widget.get_colored_brush())
+        painter.setPen(self.widget.get_colored_pen(self.outline))
+        painter.setBrush(self.widget.get_colored_brush(self.alpha))
 
         draw_shape = self.draw_shape()
         if draw_shape == Shape.CIRCLE:
