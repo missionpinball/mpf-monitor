@@ -8,23 +8,17 @@ from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 from PyQt6 import uic
 
-BRUSH_WHITE = QBrush(QColor(255, 255, 255), Qt.BrushStyle.SolidPattern)
-BRUSH_GREEN = QBrush(QColor(0, 255, 0), Qt.BrushStyle.SolidPattern)
-BRUSH_BLACK = QBrush(QColor(0, 0, 0), Qt.BrushStyle.SolidPattern)
-BRUSH_DARK_PURPLE = QBrush(QColor(128, 0, 255), Qt.BrushStyle.SolidPattern)
-
 
 class DeviceNode:
 
-    __slots__ = ["_callback", "_name", "_data", "_type", "_brush", "q_name", "q_state", "sub_properties",
-                 "sub_properties_appended", "q_time_added", "log"]
+    __slots__ = ["_callback", "_name", "_data", "_type", "q_name", "q_state",
+                 "sub_properties", "sub_properties_appended", "q_time_added", "log"]
 
     def __init__(self):
         self._callback = None
         self._name = ""
         self._data = {}
         self._type = ""
-        self._brush = BRUSH_BLACK
 
         self.q_name = QStandardItem()
         self.q_state = QStandardItem()
@@ -76,11 +70,9 @@ class DeviceNode:
 
         self.sub_properties_appended = True
         self.q_state.emitDataChanged()
-        self._brush = self._calculate_colored_brush()
 
     def setType(self, type):
         self._type = type
-        self._brush = self._calculate_colored_brush()
         self.q_state.emitDataChanged()
 
     def get_row(self):
@@ -92,16 +84,13 @@ class DeviceNode:
     def type(self):
         return self._type
 
-    def get_colored_pen(self):
-        if 'enabled' in self.data():
-            color = Qt.GlobalColor.green if self.data()['enabled'] else Qt.GlobalColor.red
-            return QPen(color, 3, Qt.PenStyle.SolidLine)
-        else:
-            return QPen(Qt.GlobalColor.white, 3, Qt.PenStyle.SolidLine)
+    def get_colored_pen(self, outline):
+        """Return colored pen for device."""
+        return self._calculate_colored_pen(outline)
 
-    def get_colored_brush(self) -> QBrush:
+    def get_colored_brush(self, alpha) -> QBrush:
         """Return colored brush for device."""
-        return self._brush
+        return self._calculate_colored_brush(alpha)
 
     def _calculate_color_gamma_correction(self, color):
         """Perform gamma correction.
@@ -126,38 +115,47 @@ class DeviceNode:
 
         return corrected
 
-    def _calculate_colored_brush(self):
+    def _calculate_colored_pen(self, outline):
+        data = self.data()
+        if 'enabled' in data:
+            color = Qt.GlobalColor.green if data['enabled'] else Qt.GlobalColor.red
+            return QPen(color, outline + 1, Qt.PenStyle.SolidLine)
+        else:
+            return QPen(Qt.GlobalColor.white, outline, Qt.PenStyle.SolidLine)
+
+    def _calculate_colored_brush(self, alpha):
+        data = self.data()
+
         if self._type == 'light':
-            color = self.data()['color']
+            color = data['color']
             if color == [0, 0, 0]:
-                # shortcut for black
-                return BRUSH_BLACK
+                return QBrush(QColor(0, 0, 0, alpha), Qt.BrushStyle.SolidPattern)
             color = self._calculate_color_gamma_correction(color)
 
         elif self._type == 'switch':
-            state = self.data()['state']
+            state = data['state']
 
             if state:
-                return BRUSH_GREEN
+                return QBrush(QColor(0, 255, 0, alpha), Qt.BrushStyle.SolidPattern)
             else:
-                return BRUSH_BLACK
+                return QBrush(QColor(0, 0, 0, alpha), Qt.BrushStyle.SolidPattern)
 
         elif self._type == 'diverter':
-            state = self.data()['active']
+            state = data['active']
 
             if state:
-                return BRUSH_DARK_PURPLE
+                return QBrush(QColor(128, 0, 255, alpha), Qt.BrushStyle.SolidPattern)
             else:
-                return BRUSH_BLACK
+                return QBrush(QColor(0, 0, 0, alpha), Qt.BrushStyle.SolidPattern)
         else:
             # Get first parameter and draw as white if it evaluates True
-            state = bool(list(self.data().values())[0])
+            state = bool(list(data.values())[0])
             if state:
-                return BRUSH_WHITE
+                return QBrush(QColor(255, 255, 255, alpha), Qt.BrushStyle.SolidPattern)
             else:
-                return BRUSH_BLACK
+                return QBrush(QColor(0, 0, 0, alpha), Qt.BrushStyle.SolidPattern)
 
-        return QBrush(QColor(*color), Qt.BrushStyle.SolidPattern)
+        return QBrush(QColor(*color, alpha), Qt.BrushStyle.SolidPattern)
 
     def set_change_callback(self, callback):
         if self._callback:

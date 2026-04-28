@@ -64,6 +64,9 @@ class MPFMonitor():
         if not isinstance(self.pf_device_size, float):  # Protect against corrupted device size
             self.pf_device_size = .02
 
+        self.pf_device_alpha = self.config.get("device_alpha", 220)
+        self.pf_device_outline = self.config.get("device_outline", 3)
+
         #Command line takes priority over settings file. If command line is None, then read the settings file.
 
         #if mpf_ip_address is not in the settings file, then localhost will be used
