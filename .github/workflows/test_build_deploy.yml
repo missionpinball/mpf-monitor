@@ -86,6 +86,7 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
+          check-latest: true
 
       - name: install Ubuntu dependencies for 0.57
         if: ${{ (matrix.os == 'ubuntu-24.04') && (matrix.mpf-version == '0.57.4') }}
@@ -102,7 +103,8 @@ jobs:
 
       - name: Install mpf-monitor
         run: |
-          pip install --upgrade pip setuptools wheel build coveralls
+          pip install --upgrade pip
+          pip install setuptools wheel build coveralls coverage
           pip install mpf==${{ matrix.mpf-version }}
           pip install -e .
 
@@ -115,7 +117,7 @@ jobs:
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       - name: Run tests
-        run: coverage run -m unittest discover -s mpfmonitor/tests
+        run: python -m coverage run -m unittest discover -s mpfmonitor/tests
         env:
           QT_QPA_PLATFORM: offscreen
 
@@ -158,7 +160,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y '^libxcb.*-dev' libx11-xcb-dev libjpeg-dev libgl1 libglx-mesa0
           sudo apt-get install -y qt6-base-dev
-          pip install --upgrade pip setuptools wheel build
+          pip install --upgrade pip
+          pip install setuptools wheel build
           pip install mpf==0.80.0
           pip install -e .
 
