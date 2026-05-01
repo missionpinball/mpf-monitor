@@ -3,6 +3,7 @@ import logging
 # For drag and drop vs click separation
 import time
 import math
+import ast
 
 # will change these to specific imports once code is more final
 from PyQt6.QtCore import *
@@ -26,6 +27,7 @@ class Shape(Enum):
     HEXAGON = 8
     OCTAGON = 9
     STAR = 10
+    CUSTOM = 11
 
 
 class PfView(QGraphicsView):
@@ -82,16 +84,21 @@ class PfPixmapItem(QGraphicsPixmapItem):
 
     def create_widget_from_config(self, widget, device_type, device_name):
         try:
-            x = self.mpfmon.config[device_type][device_name]['x']
-            y = self.mpfmon.config[device_type][device_name]['y']
+            config = self.mpfmon.config[device_type][device_name]
+            x = config['x']
+            y = config['y']
             default_size = self.mpfmon.pf_device_size
             default_alpha = self.mpfmon.pf_device_alpha
             default_outline = self.mpfmon.pf_device_outline
-            shape_str = self.mpfmon.config[device_type][device_name].get('shape', 'DEFAULT')
+
+            alpha = config.get('alpha', default_alpha)
+            shape_str = config.get('shape', 'DEFAULT')
+            custom_shape_points = None
+            if shape_str == 'CUSTOM':
+                custom_shape_points = config['custom_shape_points']
             shape = Shape[shape_str]
-            rotation = self.mpfmon.config[device_type][device_name].get('rotation', 0)
-            size = self.mpfmon.config[device_type][device_name].get('size', default_size)
-            alpha = self.mpfmon.config[device_type][device_name].get('alpha', default_alpha)
+            rotation = config.get('rotation', 0)
+            size = config.get('size', default_size)
 
         except KeyError:
             return
@@ -101,7 +108,7 @@ class PfPixmapItem(QGraphicsPixmapItem):
 
         self.create_pf_widget(widget, device_type, device_name, x, y,
                               size=size, alpha=alpha, rotation=rotation,
-                              shape=shape, save=False, outline=default_outline)
+                              shape=shape, save=False, outline=default_outline, custom_shape_points=custom_shape_points)
 
     def dragEnterEvent(self, event):
         event.acceptProposedAction()
@@ -125,10 +132,10 @@ class PfPixmapItem(QGraphicsPixmapItem):
 
     def create_pf_widget(self, widget, device_type, device_name, drop_x,
                          drop_y, size=None, alpha=255, rotation=0,
-                         outline=3, shape=Shape.DEFAULT, save=True):
+                         outline=3, shape=Shape.DEFAULT, save=True, custom_shape_points=None):
         w = PfWidget(self.mpfmon, widget, device_type, device_name, drop_x,
                      drop_y, size=size, alpha=alpha, rotation=rotation,
-                     outline=outline, shape_type=shape, save=save)
+                     outline=outline, shape_type=shape, save=save, custom_shape_points=custom_shape_points)
 
         self.mpfmon.scene.addItem(w)
 
@@ -137,7 +144,7 @@ class PfWidget(QGraphicsItem):
 
     def __init__(self, mpfmon, widget, device_type, device_name, x, y,
                  size=None, alpha=255, rotation=0, outline=3,
-                 shape_type=Shape.DEFAULT, save=True):
+                 shape_type=Shape.DEFAULT, save=True, custom_shape_points=None):
         super().__init__()
 
         self.widget = widget    # type: DeviceNode
@@ -150,6 +157,7 @@ class PfWidget(QGraphicsItem):
         self.angle = rotation
         self.alpha = alpha
         self.outline = outline
+        self.custom_shape_points = custom_shape_points
 
         self.setToolTip('{}: {}'.format(self.device_type, self.name))
         self.setAcceptedMouseButtons(Qt.MouseButton.LeftButton | Qt.MouseButton.RightButton)
@@ -277,6 +285,9 @@ class PfWidget(QGraphicsItem):
         if draw_shape == Shape.CIRCLE:
             return None # Handle circles with drawEllipse instead
 
+        elif draw_shape == Shape.CUSTOM:
+            return self.custom_points()
+
         elif draw_shape == Shape.SQUARE:
             return self.square_points()
 
@@ -332,7 +343,14 @@ class PfWidget(QGraphicsItem):
         return [[0, -.3], [-.3, .7], [.3, .7]]
 
     def star_points(self):
-        return [[0, -.5], [-.11, -.15], [-.48, -.15], [-.18, .06], [-.29, .4], [0, .19], [.29, .4], [.18, .06], [.48, -.15], [.11, -.15] ]
+        return [[0, -.5], [-.11, -.15], [-.48, -.15], [-.18, .06], [-.29, .4], [0, .19], [.29, .4], [.18, .06], [.48, -.15], [.11, -.15]]
+
+    def custom_points(self):
+        '''Loads a custom vertex array from config, or falls back to an X if config is invalid or missing.'''
+        if self.custom_shape_points:
+            return self.custom_shape_points
+        else:  # fallback X
+            return [[.36, .36], [0, .19], [-.36, .36], [-.19, 0], [-.36, -.36], [0, -.19], [.36, -.36], [.19, 0]]
 
     def notify(self, destroy=False, resize=False):
         self.update()
