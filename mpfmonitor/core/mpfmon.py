@@ -21,13 +21,13 @@ from mpfmonitor.core.modes import ModeWindow
 from mpfmonitor.core.inspector import InspectorWindow
 from mpfmonitor.core.variables import VariableWindow
 
-def run(machine_path, thread_stopper, config_file, ip_addr="localhost", port="5051", testing=False):
+def run(machine_path, thread_stopper, config_file, image_file, ip_addr="localhost", port="5051", testing=False):
     app = QApplication(sys.argv)
-    MPFMonitor(app, machine_path, thread_stopper, config_file, ip_addr, port, testing=testing)
+    MPFMonitor(app, machine_path, thread_stopper, config_file, image_file, ip_addr, port, testing=testing)
     app.exec()
 
 class MPFMonitor():
-    def __init__(self, app, machine_path, thread_stopper, config_file, ip_addr=None, port=None, parent=None, testing=False):
+    def __init__(self, app, machine_path, thread_stopper, config_file, image_file, ip_addr=None, port=None, parent=None, testing=False):
 
         # super().__init__(parent)
 
@@ -46,12 +46,13 @@ class MPFMonitor():
         self.layout = None
         self.mpf_ip_addr = ip_addr
         self.mpf_port = port
-        self.config_file = os.path.join(self.machine_path, "monitor",
-                                        config_file)
-        self.playfield_image_file = os.path.join(self.machine_path,
-                                                 "monitor", "playfield.jpg")
-        self.settings_file = os.path.join(self.machine_path,
-                                                 "monitor", "settings.ini")
+        self.config_file = os.path.join(self.machine_path, "monitor", config_file)
+
+
+        self.image_file = os.path.join(self.machine_path, "monitor", image_file)
+
+
+        self.settings_file = os.path.join(self.machine_path, "monitor", "settings.ini")
 
         QSettings.setDefaultFormat(QSettings.Format.IniFormat)
         self.local_settings = QSettings(self.settings_file, QSettings.Format.IniFormat)
@@ -113,15 +114,13 @@ class MPFMonitor():
 
         self.scene = QGraphicsScene()
 
-        self.pf = PfPixmapItem(QPixmap(self.playfield_image_file), self)
+        self.pf = PfPixmapItem(QPixmap(self.image_file), self)
         self.scene.addItem(self.pf)
 
         self.view = PfView(self.scene, self)
 
-        self.view.move(self.local_settings.value('windows/pf/pos',
-                                                 QPoint(800, 200)))
-        self.view.resize(self.local_settings.value('windows/pf/size',
-                                                   QSize(300, 600)))
+        self.view.move(self.local_settings.value('windows/pf/pos', QPoint(800, 200)))
+        self.view.resize(self.local_settings.value('windows/pf/size', QSize(300, 600)))
 
         self.event_window = EventWindow(self)
 
