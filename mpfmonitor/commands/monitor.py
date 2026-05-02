@@ -45,6 +45,15 @@ class Command(object):
                                  "not an MPF config.yaml. Default is "
                                  "monitor.")
 
+        parser.add_argument("-i",
+                            action="store", dest="image_file",
+                            default="playfield.jpg",
+                            metavar='image_file',
+                            help="The MPF Monitor image file name. "
+                                 "Files must be placed within the folder '<game>/monitor/' "
+                                 "Default is playfield.jpg\n"
+                                 "Supported types: PNG, JPG, BMP, GIF")
+
         parser.add_argument("-v",
                             action="store_const", dest="loglevel", const=logging.DEBUG,
                             default=logging.INFO, help="Enables verbose logging to the"
@@ -115,6 +124,7 @@ class Command(object):
             run(machine_path=machine_path,
                 thread_stopper=thread_stopper,
                 config_file=args.configfile,
+                image_file=args.image_file,
                 ip_addr=args.mpfipaddr,
                 port=args.mpfport)
             logging.info("MPF Monitor run loop ended.")
