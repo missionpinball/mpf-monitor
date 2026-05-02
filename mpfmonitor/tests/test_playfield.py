@@ -8,41 +8,6 @@ class TestablePfWidgetNonDrawn(PfWidget):
         if mpfmon_mock is not None:
             self.mpfmon = mpfmon_mock
 
-    """
-    __init__ of PfWidget:
-
-
-    def __init__(self, mpfmon, widget, device_type, device_name, x, y,
-                 size=None, rotation=0, shape=Shape.DEFAULT, save=True):
-        super().__init__()
-
-        self.widget = widget
-        self.mpfmon = mpfmon
-        self.name = device_name
-        self.move_in_progress = True
-        self.device_type = device_type
-        self.set_size(size=size)
-        self.shape_type = shape
-        self.angle = rotation
-
-        self.setToolTip('{}: {}'.format(self.device_type, self.name))
-        self.setAcceptedMouseButtons(Qt.MouseButton.LeftButton | Qt.MouseButton.RightButton)
-        self.setPos(x, y)
-        self.update_pos(save)
-        self.click_start = 0
-        self.release_switch = False
-
-        self.log = logging.getLogger('Core')
-
-        old_widget_exists = widget.set_change_callback(self.notify)
-
-        if old_widget_exists:
-            self.log.debug("Previous widget exists.")
-            old_widget_exists(destroy=True)
-
-        """
-
-
 class TestPfWidgetParameters(unittest.TestCase):
 
     def setUp(self):
@@ -118,23 +83,6 @@ class TestPfWidgetResizeToDefault(unittest.TestCase):
         self.config = MagicMock()
         self.mock_mpfmon.config[self.widget.device_type].get.return_value = self.config
         self.config.get.return_value = None
-
-        """
-        def resize_to_default(self, force=False):
-        device_config = self.mpfmon.config[self.device_type].get(self.name, None)
-
-        if force:
-            device_config.pop('size', None) # Delete saved size info, None is incase key doesn't exist (popped twice)
-
-        device_size = device_config.get('size', None)
-
-        if device_size is not None:
-            # Do not change the size if it's already set
-            pass
-        elif device_config is not None:
-            self.set_size()
-
-        self.update_pos(save=False)  # Do not save at this point. Let it be saved elsewhere. This reduces writes."""
 
     def test_size_resize_to_default(self):
         self.widget.resize_to_default()
