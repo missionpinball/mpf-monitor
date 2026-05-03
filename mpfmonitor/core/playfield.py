@@ -402,8 +402,8 @@ class PfWidget(QGraphicsItem):
         conf_shape_str = self.mpfmon.config[self.device_type][self.name].get('shape', 'DEFAULT')
         conf_shape = Shape[str(conf_shape_str).upper()]
 
-        if self.shape_type != conf_shape:
-            if self.shape_type != Shape.DEFAULT:
+        if self.shape_type is not conf_shape:
+            if self.shape_type is not Shape.DEFAULT:
                 self.mpfmon.config[self.device_type][self.name]['shape'] = self.shape_type.name
             else:
                 try:
@@ -414,8 +414,8 @@ class PfWidget(QGraphicsItem):
         # Only save the rotation if it has been changed
         conf_angle = self.mpfmon.config[self.device_type][self.name].get('rotation', -1)
 
-        if self.angle != conf_angle:
-            if self.angle != 0:
+        if self.angle is not conf_angle:
+            if self.angle is not 0:
                 self.mpfmon.config[self.device_type][self.name]['rotation'] = self.angle
             else:
                 try:
@@ -427,7 +427,7 @@ class PfWidget(QGraphicsItem):
         default_size = self.mpfmon.pf_device_size
         conf_size = self.mpfmon.config[self.device_type][self.name].get('size', default_size)
 
-        if self.size != conf_size and self.size != self.mpfmon.pf_device_size:
+        if self.size is not conf_size and self.size is not self.mpfmon.pf_device_size:
             self.mpfmon.config[self.device_type][self.name]['size'] = self.size
 
         if save:
