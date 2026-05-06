@@ -48,6 +48,7 @@ class InspectorWindow(QWidget):
         self.ui.bcp_required_version.setText(bcp_required_version)
 
         self.ui.mpf_version.setText("MPF Version: {}".format(mpf_version))
+        self.ui.mpf_address.setText("IP: {}, Port: {}".format(self.mpfmon.mpf_ip_addr, self.mpfmon.mpf_port))
         self.ui.python_version.setText("Python Version: {}".format(sys.version))
         self.ui.python_version.setWordWrap(True)
 
