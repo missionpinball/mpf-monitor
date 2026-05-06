@@ -1,11 +1,14 @@
 import logging
 import os
+import sys
 
 from PyQt6 import uic
 # will change these to specific imports once code is more final
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
+
+from mpf._version import __version__ as mpf_version
 
 from mpfmonitor._version import __version__, __bcp_version__
 from mpfmonitor.core.playfield import Shape
@@ -43,6 +46,10 @@ class InspectorWindow(QWidget):
         self.ui.mpf_monitor_version.setText(mpf_monitor_version)
         bcp_required_version = "BCP Version Required: {} or greater".format(__bcp_version__)
         self.ui.bcp_required_version.setText(bcp_required_version)
+
+        self.ui.mpf_version.setText("MPF Version: {}".format(mpf_version))
+        self.ui.python_version.setText("Python Version: {}".format(sys.version))
+        self.ui.python_version.setWordWrap(True)
 
     def attach_signals(self):
         self.attach_inspector_tab_signals()
