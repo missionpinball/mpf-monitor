@@ -46,6 +46,7 @@ class MPFMonitor():
         self.layout = None
         self.mpf_ip_addr = ip_addr
         self.mpf_port = port
+        self.show_layer_lights = True
         self.config_file = os.path.join(self.machine_path, "monitor", config_file)
 
 
@@ -107,6 +108,11 @@ class MPFMonitor():
                                         triggered=self.toggle_mode_window)
         self.toggle_mode_window_action.setCheckable(True)
 
+        self.toggle_layer_lights_action = QAction('&Layers', self.device_window,
+                                        statusTip='Hide the light devices',
+                                        triggered=self.toggle_layer_lights)
+        self.toggle_layer_lights_action.setCheckable(True)
+
         self.toggle_variables_window_action = QAction('&Variables', self.device_window,
                                         statusTip='Show the variables window',
                                         triggered=self.toggle_variables_window)
@@ -164,6 +170,7 @@ class MPFMonitor():
         self.view_menu.addAction(self.toggle_event_window_action)
         self.view_menu.addAction(self.toggle_mode_window_action)
         self.view_menu.addAction(self.toggle_variables_window_action)
+        self.view_menu.addAction(self.toggle_layer_lights_action)
 
     def toggle_pf_window(self):
         if self.view.isVisible():
@@ -196,6 +203,10 @@ class MPFMonitor():
         else:
             self.mode_window.show()
             self.toggle_mode_window_action.setChecked(True)
+
+    def toggle_layer_lights(self):
+        self.show_layer_lights = not self.show_layer_lights
+        # TODO and probably force redraw
 
     def toggle_variables_window(self):
         if self.variables_window.isVisible():
