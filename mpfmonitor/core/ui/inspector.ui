@@ -436,6 +436,24 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="layers_inspector_tab">
+      <attribute name="title">
+       <string>Layers</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QCheckBox" name="toggle_lights_button">
+           <property name="text">
+            <string>Hide Lights</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>

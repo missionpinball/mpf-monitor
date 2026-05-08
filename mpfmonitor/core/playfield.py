@@ -225,6 +225,9 @@ class PfWidget(QGraphicsItem):
         self.update_pos(save=False)  # Do not save at this point. Let it be saved elsewhere. This reduces writes.
 
     def draw_shape(self):
+        if self.device_type == 'light' and not self.mpfmon.show_layer_lights:
+            return None
+
         shape_result = self.shape_type
 
         # Preserve legacy and regular use
@@ -262,7 +265,9 @@ class PfWidget(QGraphicsItem):
         painter.setBrush(self.widget.get_colored_brush(self.alpha))
 
         draw_shape = self.draw_shape()
-        if draw_shape == Shape.CIRCLE:
+        if draw_shape == None:  # TODO or do we want an enum none member?
+            return
+        elif draw_shape == Shape.CIRCLE:
             painter.drawEllipse(int(self.device_size / -2), int(self.device_size / -2),
                                 int(self.device_size), int(self.device_size))
         else:
