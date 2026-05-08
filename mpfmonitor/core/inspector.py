@@ -55,6 +55,7 @@ class InspectorWindow(QWidget):
     def attach_signals(self):
         self.attach_inspector_tab_signals()
         self.attach_monitor_tab_signals()
+        self.attach_layer_tab_signals()
 
     def attach_inspector_tab_signals(self):
         self.ui.toggle_inspector_button.clicked.connect(self.toggle_inspector_mode)
@@ -87,6 +88,10 @@ class InspectorWindow(QWidget):
 
         self.ui.exit_on_close_button.setChecked(self.mpfmon.get_local_settings_bool('settings/exit-on-close'))
         self.ui.exit_on_close_button.stateChanged.connect(self.mpfmon.toggle_exit_on_close)
+
+    def attach_layer_tab_signals(self):
+        self.ui.toggle_lights_button.setChecked(self.mpfmon.toggle_layer_lights_action.isChecked())
+        self.ui.toggle_lights_button.stateChanged.connect(self.mpfmon.toggle_layer_lights)
 
     def toggle_inspector_mode(self):
         inspector_enabled = not self.mpfmon.inspector_enabled
