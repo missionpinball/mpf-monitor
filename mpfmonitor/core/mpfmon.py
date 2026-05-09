@@ -46,13 +46,12 @@ class MPFMonitor():
         self.layout = None
         self.mpf_ip_addr = ip_addr
         self.mpf_port = port
-        self.show_layer_lights = True
+        self.hide_layer_lights = False
+        self.hide_layer_nonlights = False
+        self.hide_layer_switches = False
+
         self.config_file = os.path.join(self.machine_path, "monitor", config_file)
-
-
         self.image_file = os.path.join(self.machine_path, "monitor", image_file)
-
-
         self.settings_file = os.path.join(self.machine_path, "monitor", "settings.ini")
 
         QSettings.setDefaultFormat(QSettings.Format.IniFormat)
@@ -108,15 +107,35 @@ class MPFMonitor():
                                         triggered=self.toggle_mode_window)
         self.toggle_mode_window_action.setCheckable(True)
 
-        self.toggle_layer_lights_action = QAction('&Layers', self.device_window,
-                                        statusTip='Hide the light devices',
-                                        triggered=self.toggle_layer_lights)
-        self.toggle_layer_lights_action.setCheckable(True)
-
         self.toggle_variables_window_action = QAction('&Variables', self.device_window,
                                         statusTip='Show the variables window',
                                         triggered=self.toggle_variables_window)
         self.toggle_variables_window_action.setCheckable(True)
+
+
+        self.toggle_layer_lights_action = QAction('&Lights', self.device_window,
+                                        statusTip='Show light devices',
+                                        triggered=self.toggle_layer_lights)
+        self.toggle_layer_lights_action.setCheckable(True)
+        self.toggle_layer_lights_action.setChecked(True)
+
+        self.toggle_layer_nonlights_action = QAction('&Non-Lights', self.device_window,
+                                        statusTip='Show non-light devices',
+                                        triggered=self.toggle_layer_nonlights)
+        self.toggle_layer_nonlights_action.setCheckable(True)
+        self.toggle_layer_nonlights_action.setChecked(True)
+
+        self.toggle_layer_switches_action = QAction('&Switches', self.device_window,
+                                        statusTip='Show switch devices',
+                                        triggered=self.toggle_layer_switches)
+        self.toggle_layer_switches_action.setCheckable(True)
+        self.toggle_layer_switches_action.setChecked(True)
+
+        self.toggle_layer_pf_image_action = QAction('&Background', self.device_window,
+                                        statusTip='Show the playfield image',
+                                        triggered=self.toggle_pf_image)
+        self.toggle_layer_pf_image_action.setCheckable(True)
+        self.toggle_layer_pf_image_action.setChecked(True)
 
         self.scene = QGraphicsScene()
 
@@ -125,8 +144,12 @@ class MPFMonitor():
 
         self.view = PfView(self.scene, self)
 
-        self.view.move(self.local_settings.value('windows/pf/pos', QPoint(800, 200)))
-        self.view.resize(self.local_settings.value('windows/pf/size', QSize(300, 600)))
+        self.pf_window = QMainWindow()
+        self.pf_window.setWindowTitle('Playfield')
+        self.pf_window.setCentralWidget(self.view)
+        self.pf_window.closeEvent = lambda event: self.closeEvent(event)
+        self.pf_window.move(self.local_settings.value('windows/pf/pos', QPoint(800, 200)))
+        self.pf_window.resize(self.local_settings.value('windows/pf/size', QSize(300, 600)))
 
         self.event_window = EventWindow(self)
 
@@ -163,21 +186,37 @@ class MPFMonitor():
 
         self.inspector_window.register_set_inspector_val_cb(self.set_inspector_mode)
 
-        self.menu_bar = QMenuBar()
-        self.view_menu = self.menu_bar.addMenu("&View")
-        self.view_menu.addAction(self.toggle_pf_window_action)
-        self.view_menu.addAction(self.toggle_device_window_action)
-        self.view_menu.addAction(self.toggle_event_window_action)
-        self.view_menu.addAction(self.toggle_mode_window_action)
-        self.view_menu.addAction(self.toggle_variables_window_action)
-        self.view_menu.addAction(self.toggle_layer_lights_action)
+        inspector_menu_bar = QMenuBar()
+        view_menu = inspector_menu_bar.addMenu("&View")
+        view_menu.addAction(self.toggle_pf_window_action)
+        view_menu.addAction(self.toggle_device_window_action)
+        view_menu.addAction(self.toggle_event_window_action)
+        view_menu.addAction(self.toggle_mode_window_action)
+        view_menu.addAction(self.toggle_variables_window_action)
+        self.inspector_window.layout().setMenuBar(inspector_menu_bar)
+
+        layers_menu_bar = QMenuBar()
+        layers_menu_bar.addAction(self.toggle_layer_lights_action)
+        layers_menu_bar.addAction(self.toggle_layer_nonlights_action)
+        layers_menu_bar.addAction(self.toggle_layer_switches_action)
+        layers_menu_bar.addAction(self.toggle_layer_pf_image_action)
+        self.pf_window.layout().setMenuBar(layers_menu_bar)
+
+    def toggle_pf_image(self):
+        if self.pf_window.isVisible():
+            if self.pf.isVisible():
+                self.pf.hide()
+                self.toggle_layer_pf_image_action.setChecked(False)
+            else:
+                self.pf.show()
+                self.toggle_layer_pf_image_action.setChecked(True)
 
     def toggle_pf_window(self):
-        if self.view.isVisible():
-            self.view.hide()
+        if self.pf_window.isVisible():
+            self.pf_window.hide()
             self.toggle_pf_window_action.setChecked(False)
         else:
-            self.view.show()
+            self.pf_window.show()
             self.toggle_pf_window_action.setChecked(True)
 
     def toggle_device_window(self):
@@ -205,8 +244,16 @@ class MPFMonitor():
             self.toggle_mode_window_action.setChecked(True)
 
     def toggle_layer_lights(self):
-        self.show_layer_lights = not self.show_layer_lights
-        # TODO and probably force redraw
+        self.hide_layer_lights = not self.toggle_layer_lights_action.isChecked()
+        self.scene.update()
+
+    def toggle_layer_nonlights(self):
+        self.hide_layer_nonlights = not self.toggle_layer_nonlights_action.isChecked()
+        self.scene.update()
+
+    def toggle_layer_switches(self):
+        self.hide_layer_switches = not self.toggle_layer_switches_action.isChecked()
+        self.scene.update()
 
     def toggle_variables_window(self):
         if self.variables_window.isVisible():
@@ -329,7 +376,7 @@ class MPFMonitor():
 
         monitor_windows = {
             'devices': self.device_window,
-            'pf': self.view,
+            'pf': self.pf_window,
             'modes': self.mode_window,
             'events': self.event_window,
             'inspector': self.inspector_window,

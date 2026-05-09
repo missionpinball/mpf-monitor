@@ -89,9 +89,18 @@ class InspectorWindow(QWidget):
         self.ui.exit_on_close_button.setChecked(self.mpfmon.get_local_settings_bool('settings/exit-on-close'))
         self.ui.exit_on_close_button.stateChanged.connect(self.mpfmon.toggle_exit_on_close)
 
+
+    def _attach_button_signal(self, button, action):
+        button.setCheckable(True)
+        button.setChecked(action.isChecked())
+        button.clicked.connect(action.trigger)
+        action.toggled.connect(button.setChecked)
+
     def attach_layer_tab_signals(self):
-        self.ui.toggle_lights_button.setChecked(self.mpfmon.toggle_layer_lights_action.isChecked())
-        self.ui.toggle_lights_button.stateChanged.connect(self.mpfmon.toggle_layer_lights)
+        self._attach_button_signal(self.ui.toggle_lights_button, self.mpfmon.toggle_layer_lights_action)
+        self._attach_button_signal(self.ui.toggle_nonlights_button, self.mpfmon.toggle_layer_nonlights_action)
+        self._attach_button_signal(self.ui.toggle_switches_button, self.mpfmon.toggle_layer_switches_action)
+        self._attach_button_signal(self.ui.toggle_pf_image_button, self.mpfmon.toggle_layer_pf_image_action)
 
     def toggle_inspector_mode(self):
         inspector_enabled = not self.mpfmon.inspector_enabled
@@ -169,12 +178,10 @@ class InspectorWindow(QWidget):
         self.ui.size_spinbox.setValue(self.mpfmon.pf_device_size)  # Reset the value to the stored default.
         self.enable_non_default_widgets(enabled=False)
 
-
     def enable_non_default_widgets(self, enabled=False):
         if self.ui is not None:
             self.ui.rotationDial.setEnabled(enabled)
             self.ui.shape_combo_box.setEnabled(enabled)
-
 
     def update_last_device(self, new_size=None, rotation=None, shape=None, save=True):
         # Check that there is a last widget
@@ -210,7 +217,6 @@ class InspectorWindow(QWidget):
                 self.mpfmon.view.resizeEvent()  # Re draw the playfield
                 self.mpfmon.save_config()  # Save the config with new default to disk
 
-
     def delete_last_device(self):
         if self.last_pf_widget is not None:
             self.last_pf_widget.destroy()
@@ -220,7 +226,6 @@ class InspectorWindow(QWidget):
 
     def reset_defaults_last_device(self):
         if self.last_pf_widget is not None:
-
             # Redraw the device and save changes
             default_size = self.mpfmon.pf_device_size
             self.update_last_device(new_size=default_size, shape=Shape.DEFAULT,
@@ -230,10 +235,8 @@ class InspectorWindow(QWidget):
             self.ui.rotationDial.setValue(18)
             self.ui.shape_combo_box.setCurrentIndex(0)
 
-
             # Update the device info and clear saved size data
             self.last_pf_widget.resize_to_default(force=True)
-
 
             # Redraw the device
         else:
@@ -250,7 +253,6 @@ class InspectorWindow(QWidget):
 
     def register_last_selected_cb(self):
         self.mpfmon.inspector_window_last_selected_cb = self.update_last_selected
-
 
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()

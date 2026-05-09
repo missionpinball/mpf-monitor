@@ -225,7 +225,13 @@ class PfWidget(QGraphicsItem):
         self.update_pos(save=False)  # Do not save at this point. Let it be saved elsewhere. This reduces writes.
 
     def draw_shape(self):
-        if self.device_type == 'light' and not self.mpfmon.show_layer_lights:
+        if self.device_type == 'light' and self.mpfmon.hide_layer_lights:
+            return None
+
+        if self.device_type != 'light' and self.mpfmon.hide_layer_nonlights:
+            return None
+
+        if self.device_type == 'switch' and self.mpfmon.hide_layer_switches:
             return None
 
         shape_result = self.shape_type
