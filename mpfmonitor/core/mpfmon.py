@@ -142,7 +142,8 @@ class MPFMonitor():
         self.pf = PfPixmapItem(QPixmap(self.image_file), self)
         self.scene.addItem(self.pf)
 
-        self.view = PfView(self.scene, self)
+        self.view = QGraphicsView(self.scene)
+        self.view.resizeEvent = lambda event=None: self.view.fitInView(self.pf, Qt.AspectRatioMode.KeepAspectRatio)
 
         self.pf_window = QMainWindow()
         self.pf_window.setWindowTitle('Playfield')
@@ -178,8 +179,7 @@ class MPFMonitor():
         if self.get_local_settings_bool('settings/exit-on-close'):
             self.toggle_exit_on_close()
 
-        self.inspector_enabled = False
-
+        self.set_inspector_mode(False)
         self.inspector_window = InspectorWindow(self)
         self.inspector_window.show()
         self.inspector_window.register_last_selected_cb()
@@ -392,4 +392,8 @@ class MPFMonitor():
 
     def set_inspector_mode(self, enabled=False):
         self.inspector_enabled = enabled
-        self.view.set_inspector_mode_title(inspect=enabled)
+
+        if enabled:
+            self.pf_window.setWindowTitle('Inspector Enabled - Playfield')
+        else:
+            self.pf_window.setWindowTitle('Playfield')
