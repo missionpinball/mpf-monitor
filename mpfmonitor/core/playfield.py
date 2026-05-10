@@ -30,30 +30,6 @@ class Shape(Enum):
     CUSTOM = 11
 
 
-class PfView(QGraphicsView):
-
-    def __init__(self, parent, mpfmon):
-        self.mpfmon = mpfmon
-        super().__init__(parent)
-
-        self.setWindowTitle("Playfield")
-        self.set_inspector_mode_title(inspect=False)
-
-    def resizeEvent(self, event=None):
-        self.fitInView(self.mpfmon.pf, Qt.AspectRatioMode.KeepAspectRatio)
-
-    def set_inspector_mode_title(self, inspect=False):
-        if inspect:
-            self.setWindowTitle('Inspector Enabled - Playfield')
-        else:
-            self.setWindowTitle("Playfield")
-
-    def closeEvent(self, event):
-        self.mpfmon.write_local_settings()
-        event.accept()
-        self.mpfmon.check_if_quit()
-
-
 class PfPixmapItem(QGraphicsPixmapItem):
 
     def __init__(self, image, mpfmon, parent=None):
