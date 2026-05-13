@@ -4,6 +4,7 @@ import logging
 import time
 import math
 import ast
+import re
 
 # will change these to specific imports once code is more final
 from PyQt6.QtCore import *
@@ -200,14 +201,51 @@ class PfWidget(QGraphicsItem):
 
         self.update_pos(save=False)  # Do not save at this point. Let it be saved elsewhere. This reduces writes.
 
-    def draw_shape(self):
+
+    def pass_name_filter(self):
+        filter_text = self.mpfmon.device_name_filter.strip()
+        if filter_text:
+            ignore_case = not any(char.isupper() for char in filter_text)
+
+            if filter_text.startswith('/'):
+                regex_pattern = filter_text.removeprefix('/').removesuffix('/')
+
+                try:
+                    if not re.search(regex_pattern, self.name, re.IGNORECASE if ignore_case else 0):
+                        return False
+                except (re.error, re.PatternError):
+                    return True
+            else:
+                name = self.name.lower() if ignore_case else self.name
+
+                if filter_text.startswith('^'):
+                    prefix_filter = filter_text[1:]
+                    if not name.startswith(prefix_filter):
+                        return False
+                else:
+                    if filter_text not in name:
+                        return False
+        return True
+
+
+    def allowed_by_filters(self):
+        if self.mpfmon.device_name_filter:
+            if not self.pass_name_filter():
+                return False
+
         if self.device_type == 'light' and self.mpfmon.hide_layer_lights:
-            return None
+            return False
 
         if self.device_type != 'light' and self.mpfmon.hide_layer_nonlights:
-            return None
+            return False
 
         if self.device_type == 'switch' and self.mpfmon.hide_layer_switches:
+            return False
+
+        return True
+
+    def draw_shape(self):
+        if not self.allowed_by_filters():
             return None
 
         shape_result = self.shape_type
