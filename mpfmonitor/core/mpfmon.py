@@ -49,6 +49,7 @@ class MPFMonitor():
         self.hide_layer_lights = False
         self.hide_layer_nonlights = False
         self.hide_layer_switches = False
+        self.device_name_filter = ''
 
         self.config_file = os.path.join(self.machine_path, "monitor", config_file)
         self.image_file = os.path.join(self.machine_path, "monitor", image_file)
@@ -137,6 +138,21 @@ class MPFMonitor():
         self.toggle_layer_pf_image_action.setCheckable(True)
         self.toggle_layer_pf_image_action.setChecked(True)
 
+        name_filter_input = QLineEdit()
+        name_filter_input.setPlaceholderText('Name filter')
+        name_filter_input.setText('')
+        name_filter_input.setMinimumWidth(80)
+        name_filter_input.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed))
+        name_filter_input.textChanged.connect(self.update_device_name_filter)
+        name_filter_input.setFrame(False)
+
+        pf_device_filter_action = QWidgetAction(self.device_window)
+        pf_device_filter_action.setDefaultWidget(name_filter_input)
+        pf_device_filter_action.isWidgetWithAction = True
+
+        self.name_filter_input = name_filter_input
+        self.pf_device_filter_action = pf_device_filter_action
+
         self.scene = QGraphicsScene()
 
         self.pf = PfPixmapItem(QPixmap(self.image_file), self)
@@ -195,12 +211,48 @@ class MPFMonitor():
         view_menu.addAction(self.toggle_variables_window_action)
         self.inspector_window.layout().setMenuBar(inspector_menu_bar)
 
-        layers_menu_bar = QMenuBar()
-        layers_menu_bar.addAction(self.toggle_layer_lights_action)
-        layers_menu_bar.addAction(self.toggle_layer_nonlights_action)
-        layers_menu_bar.addAction(self.toggle_layer_switches_action)
-        layers_menu_bar.addAction(self.toggle_layer_pf_image_action)
-        self.pf_window.layout().setMenuBar(layers_menu_bar)
+        layers_toolbar = QToolBar('Layers')
+
+        layers_toolbar.setFloatable(False)
+        layers_toolbar.setStyleSheet("""
+            QToolButton {
+                background-color: transparent;
+                color: #ffffff;
+                border: 1px solid transparent; /* Keeps layout matching the checked border */
+                border-radius: 4px;
+                padding: 4px 8px;              /* Explicit uniform internal padding */
+                margin: 0px 2px;               /* Explicit uniform external spacing */
+            }
+            QToolButton:hover {
+                background-color: #333333;
+                border: 1px solid #444444;
+            }
+            QToolButton:checked {
+                background-color: #555555;
+                color: #ffffff;
+                border: 1px solid #666666;    /* Same thickness as hover/normal state */
+            }
+            QToolButton:checked:hover {
+                background-color: #666666;
+            }
+            QLineEdit {
+                margin-right: 4px;  /* Pushes the right edge away from the window frame */
+                margin-left: 2px;   /* Consistent spacing away from the preceding separator */
+            }
+        """)
+
+        layers_toolbar.addAction(self.toggle_layer_lights_action)
+        layers_toolbar.addAction(self.toggle_layer_nonlights_action)
+        layers_toolbar.addAction(self.toggle_layer_switches_action)
+        layers_toolbar.addAction(self.toggle_layer_pf_image_action)
+        layers_toolbar.addSeparator()
+        layers_toolbar.addAction(self.pf_device_filter_action)
+
+        self.pf_window.addToolBar(layers_toolbar)
+
+    def update_device_name_filter(self, text):
+        self.device_name_filter = text
+        self.scene.update()
 
     def toggle_pf_image(self):
         if self.pf_window.isVisible():
