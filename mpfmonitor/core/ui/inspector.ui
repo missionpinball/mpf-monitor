@@ -455,9 +455,9 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_5">
          <item>
-          <widget class="QCheckBox" name="toggle_nonlights_button">
+          <widget class="QCheckBox" name="toggle_switches_button">
            <property name="text">
-            <string>Toggle Non-Lights</string>
+            <string>Switches</string>
            </property>
           </widget>
          </item>
@@ -466,9 +466,9 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_6">
          <item>
-          <widget class="QCheckBox" name="toggle_switches_button">
+          <widget class="QCheckBox" name="toggle_others_button">
            <property name="text">
-            <string>Switches</string>
+            <string>Other Devices</string>
            </property>
           </widget>
          </item>

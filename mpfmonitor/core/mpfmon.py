@@ -47,7 +47,7 @@ class MPFMonitor():
         self.mpf_ip_addr = ip_addr
         self.mpf_port = port
         self.hide_layer_lights = False
-        self.hide_layer_nonlights = False
+        self.hide_layer_others = False
         self.hide_layer_switches = False
         self.device_name_filter = ''
 
@@ -120,17 +120,17 @@ class MPFMonitor():
         self.toggle_layer_lights_action.setCheckable(True)
         self.toggle_layer_lights_action.setChecked(True)
 
-        self.toggle_layer_nonlights_action = QAction('&Non-Lights', self.device_window,
-                                        statusTip='Show non-light devices',
-                                        triggered=self.toggle_layer_nonlights)
-        self.toggle_layer_nonlights_action.setCheckable(True)
-        self.toggle_layer_nonlights_action.setChecked(True)
-
         self.toggle_layer_switches_action = QAction('&Switches', self.device_window,
                                         statusTip='Show switch devices',
                                         triggered=self.toggle_layer_switches)
         self.toggle_layer_switches_action.setCheckable(True)
         self.toggle_layer_switches_action.setChecked(True)
+
+        self.toggle_layer_others_action = QAction('&Others', self.device_window,
+                                        statusTip='Show other devices',
+                                        triggered=self.toggle_layer_others)
+        self.toggle_layer_others_action.setCheckable(True)
+        self.toggle_layer_others_action.setChecked(True)
 
         self.toggle_layer_pf_image_action = QAction('&Background', self.device_window,
                                         statusTip='Show the playfield image',
@@ -242,8 +242,8 @@ class MPFMonitor():
         """)
 
         layers_toolbar.addAction(self.toggle_layer_lights_action)
-        layers_toolbar.addAction(self.toggle_layer_nonlights_action)
         layers_toolbar.addAction(self.toggle_layer_switches_action)
+        layers_toolbar.addAction(self.toggle_layer_others_action)
         layers_toolbar.addAction(self.toggle_layer_pf_image_action)
         layers_toolbar.addSeparator()
         layers_toolbar.addAction(self.pf_device_filter_action)
@@ -299,12 +299,12 @@ class MPFMonitor():
         self.hide_layer_lights = not self.toggle_layer_lights_action.isChecked()
         self.scene.update()
 
-    def toggle_layer_nonlights(self):
-        self.hide_layer_nonlights = not self.toggle_layer_nonlights_action.isChecked()
-        self.scene.update()
-
     def toggle_layer_switches(self):
         self.hide_layer_switches = not self.toggle_layer_switches_action.isChecked()
+        self.scene.update()
+
+    def toggle_layer_others(self):
+        self.hide_layer_others = not self.toggle_layer_others_action.isChecked()
         self.scene.update()
 
     def toggle_variables_window(self):

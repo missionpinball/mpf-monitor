@@ -236,10 +236,10 @@ class PfWidget(QGraphicsItem):
         if self.device_type == 'light' and self.mpfmon.hide_layer_lights:
             return False
 
-        if self.device_type != 'light' and self.mpfmon.hide_layer_nonlights:
+        if self.device_type == 'switch' and self.mpfmon.hide_layer_switches:
             return False
 
-        if self.device_type == 'switch' and self.mpfmon.hide_layer_switches:
+        if self.device_type != 'light' and self.device_type != 'switch' and self.mpfmon.hide_layer_others:
             return False
 
         return True

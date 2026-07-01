@@ -98,7 +98,7 @@ class InspectorWindow(QWidget):
 
     def attach_layer_tab_signals(self):
         self._attach_button_signal(self.ui.toggle_lights_button, self.mpfmon.toggle_layer_lights_action)
-        self._attach_button_signal(self.ui.toggle_nonlights_button, self.mpfmon.toggle_layer_nonlights_action)
+        self._attach_button_signal(self.ui.toggle_others_button, self.mpfmon.toggle_layer_others_action)
         self._attach_button_signal(self.ui.toggle_switches_button, self.mpfmon.toggle_layer_switches_action)
         self._attach_button_signal(self.ui.toggle_pf_image_button, self.mpfmon.toggle_layer_pf_image_action)
 
