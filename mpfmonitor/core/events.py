@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
@@ -28,10 +30,8 @@ class EventWindow(QWidget):
 
         self.ui.setWindowTitle('Events')
 
-        self.ui.move(self.mpfmon.local_settings.value('windows/events/pos',
-                                                   QPoint(500, 200)))
-        self.ui.resize(self.mpfmon.local_settings.value('windows/events/size',
-                                                     QSize(300, 600)))
+        self.ui.move(self.mpfmon.local_settings.value('windows/events/pos', QPoint(500, 200)))
+        self.ui.resize(self.mpfmon.local_settings.value('windows/events/size', QSize(300, 600)))
 
         # Disable option "Sort", select first item.
         # TODO: Store and load selected sort index to local_settings
@@ -43,13 +43,13 @@ class EventWindow(QWidget):
         self.ui.filterLineEdit.textChanged.connect(self.filter_text)
         self.ui.sortComboBox.currentIndexChanged.connect(self.change_sort)
         self.ui.clear_button.clicked.connect(self.clear_log)
+        self.ui.inject_button.clicked.connect(self.trigger_text_event)
 
     def attach_model(self):
-        self.model = QStandardItemModel(0, 2)
-
+        self.model = QStandardItemModel(0, 3)
         self.model.setHeaderData(0, Qt.Orientation.Horizontal, "Event")
         self.model.setHeaderData(1, Qt.Orientation.Horizontal, "Data")
-        # self.model.setHeaderData(2, Qt.Orientation.Horizontal, "Time")
+        self.model.setHeaderData(2, Qt.Orientation.Horizontal, "Time")
 
         self.filtered_model = QSortFilterProxyModel(self)
         self.filtered_model.setSourceModel(self.model)
@@ -59,7 +59,6 @@ class EventWindow(QWidget):
         self.change_sort()  # Default sort
 
         self.ui.tableView.setModel(self.filtered_model)
-        self.ui.tableView.setColumnHidden(2, True)
         self.rootNode = self.model.invisibleRootItem()
 
     def add_event_to_model(self, event_name, event_type, event_callback,
@@ -71,7 +70,8 @@ class EventWindow(QWidget):
 
         name = QStandardItem(event_name)
         kwargs = QStandardItem(str(event_kwargs))
-        time_added = QStandardItem(str(self.added_index).zfill(10))
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        time_added = QStandardItem(current_time)
         self.added_index += 1
         self.model.insertRow(0, [name, kwargs, time_added])
 
@@ -81,7 +81,6 @@ class EventWindow(QWidget):
         self.ui.tableView.resizeColumnToContents(1)
 
         if not self.already_hidden:
-            self.ui.tableView.setColumnHidden(2, True)
             self.already_hidden = True
 
     def filter_text(self, string):
@@ -103,7 +102,18 @@ class EventWindow(QWidget):
 
     def clear_log(self):
         #clears the log of events
-        self.model.clear()
+        self.model.removeRows(0, self.model.rowCount())
+
+    def trigger_text_event(self):
+        """Send a name-only event from the event window field to MPF."""
+        event_name = self.ui.inject_text.text().strip()
+        payload_kwargs = {}
+
+        if event_name:
+            self.mpfmon.bcp.send('trigger', name=event_name, **payload_kwargs)
+
+        self.ui.inject_text.clear()
+        self.ui.inject_text.setFocus()
 
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()
