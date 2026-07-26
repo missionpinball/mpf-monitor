@@ -28,10 +28,8 @@ class EventWindow(QWidget):
 
         self.ui.setWindowTitle('Events')
 
-        self.ui.move(self.mpfmon.local_settings.value('windows/events/pos',
-                                                   QPoint(500, 200)))
-        self.ui.resize(self.mpfmon.local_settings.value('windows/events/size',
-                                                     QSize(300, 600)))
+        self.ui.move(self.mpfmon.local_settings.value('windows/events/pos', QPoint(500, 200)))
+        self.ui.resize(self.mpfmon.local_settings.value('windows/events/size', QSize(300, 600)))
 
         # Disable option "Sort", select first item.
         # TODO: Store and load selected sort index to local_settings
@@ -45,11 +43,10 @@ class EventWindow(QWidget):
         self.ui.clear_button.clicked.connect(self.clear_log)
 
     def attach_model(self):
-        self.model = QStandardItemModel(0, 2)
-
+        self.model = QStandardItemModel(0, 3)
         self.model.setHeaderData(0, Qt.Orientation.Horizontal, "Event")
         self.model.setHeaderData(1, Qt.Orientation.Horizontal, "Data")
-        # self.model.setHeaderData(2, Qt.Orientation.Horizontal, "Time")
+        self.model.setHeaderData(2, Qt.Orientation.Horizontal, "Time")
 
         self.filtered_model = QSortFilterProxyModel(self)
         self.filtered_model.setSourceModel(self.model)
@@ -103,7 +100,7 @@ class EventWindow(QWidget):
 
     def clear_log(self):
         #clears the log of events
-        self.model.clear()
+        self.model.removeRows(0, self.model.rowCount())
 
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()
