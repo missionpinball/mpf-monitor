@@ -43,6 +43,7 @@ class EventWindow(QWidget):
         self.ui.filterLineEdit.textChanged.connect(self.filter_text)
         self.ui.sortComboBox.currentIndexChanged.connect(self.change_sort)
         self.ui.clear_button.clicked.connect(self.clear_log)
+        self.ui.inject_button.clicked.connect(self.trigger_text_event)
 
     def attach_model(self):
         self.model = QStandardItemModel(0, 3)
@@ -102,6 +103,17 @@ class EventWindow(QWidget):
     def clear_log(self):
         #clears the log of events
         self.model.removeRows(0, self.model.rowCount())
+
+    def trigger_text_event(self):
+        """Send a name-only event from the event window field to MPF."""
+        event_name = self.ui.inject_text.text().strip()
+        payload_kwargs = {}
+
+        if event_name:
+            self.mpfmon.bcp.send('trigger', name=event_name, **payload_kwargs)
+
+        self.ui.inject_text.clear()
+        self.ui.inject_text.setFocus()
 
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()

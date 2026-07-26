@@ -171,6 +171,12 @@ class TestEvents(unittest.TestCase):
         self.eventWindow.ui.filterLineEdit.setText(event_list[2])
         self.assertEqual(self.eventWindow.filtered_model.rowCount(), 2)
 
+    def test_ui_injection_flow(self):
+        self.eventWindow.ui.inject_text.setText("fake_event")
+        QTest.mouseClick(self.eventWindow.ui.inject_button, QtCore.Qt.MouseButton.LeftButton)
+        self.eventWindow.mpfmon.bcp.send.assert_called_with('trigger', name="fake_event")
+        self.assertEqual(self.eventWindow.ui.inject_text.text(), "")
+
 
 if __name__ == '__main__':
     unittest.main()
