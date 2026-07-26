@@ -1,6 +1,8 @@
-import unittest
-import threading
 import sys
+import threading
+import time
+import unittest
+
 from PyQt6.QtTest import QTest
 from PyQt6 import QtCore, QtGui, QtWidgets
 from unittest.mock import MagicMock
@@ -120,6 +122,7 @@ class TestEvents(unittest.TestCase):
         event_list = ["event_a", "event_b", "event_c"]
 
         for e in event_list:
+            time.sleep(0.002) # need to ensure events have different timestamps
             self.eventWindow.add_event_to_model(e, None, None, self.mock_event_kwargs, None)
 
         # Default is Received up

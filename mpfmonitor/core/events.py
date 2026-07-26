@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from PyQt6.QtCore import *
 from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
@@ -56,7 +58,6 @@ class EventWindow(QWidget):
         self.change_sort()  # Default sort
 
         self.ui.tableView.setModel(self.filtered_model)
-        self.ui.tableView.setColumnHidden(2, True)
         self.rootNode = self.model.invisibleRootItem()
 
     def add_event_to_model(self, event_name, event_type, event_callback,
@@ -68,7 +69,8 @@ class EventWindow(QWidget):
 
         name = QStandardItem(event_name)
         kwargs = QStandardItem(str(event_kwargs))
-        time_added = QStandardItem(str(self.added_index).zfill(10))
+        current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+        time_added = QStandardItem(current_time)
         self.added_index += 1
         self.model.insertRow(0, [name, kwargs, time_added])
 
@@ -78,7 +80,6 @@ class EventWindow(QWidget):
         self.ui.tableView.resizeColumnToContents(1)
 
         if not self.already_hidden:
-            self.ui.tableView.setColumnHidden(2, True)
             self.already_hidden = True
 
     def filter_text(self, string):
