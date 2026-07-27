@@ -5,7 +5,9 @@ from PyQt6.QtGui import *
 from PyQt6.QtWidgets import *
 from PyQt6 import uic
 
+import ast
 import os
+import shlex
 
 
 class EventWindow(QWidget):
@@ -104,18 +106,35 @@ class EventWindow(QWidget):
         #clears the log of events
         self.model.removeRows(0, self.model.rowCount())
 
-    def trigger_text_event(self):
-        """Send a name-only event from the event window field to MPF."""
-        event_name = self.ui.inject_text.text().strip()
-        payload_kwargs = {}
-
-        if event_name:
-            self.mpfmon.bcp.send('trigger', name=event_name, **payload_kwargs)
-
-        self.ui.inject_text.clear()
-        self.ui.inject_text.setFocus()
-
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()
         event.accept()
         self.mpfmon.check_if_quit()
+
+    def trigger_text_event(self):
+        """Send an event from the event window field to MPF."""
+        raw_text = self.ui.inject_text.text().strip()
+        if raw_text:
+
+            try:
+                parts = shlex.split(raw_text)
+            except ValueError:
+                parts = raw_text.split(" ")
+
+            event_name = parts[0]
+            payload_kwargs = {}
+
+            for arg in parts[1:]:
+                if '=' in arg:
+                    key, val = arg.split('=', 1)
+                    val = val.strip("'\"")
+                    try:
+                        payload_kwargs[key] = ast.literal_eval(val)
+                    except (ValueError, SyntaxError):
+                        payload_kwargs[key] = val
+
+            if event_name:
+                self.mpfmon.bcp.send('trigger', name=event_name, **payload_kwargs)
+
+        self.ui.inject_text.clear()
+        self.ui.inject_text.setFocus()
