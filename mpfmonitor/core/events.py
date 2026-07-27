@@ -27,7 +27,7 @@ class EventWindow(QWidget):
 
     def draw_ui(self):
         # Load ui file from ./ui/
-        ui_path = os.path.join(os.path.dirname(__file__), "ui", "searchable_table.ui")
+        ui_path = os.path.join(os.path.dirname(__file__), "ui", "events_table.ui")
         self.ui = uic.loadUi(ui_path, self)
 
         self.ui.setWindowTitle('Events')
@@ -46,6 +46,7 @@ class EventWindow(QWidget):
         self.ui.sortComboBox.currentIndexChanged.connect(self.change_sort)
         self.ui.clear_button.clicked.connect(self.clear_log)
         self.ui.inject_button.clicked.connect(self.trigger_text_event)
+        self.ui.inject_text.returnPressed.connect(self.trigger_text_event)
 
     def attach_model(self):
         self.model = QStandardItemModel(0, 3)
