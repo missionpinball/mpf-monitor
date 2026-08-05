@@ -442,6 +442,17 @@
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_8">
        <item>
+        <layout class="QVBoxLayout" name="verticalLayout_7">
+         <item>
+          <widget class="QPushButton" name="cycle_pf_image_button">
+           <property name="text">
+            <string>Playfield Image</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
         <layout class="QVBoxLayout" name="verticalLayout_4">
          <item>
           <widget class="QCheckBox" name="toggle_lights_button">
@@ -469,17 +480,6 @@
           <widget class="QCheckBox" name="toggle_others_button">
            <property name="text">
             <string>Other Devices</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_7">
-         <item>
-          <widget class="QCheckBox" name="toggle_pf_image_button">
-           <property name="text">
-            <string>Playfield Image</string>
            </property>
           </widget>
          </item>

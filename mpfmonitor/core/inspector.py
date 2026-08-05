@@ -100,7 +100,7 @@ class InspectorWindow(QWidget):
         self._attach_button_signal(self.ui.toggle_lights_button, self.mpfmon.toggle_layer_lights_action)
         self._attach_button_signal(self.ui.toggle_others_button, self.mpfmon.toggle_layer_others_action)
         self._attach_button_signal(self.ui.toggle_switches_button, self.mpfmon.toggle_layer_switches_action)
-        self._attach_button_signal(self.ui.toggle_pf_image_button, self.mpfmon.toggle_layer_pf_image_action)
+        self.ui.cycle_pf_image_button.clicked.connect(self.mpfmon.cycle_pf_image)
 
     def toggle_inspector_mode(self):
         inspector_enabled = not self.mpfmon.inspector_enabled
