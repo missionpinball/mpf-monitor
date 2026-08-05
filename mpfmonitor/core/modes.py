@@ -50,7 +50,6 @@ class ModeWindow(QWidget):
 
         self.model.setHeaderData(0, Qt.Orientation.Horizontal, "Mode")
         self.model.setHeaderData(1, Qt.Orientation.Horizontal, "Priority")
-        # self.model.setHeaderData(2, Qt.Orientation.Horizontal, "Time")
 
         self.filtered_model = QSortFilterProxyModel(self)
         self.filtered_model.setSourceModel(self.model)

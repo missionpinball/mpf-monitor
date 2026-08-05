@@ -64,8 +64,7 @@ class EventWindow(QWidget):
         self.ui.tableView.setModel(self.filtered_model)
         self.rootNode = self.model.invisibleRootItem()
 
-    def add_event_to_model(self, event_name, event_type, event_callback,
-                             event_kwargs, registered_handlers):
+    def add_event_to_model(self, event_name, event_type, event_callback, event_kwargs, registered_handlers):
         """Add an event."""
         assert(self.model is not None)
         # remove _from_bcp arg
