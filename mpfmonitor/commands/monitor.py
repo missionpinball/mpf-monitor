@@ -33,8 +33,7 @@ class Command(object):
                             metavar='file_name',
                             default=os.path.join("logs", datetime.now().strftime(
                                 "%Y-%m-%d-%H-%M-%S-monitor-" +
-                                socket.gethostname() +
-                                ".log")),
+                                socket.gethostname() + ".log")),
                             help="The name (and path) of the log file")
 
         parser.add_argument("-c",
@@ -42,8 +41,7 @@ class Command(object):
                             default="monitor", metavar='config_file(s)',
                             help="The name of a config file to load. Note "
                                  "this is a config for the monitor itself, "
-                                 "not an MPF config.yaml. Default is "
-                                 "monitor.")
+                                 "not an MPF config.yaml. Default is monitor.")
 
         parser.add_argument("-i",
                             action="append", dest="image_files",
@@ -57,22 +55,12 @@ class Command(object):
 
         parser.add_argument("-v",
                             action="store_const", dest="loglevel", const=logging.DEBUG,
-                            default=logging.INFO, help="Enables verbose logging to the"
-                                                       " log file")
+                            default=logging.INFO, help="Enables verbose logging to the log file")
 
         parser.add_argument("-V",
                             action="store_true", dest="consoleloglevel",
                             default=logging.INFO,
-                            help="Enables verbose logging to the console. Do NOT on "
-                                 "Windows platforms")
-
-        parser.add_argument("-C",
-                            action="store", dest="mpfmonconfigfile",
-                            default="mpfmonitor.yaml",
-                            metavar='config_file',
-                            help="The MPF Monitor default config file. "
-                                 "Default is <mpf-monitor install "
-                                 "folder>/mpfmonitor.yaml")
+                            help="Enables verbose logging to the console. Do NOT use on Windows platforms")
 
         parser.add_argument("-ip",
                             action="store", dest="mpfipaddr",
@@ -96,13 +84,11 @@ class Command(object):
                 raise
 
         logging.basicConfig(level=args.loglevel,
-                            format='%(asctime)s : %(levelname)s : %(name)s : '
-                                   '%(message)s',
+                            format='%(asctime)s : %(levelname)s : %(name)s : %(message)s',
                             filename=os.path.join(machine_path, args.logfile),
                             filemode='w')
 
-        # define a Handler which writes INFO messages or higher to the
-        # sys.stderr
+        # define a Handler which writes INFO messages or higher to the sys.stderr
         console = logging.StreamHandler()
         console.setLevel(args.consoleloglevel)
 

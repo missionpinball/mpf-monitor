@@ -170,7 +170,6 @@ class MPFMonitor():
         self.event_window = EventWindow(self)
 
         self.variables_window = VariableWindow(self)
-        # self.variables_window.show()
 
         self.mode_window = ModeWindow(self)
 
@@ -349,18 +348,6 @@ class MPFMonitor():
         self.event_window.model.clear()
         self.mode_window.model.clear()
 
-    def eventFilter(self, source, event):
-        try:
-            if source is self.playfield and event.type() == QEvent.Resize:
-                self.playfield.setPixmap(self.playfield_image.scaled(
-                    self.playfield.size(), Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation))
-                self.pf.invalidate_size()
-        except AttributeError:
-            pass
-
-        return super().eventFilter(source, event)
-
     def tick(self):
         """
         Called every 20 mSec
@@ -396,8 +383,7 @@ class MPFMonitor():
             self.event_window.update_events()
 
     def about(self):
-        QMessageBox.about(self, "About MPF Monitor",
-                "This is the MPF Monitor")
+        QMessageBox.about(self, "About MPF Monitor", "This is the MPF Monitor")
 
     def load_config(self):
         try:

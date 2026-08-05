@@ -37,10 +37,8 @@ class InspectorWindow(QWidget):
 
         self.ui.setWindowTitle('Inspector')
 
-        self.ui.move(self.mpfmon.local_settings.value('windows/inspector/pos',
-                                                   QPoint(1100, 465)))
-        self.ui.resize(self.mpfmon.local_settings.value('windows/inspector/size',
-                                                     QSize(300, 340)))
+        self.ui.move(self.mpfmon.local_settings.value('windows/inspector/pos', QPoint(1100, 465)))
+        self.ui.resize(self.mpfmon.local_settings.value('windows/inspector/size', QSize(300, 340)))
 
         mpf_monitor_version = "MPF Monitor Version: {}".format(__version__)
         self.ui.mpf_monitor_version.setText(mpf_monitor_version)
@@ -228,8 +226,7 @@ class InspectorWindow(QWidget):
         if self.last_pf_widget is not None:
             # Redraw the device and save changes
             default_size = self.mpfmon.pf_device_size
-            self.update_last_device(new_size=default_size, shape=Shape.DEFAULT,
-                                    rotation=0, save=True)
+            self.update_last_device(new_size=default_size, shape=Shape.DEFAULT, rotation=0, save=True)
 
             self.ui.size_spinbox.setValue(default_size)
             self.ui.rotationDial.setValue(18)
