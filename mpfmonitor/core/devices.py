@@ -338,10 +338,8 @@ class DeviceWindow(QWidget):
 
         self.ui.setWindowTitle('Devices')
 
-        self.ui.move(self.mpfmon.local_settings.value('windows/devices/pos',
-                                            QPoint(200, 200)))
-        self.ui.resize(self.mpfmon.local_settings.value('windows/devices/size',
-                                              QSize(300, 600)))
+        self.ui.move(self.mpfmon.local_settings.value('windows/devices/pos', QPoint(200, 200)))
+        self.ui.resize(self.mpfmon.local_settings.value('windows/devices/size', QSize(300, 600)))
 
         # Disable option "Sort", select first item.
         # TODO: Store and load selected sort index to local_settings

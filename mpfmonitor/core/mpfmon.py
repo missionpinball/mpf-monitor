@@ -21,13 +21,13 @@ from mpfmonitor.core.modes import ModeWindow
 from mpfmonitor.core.inspector import InspectorWindow
 from mpfmonitor.core.variables import VariableWindow
 
-def run(machine_path, thread_stopper, config_file, image_file, ip_addr="localhost", port="5051", testing=False):
+def run(machine_path, thread_stopper, config_file, image_files, ip_addr="localhost", port="5051", testing=False):
     app = QApplication(sys.argv)
-    MPFMonitor(app, machine_path, thread_stopper, config_file, image_file, ip_addr, port, testing=testing)
+    MPFMonitor(app, machine_path, thread_stopper, config_file, image_files, ip_addr, port, testing=testing)
     app.exec()
 
 class MPFMonitor():
-    def __init__(self, app, machine_path, thread_stopper, config_file, image_file, ip_addr=None, port=None, parent=None, testing=False):
+    def __init__(self, app, machine_path, thread_stopper, config_file, image_files, ip_addr=None, port=None, parent=None, testing=False):
 
         # super().__init__(parent)
 
@@ -47,12 +47,12 @@ class MPFMonitor():
         self.mpf_ip_addr = ip_addr
         self.mpf_port = port
         self.hide_layer_lights = False
-        self.hide_layer_nonlights = False
+        self.hide_layer_others = False
         self.hide_layer_switches = False
         self.device_name_filter = ''
 
         self.config_file = os.path.join(self.machine_path, "monitor", config_file)
-        self.image_file = os.path.join(self.machine_path, "monitor", image_file)
+        self.image_files = [os.path.join(self.machine_path, "monitor", f) for f in image_files]
         self.settings_file = os.path.join(self.machine_path, "monitor", "settings.ini")
 
         QSettings.setDefaultFormat(QSettings.Format.IniFormat)
@@ -120,23 +120,21 @@ class MPFMonitor():
         self.toggle_layer_lights_action.setCheckable(True)
         self.toggle_layer_lights_action.setChecked(True)
 
-        self.toggle_layer_nonlights_action = QAction('&Non-Lights', self.device_window,
-                                        statusTip='Show non-light devices',
-                                        triggered=self.toggle_layer_nonlights)
-        self.toggle_layer_nonlights_action.setCheckable(True)
-        self.toggle_layer_nonlights_action.setChecked(True)
-
         self.toggle_layer_switches_action = QAction('&Switches', self.device_window,
                                         statusTip='Show switch devices',
                                         triggered=self.toggle_layer_switches)
         self.toggle_layer_switches_action.setCheckable(True)
         self.toggle_layer_switches_action.setChecked(True)
 
-        self.toggle_layer_pf_image_action = QAction('&Background', self.device_window,
-                                        statusTip='Show the playfield image',
-                                        triggered=self.toggle_pf_image)
-        self.toggle_layer_pf_image_action.setCheckable(True)
-        self.toggle_layer_pf_image_action.setChecked(True)
+        self.toggle_layer_others_action = QAction('&Others', self.device_window,
+                                        statusTip='Show other devices',
+                                        triggered=self.toggle_layer_others)
+        self.toggle_layer_others_action.setCheckable(True)
+        self.toggle_layer_others_action.setChecked(True)
+
+        self.cycle_layer_pf_image_action = QAction('&Image', self.device_window,
+                                        statusTip='Cycle the playfield image',
+                                        triggered=self.cycle_pf_image)
 
         name_filter_input = QLineEdit()
         name_filter_input.setPlaceholderText('Name filter')
@@ -155,7 +153,8 @@ class MPFMonitor():
 
         self.scene = QGraphicsScene()
 
-        self.pf = PfPixmapItem(QPixmap(self.image_file), self)
+        self._current_image_index = None
+        self.pf = PfPixmapItem(QPixmap(self.get_next_image_file()), self)
         self.scene.addItem(self.pf)
 
         self.view = QGraphicsView(self.scene)
@@ -171,7 +170,6 @@ class MPFMonitor():
         self.event_window = EventWindow(self)
 
         self.variables_window = VariableWindow(self)
-        # self.variables_window.show()
 
         self.mode_window = ModeWindow(self)
 
@@ -242,26 +240,40 @@ class MPFMonitor():
         """)
 
         layers_toolbar.addAction(self.toggle_layer_lights_action)
-        layers_toolbar.addAction(self.toggle_layer_nonlights_action)
         layers_toolbar.addAction(self.toggle_layer_switches_action)
-        layers_toolbar.addAction(self.toggle_layer_pf_image_action)
+        layers_toolbar.addAction(self.toggle_layer_others_action)
+        layers_toolbar.addAction(self.cycle_layer_pf_image_action)
         layers_toolbar.addSeparator()
         layers_toolbar.addAction(self.pf_device_filter_action)
 
         self.pf_window.addToolBar(layers_toolbar)
 
+    def get_next_image_file(self):
+        if self._current_image_index is None:
+            self._current_image_index = 0
+        else:
+            self._current_image_index += 1
+        if self._current_image_index >= len(self.image_files):
+            self._current_image_index = None
+            return None
+
+        return self.image_files[self._current_image_index]
+
     def update_device_name_filter(self, text):
         self.device_name_filter = text
         self.scene.update()
 
-    def toggle_pf_image(self):
+    def cycle_pf_image(self):
+        """Cycles through background images, or hides if on the last item."""
         if self.pf_window.isVisible():
-            if self.pf.isVisible():
-                self.pf.hide()
-                self.toggle_layer_pf_image_action.setChecked(False)
-            else:
+            next_file = self.get_next_image_file()
+
+            if next_file:
+                self.pf.setPixmap(QPixmap(next_file))
                 self.pf.show()
-                self.toggle_layer_pf_image_action.setChecked(True)
+            else:
+                # Reached the end of the sequence (None); hide the background layer
+                self.pf.hide()
 
     def toggle_pf_window(self):
         if self.pf_window.isVisible():
@@ -299,12 +311,12 @@ class MPFMonitor():
         self.hide_layer_lights = not self.toggle_layer_lights_action.isChecked()
         self.scene.update()
 
-    def toggle_layer_nonlights(self):
-        self.hide_layer_nonlights = not self.toggle_layer_nonlights_action.isChecked()
-        self.scene.update()
-
     def toggle_layer_switches(self):
         self.hide_layer_switches = not self.toggle_layer_switches_action.isChecked()
+        self.scene.update()
+
+    def toggle_layer_others(self):
+        self.hide_layer_others = not self.toggle_layer_others_action.isChecked()
         self.scene.update()
 
     def toggle_variables_window(self):
@@ -335,18 +347,6 @@ class MPFMonitor():
         self.start_time = 0
         self.event_window.model.clear()
         self.mode_window.model.clear()
-
-    def eventFilter(self, source, event):
-        try:
-            if source is self.playfield and event.type() == QEvent.Resize:
-                self.playfield.setPixmap(self.playfield_image.scaled(
-                    self.playfield.size(), Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation))
-                self.pf.invalidate_size()
-        except AttributeError:
-            pass
-
-        return super().eventFilter(source, event)
 
     def tick(self):
         """
@@ -383,8 +383,7 @@ class MPFMonitor():
             self.event_window.update_events()
 
     def about(self):
-        QMessageBox.about(self, "About MPF Monitor",
-                "This is the MPF Monitor")
+        QMessageBox.about(self, "About MPF Monitor", "This is the MPF Monitor")
 
     def load_config(self):
         try:

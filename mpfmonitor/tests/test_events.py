@@ -1,6 +1,8 @@
-import unittest
-import threading
 import sys
+import threading
+import time
+import unittest
+
 from PyQt6.QtTest import QTest
 from PyQt6 import QtCore, QtGui, QtWidgets
 from unittest.mock import MagicMock
@@ -120,6 +122,7 @@ class TestEvents(unittest.TestCase):
         event_list = ["event_a", "event_b", "event_c"]
 
         for e in event_list:
+            time.sleep(0.002) # need to ensure events have different timestamps
             self.eventWindow.add_event_to_model(e, None, None, self.mock_event_kwargs, None)
 
         # Default is Received up
@@ -167,6 +170,12 @@ class TestEvents(unittest.TestCase):
         # Set the filter to a non-unique string and check it returns 2 matches
         self.eventWindow.ui.filterLineEdit.setText(event_list[2])
         self.assertEqual(self.eventWindow.filtered_model.rowCount(), 2)
+
+    def test_ui_injection_flow(self):
+        self.eventWindow.ui.inject_text.setText("fake_event foo='bar' quux=1 corge=True fred=None")
+        QTest.mouseClick(self.eventWindow.ui.inject_button, QtCore.Qt.MouseButton.LeftButton)
+        self.eventWindow.mpfmon.bcp.send.assert_called_with('trigger', name="fake_event", foo="bar", quux=1, corge=True, fred=None)
+        self.assertEqual(self.eventWindow.ui.inject_text.text(), "")
 
 
 if __name__ == '__main__':
