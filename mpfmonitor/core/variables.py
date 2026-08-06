@@ -26,14 +26,11 @@ class VariableWindow(QWidget):
         # Load ui file from ./ui/
         ui_path = os.path.join(os.path.dirname(__file__), "ui", "searchable_table.ui")
         self.ui = uic.loadUi(ui_path, self)
-        self.ui.clear_button.hide()
 
         self.ui.setWindowTitle('Player/Machine Variables')
 
-        self.ui.move(self.mpfmon.local_settings.value('windows/variables/pos',
-                                                   QPoint(1100, 200)))
-        self.ui.resize(self.mpfmon.local_settings.value('windows/variables/size',
-                                                     QSize(300, 240)))
+        self.ui.move(self.mpfmon.local_settings.value('windows/variables/pos', QPoint(1100, 200)))
+        self.ui.resize(self.mpfmon.local_settings.value('windows/variables/size', QSize(300, 240)))
 
         # Fix sort combobox verbiage
         self.ui.sortComboBox.setItemText(1, "Name ▴")
