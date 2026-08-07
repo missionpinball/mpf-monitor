@@ -52,8 +52,12 @@ class MPFMonitor():
         self.device_name_filter = ''
 
         self.config_file = os.path.join(self.machine_path, "monitor", config_file)
-        self.image_files = [os.path.join(self.machine_path, "monitor", f) for f in image_files]
         self.settings_file = os.path.join(self.machine_path, "monitor", "settings.ini")
+
+        resolved = [os.path.abspath(os.path.join(self.machine_path, "monitor", f)) for f in image_files]
+        deduped = list(dict.fromkeys(resolved))
+        deduped.sort(key=lambda path: os.path.basename(path).lower())
+        self.image_files = deduped
 
         QSettings.setDefaultFormat(QSettings.Format.IniFormat)
         self.local_settings = QSettings(self.settings_file, QSettings.Format.IniFormat)
