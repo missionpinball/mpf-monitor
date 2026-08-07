@@ -37,6 +37,9 @@ homepage = "https://missionpinball.org"
 [project.entry-points."mpf.command"]
 monitor = "mpfmonitor.commands.monitor:get_command"
 
+[project.scripts]
+mpf-monitor = "mpfmonitor.commands.monitor:main"
+
 [tool.setuptools]
 include-package-data = true
 
