@@ -44,13 +44,13 @@ class Command(object):
                                  "not an MPF config.yaml. Default is monitor.")
 
         parser.add_argument("-i",
-                            action="append", dest="image_files",
+                            action="extend", nargs="+", dest="image_files",
                             default=[],  # Default for lists must be implemented by custom check
                             metavar='image_files',
                             help="The MPF Monitor image file name. "
                                  "Files must be placed within the folder '<game>/monitor/' "
                                  "Default is playfield.jpg\n"
-                                 "Use `-i=image1.jpg -i=image2.png` to add multiple options.\n"
+                                 "Use `-i=image1.jpg image2.png` to add multiple options.\n"
                                  "Supported types: PNG, JPG, BMP, GIF")
 
         parser.add_argument("-is",
