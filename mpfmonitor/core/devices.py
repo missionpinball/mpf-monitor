@@ -332,7 +332,6 @@ class DeviceWindow(QWidget):
         self._debug_enabled = self.log.isEnabledFor(logging.DEBUG)
 
     def draw_ui(self):
-        # Load ui file from ./ui/
         ui_path = os.path.join(os.path.dirname(__file__), "ui", "searchable_tree.ui")
         self.ui = uic.loadUi(ui_path, self)
 
@@ -341,10 +340,11 @@ class DeviceWindow(QWidget):
         self.ui.move(self.mpfmon.local_settings.value('windows/devices/pos', QPoint(200, 200)))
         self.ui.resize(self.mpfmon.local_settings.value('windows/devices/size', QSize(300, 600)))
 
-        # Disable option "Sort", select first item.
-        # TODO: Store and load selected sort index to local_settings
         self.ui.sortComboBox.model().item(0).setEnabled(False)
-        self.ui.sortComboBox.setCurrentIndex(1)
+
+        initial_sort = int(self.mpfmon.local_settings.value('windows/devices/sort_index', 3))
+        self.ui.sortComboBox.setCurrentIndex(initial_sort)
+
         self.ui.treeView.setAlternatingRowColors(True)
 
     def attach_signals(self):
@@ -359,6 +359,7 @@ class DeviceWindow(QWidget):
         self.treeview = self.ui.treeView
 
         self.model = QStandardItemModel()
+        self.model.setColumnCount(3)
         self.model.setHorizontalHeaderLabels(["Device", "Data"])
 
         self.treeview.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
@@ -370,9 +371,12 @@ class DeviceWindow(QWidget):
         self.filtered_model = QSortFilterProxyModel(self)
         self.filtered_model.setSourceModel(self.model)
         self.filtered_model.setRecursiveFilteringEnabled(True)
+        self.filtered_model.setDynamicSortFilter(True)
         self.filtered_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
 
         self.treeview.setModel(self.filtered_model)
+        self.filtered_model.sort(0, Qt.SortOrder.AscendingOrder)
+        self.ui.treeView.setColumnHidden(2, True)
 
     def resize_columns_to_content(self):
         self.ui.treeView.resizeColumnToContents(0)
@@ -404,8 +408,6 @@ class DeviceWindow(QWidget):
         else:
             self.device_states[type][name].setData(state)
 
-        self.ui.treeView.setColumnHidden(2, True)
-
     def filter_text(self, string):
         wc_string = "*" + str(string) + "*"
         self.filtered_model.setFilterWildcard(wc_string)
@@ -416,8 +418,7 @@ class DeviceWindow(QWidget):
         self.model.layoutAboutToBeChanged.emit()
         self.filtered_model.beginResetModel()
 
-        # This is a bit sloppy and probably should be reworked.
-        if index == 1:  # Received up
+        if index == 1:    # Received up
             self.filtered_model.sort(2, Qt.SortOrder.AscendingOrder)
         elif index == 2:  # Received down
             self.filtered_model.sort(2, Qt.SortOrder.DescendingOrder)
@@ -427,6 +428,7 @@ class DeviceWindow(QWidget):
             self.filtered_model.sort(0, Qt.SortOrder.DescendingOrder)
 
         self.filtered_model.endResetModel()
+        self.ui.treeView.setColumnHidden(2, True)
         self.model.layoutChanged.emit()
 
     def closeEvent(self, event):

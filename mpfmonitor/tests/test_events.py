@@ -79,7 +79,7 @@ class TestEvents(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         mock_mpfmon = MagicMock()
-        mock_mpfmon.local_settings.value.side_effect = [QPoint(500, 200), QSize(300, 600)]
+        mock_mpfmon.local_settings.value.side_effect = lambda key, default=None: default
 
         self.eventWindow = EventWindow(mock_mpfmon)
 

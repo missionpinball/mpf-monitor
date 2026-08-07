@@ -82,7 +82,7 @@ class TestModeWindowGUI(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         mock_mpfmon = MagicMock()
-        mock_mpfmon.local_settings.value.side_effect = [QPoint(1100, 200), QSize(300, 250)]
+        mock_mpfmon.local_settings.value.side_effect = lambda key, default=None: default
 
         self.mode_window = ModeWindow(mock_mpfmon)
 
