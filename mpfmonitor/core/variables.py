@@ -23,7 +23,6 @@ class VariableWindow(QWidget):
         self.variables = dict()  # keys are tuples of (variable, type), values are the var's value model
 
     def draw_ui(self):
-        # Load ui file from ./ui/
         ui_path = os.path.join(os.path.dirname(__file__), "ui", "searchable_table.ui")
         self.ui = uic.loadUi(ui_path, self)
 
@@ -38,11 +37,9 @@ class VariableWindow(QWidget):
         self.ui.sortComboBox.setItemText(3, "Value ▴")
         self.ui.sortComboBox.setItemText(4, "Value ▾")
 
-        # Disable option "Sort", select first item.
-        # TODO: Store and load selected sort index to local_settings
         self.ui.sortComboBox.model().item(0).setEnabled(False)
-        self.ui.sortComboBox.setCurrentIndex(1)
-
+        initial_sort = int(self.mpfmon.local_settings.value('windows/variables/sort_index', 1))
+        self.ui.sortComboBox.setCurrentIndex(initial_sort)
 
     def attach_signals(self):
         assert (self.ui is not None)
@@ -62,7 +59,8 @@ class VariableWindow(QWidget):
         self.filtered_model.setFilterKeyColumn(1)
         self.filtered_model.setDynamicSortFilter(True)
 
-        self.change_sort()  # Default sort
+        initial_sort = int(self.mpfmon.local_settings.value('windows/variables/sort_index', 1))
+        self.change_sort(initial_sort)
 
         self.ui.tableView.setModel(self.filtered_model)
         # self.ui.tableView.setColumnHidden(2, True)
@@ -91,8 +89,7 @@ class VariableWindow(QWidget):
         self.ui.tableView.resizeColumnToContents(1)
 
     def change_sort(self, index=1):
-        # This is a bit sloppy and probably should be reworked.
-        if index == 1:  # Name up
+        if index == 1:    # Name up
             self.filtered_model.sort(1, Qt.SortOrder.DescendingOrder)
         elif index == 2:  # Name down
             self.filtered_model.sort(1, Qt.SortOrder.AscendingOrder)

@@ -416,6 +416,10 @@ class MPFMonitor():
             'size': window.size(),
             'visible': window.isVisible()
         }
+
+        if hasattr(window, 'ui') and window.ui and hasattr(window.ui, 'sortComboBox'):
+            settings['sort_index'] = window.ui.sortComboBox.currentIndex()
+
         for line in settings.keys():
             setting_name = 'windows/' + window_name + '/' + line
             self.local_settings.setValue(setting_name, settings.get(line))

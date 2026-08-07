@@ -34,11 +34,9 @@ class ModeWindow(QWidget):
         self.ui.sortComboBox.setItemText(1, "Priority ▴")
         self.ui.sortComboBox.setItemText(2, "Priority ▾")
 
-
-        # Disable option "Sort", select first item.
-        # TODO: Store and load selected sort index to local_settings
         self.ui.sortComboBox.model().item(0).setEnabled(False)
-        self.ui.sortComboBox.setCurrentIndex(1)
+        initial_sort = int(self.mpfmon.local_settings.value('windows/modes/sort_index', 1))
+        self.ui.sortComboBox.setCurrentIndex(initial_sort)
 
     def attach_signals(self):
         assert (self.ui is not None)
@@ -46,7 +44,7 @@ class ModeWindow(QWidget):
         self.ui.sortComboBox.currentIndexChanged.connect(self.change_sort)
 
     def attach_model(self):
-        self.model = QStandardItemModel(0, 2)
+        self.model = QStandardItemModel(0, 3)
 
         self.model.setHeaderData(0, Qt.Orientation.Horizontal, "Mode")
         self.model.setHeaderData(1, Qt.Orientation.Horizontal, "Priority")
@@ -56,7 +54,8 @@ class ModeWindow(QWidget):
         self.filtered_model.setFilterKeyColumn(0)
         self.filtered_model.setDynamicSortFilter(True)
 
-        self.change_sort()  # Default sort
+        initial_sort = int(self.mpfmon.local_settings.value('windows/modes/sort_index', 1))
+        self.change_sort(initial_sort)
 
         self.ui.tableView.setModel(self.filtered_model)
         self.ui.tableView.setColumnHidden(2, True)
@@ -85,8 +84,7 @@ class ModeWindow(QWidget):
         self.ui.tableView.resizeColumnToContents(1)
 
     def change_sort(self, index=1):
-        # This is a bit sloppy and probably should be reworked.
-        if index == 1:  # Received up
+        if index == 1:    # Received up
             self.filtered_model.sort(2, Qt.SortOrder.DescendingOrder)
         elif index == 2:  # Received down
             self.filtered_model.sort(2, Qt.SortOrder.AscendingOrder)
