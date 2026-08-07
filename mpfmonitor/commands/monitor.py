@@ -12,20 +12,10 @@ import time
 import errno
 from mpfmonitor._version import __version__
 
-# import functiontrace
-# functiontrace.trace()
-
 class Command(object):
 
     # pylint: disable-msg=too-many-locals
-    def __init__(self, mpf_path, machine_path, args):
-
-        # Need to have these in here because we don't want them to load when
-        # the module is loaded as an mpf.command
-        from mpf.core.utility_functions import Util
-
-        del mpf_path
-
+    def __init__(self, _mpf_path, machine_path, args):
         parser = argparse.ArgumentParser(description='Starts the MPF Monitor')
 
         parser.add_argument("-l",
@@ -154,3 +144,9 @@ class Command(object):
 
 def get_command():
     return 'monitor', Command
+
+# Standalone entry point for the mpf-monitor console script
+def main():
+    machine_path = os.getcwd()
+    cli_args = sys.argv[1:]
+    Command(_mpf_path=None, machine_path=machine_path, args=cli_args)
