@@ -70,12 +70,12 @@
        </item>
        <item>
         <property name="text">
-         <string>Recieved ▴</string>
+         <string>Received ▾</string>
         </property>
        </item>
        <item>
         <property name="text">
-         <string>Recieved ▾</string>
+         <string>Received ▴</string>
         </property>
        </item>
        <item>

@@ -322,6 +322,10 @@ class DeviceWindow(QWidget):
         self.attach_model()
         self.attach_signals()
 
+        initial_sort = int(self.mpfmon.local_settings.value('windows/devices/sort_index', 3))
+        self.ui.sortComboBox.setCurrentIndex(initial_sort)
+        self.change_sort(initial_sort)
+
         self.log = logging.getLogger('Core')
 
         self.already_hidden = False
@@ -341,9 +345,6 @@ class DeviceWindow(QWidget):
         self.ui.resize(self.mpfmon.local_settings.value('windows/devices/size', QSize(300, 600)))
 
         self.ui.sortComboBox.model().item(0).setEnabled(False)
-
-        initial_sort = int(self.mpfmon.local_settings.value('windows/devices/sort_index', 3))
-        self.ui.sortComboBox.setCurrentIndex(initial_sort)
 
         self.ui.treeView.setAlternatingRowColors(True)
 
@@ -375,7 +376,6 @@ class DeviceWindow(QWidget):
         self.filtered_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
 
         self.treeview.setModel(self.filtered_model)
-        self.filtered_model.sort(0, Qt.SortOrder.AscendingOrder)
         self.ui.treeView.setColumnHidden(2, True)
 
     def resize_columns_to_content(self):
@@ -405,6 +405,7 @@ class DeviceWindow(QWidget):
             self.device_type_widgets[type].appendRow(node.get_row())
 
             self.mpfmon.pf.create_widget_from_config(node, type, name)
+            self.change_sort(self.ui.sortComboBox.currentIndex())
         else:
             self.device_states[type][name].setData(state)
 
@@ -415,21 +416,16 @@ class DeviceWindow(QWidget):
         self.ui.treeView.resizeColumnToContents(1)
 
     def change_sort(self, index=1):
-        self.model.layoutAboutToBeChanged.emit()
-        self.filtered_model.beginResetModel()
-
-        if index == 1:    # Received up
-            self.filtered_model.sort(2, Qt.SortOrder.AscendingOrder)
-        elif index == 2:  # Received down
-            self.filtered_model.sort(2, Qt.SortOrder.DescendingOrder)
-        elif index == 3:  # Name up
+        if index == 1:    # Name A-Z
             self.filtered_model.sort(0, Qt.SortOrder.AscendingOrder)
-        elif index == 4:  # Name down
+        elif index == 2:  # Name Z-A
             self.filtered_model.sort(0, Qt.SortOrder.DescendingOrder)
+        elif index == 3:  # Received - Latest
+            self.filtered_model.sort(2, Qt.SortOrder.DescendingOrder)
+        elif index == 4:  # Received - Oldest
+            self.filtered_model.sort(2, Qt.SortOrder.AscendingOrder)
 
-        self.filtered_model.endResetModel()
         self.ui.treeView.setColumnHidden(2, True)
-        self.model.layoutChanged.emit()
 
     def closeEvent(self, event):
         super().closeEvent(event)

@@ -418,7 +418,7 @@ class MPFMonitor():
         if self.close_on_disconnect:
             self.log.info("Quitting due to MPF connection and close_on_disconnect setting")
             self.write_local_settings()
-            QMetaObject.invokeMethod(QCoreApplication.instance(), "exit", Qt.ConnectionType.QueuedConnection, Q_ARG(int, 0))
+            QCoreApplication.instance().exit(0)
 
     def write_window_settings(self, window_name, window):
         settings = {
@@ -438,7 +438,6 @@ class MPFMonitor():
         return "true" == str(self.local_settings.value(setting, False)).lower()
 
     def write_local_settings(self):
-
         monitor_windows = {
             'devices': self.device_window,
             'pf': self.pf_window,

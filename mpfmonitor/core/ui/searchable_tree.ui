@@ -68,22 +68,22 @@
        </item>
        <item>
         <property name="text">
-         <string>Recieved ▴</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Recieved ▾</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
          <string>Name ▴</string>
         </property>
        </item>
        <item>
         <property name="text">
          <string>Name ▾</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Received ▾</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Received ▴</string>
         </property>
        </item>
       </widget>
