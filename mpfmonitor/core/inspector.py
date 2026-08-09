@@ -256,4 +256,4 @@ class InspectorWindow(QWidget):
     def closeEvent(self, event):
         self.mpfmon.write_local_settings()
         event.accept()
-        self.mpfmon.check_if_quit()
+        QCoreApplication.exit(0)
