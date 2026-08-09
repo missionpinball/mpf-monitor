@@ -172,7 +172,8 @@ class BCPClient(object):
 
         self.connected = False
 
-        self.mpfmon.handle_mpf_disconnected()
+        if not self.mpfmon.thread_stopper.is_set():
+            self.mpfmon.handle_mpf_disconnected()
 
     def disconnect(self):
         if not self.connected:
