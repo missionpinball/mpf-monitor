@@ -37,8 +37,8 @@ class ModeWindow(QWidget):
         self.ui.resize(self.mpfmon.local_settings.value('windows/modes/size', QSize(300, 240)))
 
         # Fix sort combobox verbiage
-        self.ui.sortComboBox.setItemText(1, "Priority ▴")
-        self.ui.sortComboBox.setItemText(2, "Priority ▾")
+        self.ui.sortComboBox.setItemText(1, "Priority ▾")
+        self.ui.sortComboBox.setItemText(2, "Priority ▴")
 
         self.ui.sortComboBox.model().item(0).setEnabled(False)
 
@@ -82,13 +82,13 @@ class ModeWindow(QWidget):
         self.ui.tableView.resizeColumnToContents(1)
 
     def change_sort(self, index=1):
-        if index == 1:    # Received up
+        if index == 1:    # Priority Desc
             self.filtered_model.sort(2, Qt.SortOrder.DescendingOrder)
-        elif index == 2:  # Received down
+        elif index == 2:  # Priority Asc
             self.filtered_model.sort(2, Qt.SortOrder.AscendingOrder)
-        elif index == 3:  # Name up
+        elif index == 3:  # Name A-z
             self.filtered_model.sort(0, Qt.SortOrder.AscendingOrder)
-        elif index == 4:  # Name down
+        elif index == 4:  # Name Z-A
             self.filtered_model.sort(0, Qt.SortOrder.DescendingOrder)
 
     def closeEvent(self, event):

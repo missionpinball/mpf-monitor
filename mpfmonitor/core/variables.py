@@ -88,13 +88,13 @@ class VariableWindow(QWidget):
         self.ui.tableView.resizeColumnToContents(1)
 
     def change_sort(self, index=1):
-        if index == 1:    # Name up
-            self.filtered_model.sort(1, Qt.SortOrder.DescendingOrder)
-        elif index == 2:  # Name down
+        if index == 1:    # Name A-Z
             self.filtered_model.sort(1, Qt.SortOrder.AscendingOrder)
-        elif index == 3:  # Value up
+        elif index == 2:  # Name Z-A
+            self.filtered_model.sort(1, Qt.SortOrder.DescendingOrder)
+        elif index == 3:  # Value Asc
             self.filtered_model.sort(2, Qt.SortOrder.AscendingOrder)
-        elif index == 4:  # Value down
+        elif index == 4:  # Value Desc
             self.filtered_model.sort(2, Qt.SortOrder.DescendingOrder)
 
     def closeEvent(self, event):

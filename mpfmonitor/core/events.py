@@ -88,13 +88,13 @@ class EventWindow(QWidget):
         self.ui.tableView.resizeColumnToContents(1)
 
     def change_sort(self, index=1):
-        if index == 1:    # Received up
+        if index == 1:    # Received Desc
             self.filtered_model.sort(2, Qt.SortOrder.DescendingOrder)
-        elif index == 2:  # Received down
+        elif index == 2:  # Received Asc
             self.filtered_model.sort(2, Qt.SortOrder.AscendingOrder)
-        elif index == 3:  # Name up
+        elif index == 3:  # Name A-Z
             self.filtered_model.sort(0, Qt.SortOrder.AscendingOrder)
-        elif index == 4:  # Name down
+        elif index == 4:  # Name Z-A
             self.filtered_model.sort(0, Qt.SortOrder.DescendingOrder)
 
     def clear_log(self):

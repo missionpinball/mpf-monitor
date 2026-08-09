@@ -416,14 +416,14 @@ class DeviceWindow(QWidget):
         self.ui.treeView.resizeColumnToContents(1)
 
     def change_sort(self, index=1):
-        if index == 1:    # Received up
-            self.filtered_model.sort(2, Qt.SortOrder.AscendingOrder)
-        elif index == 2:  # Received down
-            self.filtered_model.sort(2, Qt.SortOrder.DescendingOrder)
-        elif index == 3:  # Name up
+        if index == 1:    # Name A-Z
             self.filtered_model.sort(0, Qt.SortOrder.AscendingOrder)
-        elif index == 4:  # Name down
+        elif index == 2:  # Name Z-A
             self.filtered_model.sort(0, Qt.SortOrder.DescendingOrder)
+        elif index == 3:  # Received - Latest
+            self.filtered_model.sort(2, Qt.SortOrder.DescendingOrder)
+        elif index == 4:  # Received - Oldest
+            self.filtered_model.sort(2, Qt.SortOrder.AscendingOrder)
 
         self.ui.treeView.setColumnHidden(2, True)
 
