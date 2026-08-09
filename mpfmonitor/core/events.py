@@ -20,7 +20,12 @@ class EventWindow(QWidget):
         self.model = None
         self.draw_ui()
         self.attach_model()
+        self.ui.tableView.setModel(self.filtered_model)
+        self.rootNode = self.model.invisibleRootItem()
         self.attach_signals()
+
+        initial_sort = int(self.mpfmon.local_settings.value('windows/events/sort_index', 1))
+        self.ui.sortComboBox.setCurrentIndex(initial_sort)
 
         self.already_hidden = False
         self.added_index = 0
@@ -33,9 +38,6 @@ class EventWindow(QWidget):
 
         self.ui.move(self.mpfmon.local_settings.value('windows/events/pos', QPoint(500, 200)))
         self.ui.resize(self.mpfmon.local_settings.value('windows/events/size', QSize(300, 600)))
-
-        initial_sort = int(self.mpfmon.local_settings.value('windows/events/sort_index', 1))
-        self.ui.sortComboBox.setCurrentIndex(initial_sort)
 
         self.ui.sortComboBox.model().item(0).setEnabled(False)
 
@@ -57,12 +59,6 @@ class EventWindow(QWidget):
         self.filtered_model.setSourceModel(self.model)
         self.filtered_model.setFilterKeyColumn(0)
         self.filtered_model.setDynamicSortFilter(True)
-
-        initial_sort = int(self.mpfmon.local_settings.value('windows/events/sort_index', 1))
-        self.change_sort(initial_sort)
-
-        self.ui.tableView.setModel(self.filtered_model)
-        self.rootNode = self.model.invisibleRootItem()
 
     def add_event_to_model(self, event_name, event_type, event_callback, event_kwargs, registered_handlers):
         """Add an event."""

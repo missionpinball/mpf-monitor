@@ -15,7 +15,13 @@ class VariableWindow(QWidget):
         self.model = None
         self.draw_ui()
         self.attach_model()
+        self.ui.tableView.setModel(self.filtered_model)
+        self.rootNode = self.model.invisibleRootItem()
+
         self.attach_signals()
+
+        initial_sort = int(self.mpfmon.local_settings.value('windows/variables/sort_index', 1))
+        self.ui.sortComboBox.setCurrentIndex(initial_sort)
 
         self.already_hidden = False
         self.added_index = 0
@@ -38,8 +44,6 @@ class VariableWindow(QWidget):
         self.ui.sortComboBox.setItemText(4, "Value ▾")
 
         self.ui.sortComboBox.model().item(0).setEnabled(False)
-        initial_sort = int(self.mpfmon.local_settings.value('windows/variables/sort_index', 1))
-        self.ui.sortComboBox.setCurrentIndex(initial_sort)
 
     def attach_signals(self):
         assert (self.ui is not None)
@@ -59,13 +63,6 @@ class VariableWindow(QWidget):
         self.filtered_model.setFilterKeyColumn(1)
         self.filtered_model.setDynamicSortFilter(True)
 
-        initial_sort = int(self.mpfmon.local_settings.value('windows/variables/sort_index', 1))
-        self.change_sort(initial_sort)
-
-        self.ui.tableView.setModel(self.filtered_model)
-        # self.ui.tableView.setColumnHidden(2, True)
-        self.rootNode = self.model.invisibleRootItem()
-
     def update_variable(self, var_type, variable, value):
         """Update variables.
 
@@ -81,6 +78,8 @@ class VariableWindow(QWidget):
             value_model = QStandardItem(str(value))
             self.variables[(variable, var_type)] = value_model
             self.model.insertRow(0, [QStandardItem(var_type), QStandardItem(str(variable)), value_model])
+
+        self.change_sort(self.ui.sortComboBox.currentIndex())
 
     def filter_text(self, string):
         wc_string = "*" + str(string) + "*"
