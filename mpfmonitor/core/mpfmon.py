@@ -193,9 +193,12 @@ class MPFMonitor():
             self.toggle_variables_window()
 
         self.exit_on_close = False
-
         if self.get_local_settings_bool('settings/exit-on-close'):
             self.toggle_exit_on_close()
+
+        self.close_on_disconnect = False
+        if self.get_local_settings_bool('settings/close-on-disconnect'):
+            self.toggle_close_on_disconnect()
 
         self.set_inspector_mode(False)
         self.inspector_window = InspectorWindow(self)
@@ -332,16 +335,13 @@ class MPFMonitor():
             self.toggle_variables_window_action.setChecked(True)
 
     def toggle_exit_on_close(self):
-        if self.exit_on_close:
-            self.exit_on_close = False
-        else:
-            self.exit_on_close = True
+        self.exit_on_close = not self.exit_on_close
+
+    def toggle_close_on_disconnect(self):
+        self.close_on_disconnect = not self.close_on_disconnect
 
     def toggle_sort_by_time(self):
-        if self.sort_by_time:
-            self.sort_by_time = False
-        else:
-            self.sort_by_time = True
+        self.sort_by_time = not self.sort_by_time
 
     def except_hook(self, cls, exception, traceback):
         sys.__excepthook__(cls, exception, traceback)
@@ -414,6 +414,12 @@ class MPFMonitor():
             self.log.info("Quitting due to quit on close")
             QCoreApplication.exit(0)
 
+    def handle_mpf_disconnected(self):
+        if self.close_on_disconnect:
+            self.log.info("Quitting due to MPF connection and close_on_disconnect setting")
+            self.write_local_settings()
+            QMetaObject.invokeMethod(QCoreApplication.instance(), "exit", Qt.ConnectionType.QueuedConnection, Q_ARG(int, 0))
+
     def write_window_settings(self, window_name, window):
         settings = {
             'pos': window.pos(),
@@ -446,6 +452,7 @@ class MPFMonitor():
             self.write_window_settings(window, monitor_windows.get(window))
 
         self.local_settings.setValue('settings/exit-on-close', self.exit_on_close)
+        self.local_settings.setValue('settings/close-on-disconnect', self.close_on_disconnect)
 
         self.local_settings.sync()
 

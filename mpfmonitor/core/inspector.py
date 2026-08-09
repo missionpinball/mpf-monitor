@@ -87,6 +87,8 @@ class InspectorWindow(QWidget):
         self.ui.exit_on_close_button.setChecked(self.mpfmon.get_local_settings_bool('settings/exit-on-close'))
         self.ui.exit_on_close_button.stateChanged.connect(self.mpfmon.toggle_exit_on_close)
 
+        self.ui.close_on_disconnect_button.setChecked(self.mpfmon.get_local_settings_bool('settings/close-on-disconnect'))
+        self.ui.close_on_disconnect_button.stateChanged.connect(self.mpfmon.toggle_close_on_disconnect)
 
     def _attach_button_signal(self, button, action):
         button.setCheckable(True)

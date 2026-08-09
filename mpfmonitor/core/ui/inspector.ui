@@ -367,6 +367,13 @@
           </widget>
          </item>
          <item>
+          <widget class="QCheckBox" name="close_on_disconnect_button">
+           <property name="text">
+            <string>Quit on MPF disconnect</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QGroupBox" name="about_group_box">
            <property name="title">
             <string>About MPF Monitor:</string>
