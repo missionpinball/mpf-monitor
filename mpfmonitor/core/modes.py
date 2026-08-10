@@ -15,7 +15,13 @@ class ModeWindow(QWidget):
         self.model = None
         self.draw_ui()
         self.attach_model()
+        self.ui.tableView.setModel(self.filtered_model)
+        self.ui.tableView.setColumnHidden(2, True)
+        self.rootNode = self.model.invisibleRootItem()
         self.attach_signals()
+
+        initial_sort = int(self.mpfmon.local_settings.value('windows/modes/sort_index', 1))
+        self.ui.sortComboBox.setCurrentIndex(initial_sort)
 
         self.already_hidden = False
         self.added_index = 0
@@ -31,14 +37,10 @@ class ModeWindow(QWidget):
         self.ui.resize(self.mpfmon.local_settings.value('windows/modes/size', QSize(300, 240)))
 
         # Fix sort combobox verbiage
-        self.ui.sortComboBox.setItemText(1, "Priority ▴")
-        self.ui.sortComboBox.setItemText(2, "Priority ▾")
+        self.ui.sortComboBox.setItemText(1, "Priority ▾")
+        self.ui.sortComboBox.setItemText(2, "Priority ▴")
 
-
-        # Disable option "Sort", select first item.
-        # TODO: Store and load selected sort index to local_settings
         self.ui.sortComboBox.model().item(0).setEnabled(False)
-        self.ui.sortComboBox.setCurrentIndex(1)
 
     def attach_signals(self):
         assert (self.ui is not None)
@@ -46,7 +48,7 @@ class ModeWindow(QWidget):
         self.ui.sortComboBox.currentIndexChanged.connect(self.change_sort)
 
     def attach_model(self):
-        self.model = QStandardItemModel(0, 2)
+        self.model = QStandardItemModel(0, 3)
 
         self.model.setHeaderData(0, Qt.Orientation.Horizontal, "Mode")
         self.model.setHeaderData(1, Qt.Orientation.Horizontal, "Priority")
@@ -55,12 +57,6 @@ class ModeWindow(QWidget):
         self.filtered_model.setSourceModel(self.model)
         self.filtered_model.setFilterKeyColumn(0)
         self.filtered_model.setDynamicSortFilter(True)
-
-        self.change_sort()  # Default sort
-
-        self.ui.tableView.setModel(self.filtered_model)
-        self.ui.tableView.setColumnHidden(2, True)
-        self.rootNode = self.model.invisibleRootItem()
 
     def process_mode_update(self, running_modes):
         """Update mode list."""
@@ -77,6 +73,7 @@ class ModeWindow(QWidget):
         self.model.setHeaderData(1, Qt.Orientation.Horizontal, "Priority")
 
         self.ui.tableView.setColumnHidden(2, True)
+        self.change_sort(self.ui.sortComboBox.currentIndex())
 
     def filter_text(self, string):
         wc_string = "*" + str(string) + "*"
@@ -85,14 +82,13 @@ class ModeWindow(QWidget):
         self.ui.tableView.resizeColumnToContents(1)
 
     def change_sort(self, index=1):
-        # This is a bit sloppy and probably should be reworked.
-        if index == 1:  # Received up
+        if index == 1:    # Priority Desc
             self.filtered_model.sort(2, Qt.SortOrder.DescendingOrder)
-        elif index == 2:  # Received down
+        elif index == 2:  # Priority Asc
             self.filtered_model.sort(2, Qt.SortOrder.AscendingOrder)
-        elif index == 3:  # Name up
+        elif index == 3:  # Name A-z
             self.filtered_model.sort(0, Qt.SortOrder.AscendingOrder)
-        elif index == 4:  # Name down
+        elif index == 4:  # Name Z-A
             self.filtered_model.sort(0, Qt.SortOrder.DescendingOrder)
 
     def closeEvent(self, event):

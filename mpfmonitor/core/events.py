@@ -20,13 +20,17 @@ class EventWindow(QWidget):
         self.model = None
         self.draw_ui()
         self.attach_model()
+        self.ui.tableView.setModel(self.filtered_model)
+        self.rootNode = self.model.invisibleRootItem()
         self.attach_signals()
+
+        initial_sort = int(self.mpfmon.local_settings.value('windows/events/sort_index', 1))
+        self.ui.sortComboBox.setCurrentIndex(initial_sort)
 
         self.already_hidden = False
         self.added_index = 0
 
     def draw_ui(self):
-        # Load ui file from ./ui/
         ui_path = os.path.join(os.path.dirname(__file__), "ui", "events_table.ui")
         self.ui = uic.loadUi(ui_path, self)
 
@@ -35,10 +39,7 @@ class EventWindow(QWidget):
         self.ui.move(self.mpfmon.local_settings.value('windows/events/pos', QPoint(500, 200)))
         self.ui.resize(self.mpfmon.local_settings.value('windows/events/size', QSize(300, 600)))
 
-        # Disable option "Sort", select first item.
-        # TODO: Store and load selected sort index to local_settings
         self.ui.sortComboBox.model().item(0).setEnabled(False)
-        self.ui.sortComboBox.setCurrentIndex(1)
 
     def attach_signals(self):
         assert (self.ui is not None)
@@ -58,11 +59,6 @@ class EventWindow(QWidget):
         self.filtered_model.setSourceModel(self.model)
         self.filtered_model.setFilterKeyColumn(0)
         self.filtered_model.setDynamicSortFilter(True)
-
-        self.change_sort()  # Default sort
-
-        self.ui.tableView.setModel(self.filtered_model)
-        self.rootNode = self.model.invisibleRootItem()
 
     def add_event_to_model(self, event_name, event_type, event_callback, event_kwargs, registered_handlers):
         """Add an event."""
@@ -92,14 +88,13 @@ class EventWindow(QWidget):
         self.ui.tableView.resizeColumnToContents(1)
 
     def change_sort(self, index=1):
-        # This is a bit sloppy and probably should be reworked.
-        if index == 1:  # Received up
+        if index == 1:    # Received Desc
             self.filtered_model.sort(2, Qt.SortOrder.DescendingOrder)
-        elif index == 2:  # Received down
+        elif index == 2:  # Received Asc
             self.filtered_model.sort(2, Qt.SortOrder.AscendingOrder)
-        elif index == 3:  # Name up
+        elif index == 3:  # Name A-Z
             self.filtered_model.sort(0, Qt.SortOrder.AscendingOrder)
-        elif index == 4:  # Name down
+        elif index == 4:  # Name Z-A
             self.filtered_model.sort(0, Qt.SortOrder.DescendingOrder)
 
     def clear_log(self):
