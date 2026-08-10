@@ -15,7 +15,13 @@ class VariableWindow(QWidget):
         self.model = None
         self.draw_ui()
         self.attach_model()
+        self.ui.tableView.setModel(self.filtered_model)
+        self.rootNode = self.model.invisibleRootItem()
+
         self.attach_signals()
+
+        initial_sort = int(self.mpfmon.local_settings.value('windows/variables/sort_index', 1))
+        self.ui.sortComboBox.setCurrentIndex(initial_sort)
 
         self.already_hidden = False
         self.added_index = 0
@@ -23,7 +29,6 @@ class VariableWindow(QWidget):
         self.variables = dict()  # keys are tuples of (variable, type), values are the var's value model
 
     def draw_ui(self):
-        # Load ui file from ./ui/
         ui_path = os.path.join(os.path.dirname(__file__), "ui", "searchable_table.ui")
         self.ui = uic.loadUi(ui_path, self)
 
@@ -38,11 +43,7 @@ class VariableWindow(QWidget):
         self.ui.sortComboBox.setItemText(3, "Value ▴")
         self.ui.sortComboBox.setItemText(4, "Value ▾")
 
-        # Disable option "Sort", select first item.
-        # TODO: Store and load selected sort index to local_settings
         self.ui.sortComboBox.model().item(0).setEnabled(False)
-        self.ui.sortComboBox.setCurrentIndex(1)
-
 
     def attach_signals(self):
         assert (self.ui is not None)
@@ -62,12 +63,6 @@ class VariableWindow(QWidget):
         self.filtered_model.setFilterKeyColumn(1)
         self.filtered_model.setDynamicSortFilter(True)
 
-        self.change_sort()  # Default sort
-
-        self.ui.tableView.setModel(self.filtered_model)
-        # self.ui.tableView.setColumnHidden(2, True)
-        self.rootNode = self.model.invisibleRootItem()
-
     def update_variable(self, var_type, variable, value):
         """Update variables.
 
@@ -84,6 +79,8 @@ class VariableWindow(QWidget):
             self.variables[(variable, var_type)] = value_model
             self.model.insertRow(0, [QStandardItem(var_type), QStandardItem(str(variable)), value_model])
 
+        self.change_sort(self.ui.sortComboBox.currentIndex())
+
     def filter_text(self, string):
         wc_string = "*" + str(string) + "*"
         self.filtered_model.setFilterWildcard(wc_string)
@@ -91,14 +88,13 @@ class VariableWindow(QWidget):
         self.ui.tableView.resizeColumnToContents(1)
 
     def change_sort(self, index=1):
-        # This is a bit sloppy and probably should be reworked.
-        if index == 1:  # Name up
-            self.filtered_model.sort(1, Qt.SortOrder.DescendingOrder)
-        elif index == 2:  # Name down
+        if index == 1:    # Name A-Z
             self.filtered_model.sort(1, Qt.SortOrder.AscendingOrder)
-        elif index == 3:  # Value up
+        elif index == 2:  # Name Z-A
+            self.filtered_model.sort(1, Qt.SortOrder.DescendingOrder)
+        elif index == 3:  # Value Asc
             self.filtered_model.sort(2, Qt.SortOrder.AscendingOrder)
-        elif index == 4:  # Value down
+        elif index == 4:  # Value Desc
             self.filtered_model.sort(2, Qt.SortOrder.DescendingOrder)
 
     def closeEvent(self, event):
