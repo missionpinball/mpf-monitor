@@ -93,29 +93,24 @@ class MPFMonitor():
         self.tick_timer.start()
 
         self.toggle_pf_window_action = QAction('&Playfield', self.device_window,
-                                        statusTip='Show the playfield window',
+                                        statusTip='Toggle the playfield window visibility',
                                         triggered=self.toggle_pf_window)
-        self.toggle_pf_window_action.setCheckable(True)
 
         self.toggle_device_window_action = QAction('&Devices', self.device_window,
-                                        statusTip='Show the device window',
+                                        statusTip='Toggle the device window visibility',
                                         triggered=self.toggle_device_window)
-        self.toggle_device_window_action.setCheckable(True)
 
         self.toggle_event_window_action = QAction('&Events', self.device_window,
-                                        statusTip='Show the events window',
+                                        statusTip='Toggle the events window visibility',
                                         triggered=self.toggle_event_window)
-        self.toggle_event_window_action.setCheckable(True)
 
         self.toggle_mode_window_action = QAction('&Modes', self.device_window,
-                                        statusTip='Show the mode window',
+                                        statusTip='Toggle the mode window visibility',
                                         triggered=self.toggle_mode_window)
-        self.toggle_mode_window_action.setCheckable(True)
 
         self.toggle_variables_window_action = QAction('&Variables', self.device_window,
-                                        statusTip='Show the variables window',
+                                        statusTip='Toggle the variables window visibility',
                                         triggered=self.toggle_variables_window)
-        self.toggle_variables_window_action.setCheckable(True)
 
 
         self.toggle_layer_lights_action = QAction('&Lights', self.device_window,
@@ -221,28 +216,30 @@ class MPFMonitor():
         layers_toolbar.setFloatable(False)
         layers_toolbar.setStyleSheet("""
             QToolButton {
-                background-color: transparent;
-                color: #ffffff;
-                border: 1px solid transparent; /* Keeps layout matching the checked border */
+                background-color: palette(button);
+                color: palette(button-text);
+                border: 1px solid palette(mid);
                 border-radius: 4px;
-                padding: 4px 8px;              /* Explicit uniform internal padding */
-                margin: 0px 2px;               /* Explicit uniform external spacing */
+                padding: 4px 8px;
+                margin: 0px 2px;
             }
             QToolButton:hover {
-                background-color: #333333;
-                border: 1px solid #444444;
+                background-color: palette(highlight);
+                color: palette(highlighted-text);
+                border: 1px solid palette(dark);
             }
             QToolButton:checked {
-                background-color: #555555;
-                color: #ffffff;
-                border: 1px solid #666666;    /* Same thickness as hover/normal state */
-            }
+                background-color: palette(dark);
+                color: palette(bright-text);
+                border: 1px solid palette(shadow);
             QToolButton:checked:hover {
-                background-color: #666666;
+                background-color: palette(shadow);
             }
             QLineEdit {
-                margin-right: 4px;  /* Pushes the right edge away from the window frame */
-                margin-left: 2px;   /* Consistent spacing away from the preceding separator */
+                background-color: palette(base);
+                color: palette(text);
+                border: 1px solid palette(mid);
+                border-radius: 4px;
             }
         """)
 

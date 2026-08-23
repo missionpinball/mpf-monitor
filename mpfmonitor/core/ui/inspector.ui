@@ -318,37 +318,37 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
-          <widget class="QCheckBox" name="toggle_device_win_button">
+          <widget class="QPushButton" name="toggle_device_win_button">
            <property name="text">
-            <string>Show device window</string>
+            <string>Toggle device window</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="toggle_event_win_button">
+          <widget class="QPushButton" name="toggle_event_win_button">
            <property name="text">
-            <string>Show event window</string>
+            <string>Toggle event window</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="toggle_pf_win_button">
+          <widget class="QPushButton" name="toggle_pf_win_button">
            <property name="text">
-            <string>Show playfield window</string>
+            <string>Toggle playfield window</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="toggle_mode_win_button">
+          <widget class="QPushButton" name="toggle_mode_win_button">
            <property name="text">
-            <string>Show mode window</string>
+            <string>Toggle mode window</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="toggle_variables_win_button">
+          <widget class="QPushButton" name="toggle_variables_win_button">
            <property name="text">
-            <string>Show variables window</string>
+            <string>Toggle variables window</string>
            </property>
           </widget>
          </item>
