@@ -216,28 +216,30 @@ class MPFMonitor():
         layers_toolbar.setFloatable(False)
         layers_toolbar.setStyleSheet("""
             QToolButton {
-                background-color: transparent;
-                color: #ffffff;
-                border: 1px solid transparent; /* Keeps layout matching the checked border */
+                background-color: palette(button);
+                color: palette(button-text);
+                border: 1px solid palette(mid);
                 border-radius: 4px;
-                padding: 4px 8px;              /* Explicit uniform internal padding */
-                margin: 0px 2px;               /* Explicit uniform external spacing */
+                padding: 4px 8px;
+                margin: 0px 2px;
             }
             QToolButton:hover {
-                background-color: #333333;
-                border: 1px solid #444444;
+                background-color: palette(highlight);
+                color: palette(highlighted-text);
+                border: 1px solid palette(dark);
             }
             QToolButton:checked {
-                background-color: #555555;
-                color: #ffffff;
-                border: 1px solid #666666;    /* Same thickness as hover/normal state */
-            }
+                background-color: palette(dark);
+                color: palette(bright-text);
+                border: 1px solid palette(shadow);
             QToolButton:checked:hover {
-                background-color: #666666;
+                background-color: palette(shadow);
             }
             QLineEdit {
-                margin-right: 4px;  /* Pushes the right edge away from the window frame */
-                margin-left: 2px;   /* Consistent spacing away from the preceding separator */
+                background-color: palette(base);
+                color: palette(text);
+                border: 1px solid palette(mid);
+                border-radius: 4px;
             }
         """)
 
