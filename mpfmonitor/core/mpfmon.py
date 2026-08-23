@@ -93,29 +93,24 @@ class MPFMonitor():
         self.tick_timer.start()
 
         self.toggle_pf_window_action = QAction('&Playfield', self.device_window,
-                                        statusTip='Show the playfield window',
+                                        statusTip='Toggle the playfield window visibility',
                                         triggered=self.toggle_pf_window)
-        self.toggle_pf_window_action.setCheckable(True)
 
         self.toggle_device_window_action = QAction('&Devices', self.device_window,
-                                        statusTip='Show the device window',
+                                        statusTip='Toggle the device window visibility',
                                         triggered=self.toggle_device_window)
-        self.toggle_device_window_action.setCheckable(True)
 
         self.toggle_event_window_action = QAction('&Events', self.device_window,
-                                        statusTip='Show the events window',
+                                        statusTip='Toggle the events window visibility',
                                         triggered=self.toggle_event_window)
-        self.toggle_event_window_action.setCheckable(True)
 
         self.toggle_mode_window_action = QAction('&Modes', self.device_window,
-                                        statusTip='Show the mode window',
+                                        statusTip='Toggle the mode window visibility',
                                         triggered=self.toggle_mode_window)
-        self.toggle_mode_window_action.setCheckable(True)
 
         self.toggle_variables_window_action = QAction('&Variables', self.device_window,
-                                        statusTip='Show the variables window',
+                                        statusTip='Toggle the variables window visibility',
                                         triggered=self.toggle_variables_window)
-        self.toggle_variables_window_action.setCheckable(True)
 
 
         self.toggle_layer_lights_action = QAction('&Lights', self.device_window,
