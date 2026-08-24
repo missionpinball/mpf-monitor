@@ -93,50 +93,50 @@ class MPFMonitor():
         self.tick_timer.start()
 
         self.toggle_pf_window_action = QAction('&Playfield', self.device_window,
-                                        statusTip='Toggle the playfield window visibility',
                                         triggered=self.toggle_pf_window)
 
         self.toggle_device_window_action = QAction('&Devices', self.device_window,
-                                        statusTip='Toggle the device window visibility',
                                         triggered=self.toggle_device_window)
 
         self.toggle_event_window_action = QAction('&Events', self.device_window,
-                                        statusTip='Toggle the events window visibility',
                                         triggered=self.toggle_event_window)
 
         self.toggle_mode_window_action = QAction('&Modes', self.device_window,
-                                        statusTip='Toggle the mode window visibility',
                                         triggered=self.toggle_mode_window)
 
         self.toggle_variables_window_action = QAction('&Variables', self.device_window,
-                                        statusTip='Toggle the variables window visibility',
                                         triggered=self.toggle_variables_window)
 
 
         self.toggle_layer_lights_action = QAction('&Lights', self.device_window,
                                         statusTip='Show light devices',
+                                        toolTip='Show light devices',
                                         triggered=self.toggle_layer_lights)
         self.toggle_layer_lights_action.setCheckable(True)
         self.toggle_layer_lights_action.setChecked(True)
 
         self.toggle_layer_switches_action = QAction('&Switches', self.device_window,
                                         statusTip='Show switch devices',
+                                        toolTip='Show switch devices',
                                         triggered=self.toggle_layer_switches)
         self.toggle_layer_switches_action.setCheckable(True)
         self.toggle_layer_switches_action.setChecked(True)
 
         self.toggle_layer_others_action = QAction('&Others', self.device_window,
                                         statusTip='Show other devices',
+                                        toolTip='Show other devices',
                                         triggered=self.toggle_layer_others)
         self.toggle_layer_others_action.setCheckable(True)
         self.toggle_layer_others_action.setChecked(True)
 
         self.cycle_layer_pf_image_action = QAction('&Image', self.device_window,
                                         statusTip='Cycle the playfield image',
+                                        toolTip='Cycle the playfield image',
                                         triggered=self.cycle_pf_image)
 
         name_filter_input = QLineEdit()
-        name_filter_input.setPlaceholderText('Name filter')
+        name_filter_input.setPlaceholderText('Device name filter')
+        name_filter_input.setToolTip("Type <b>^</b> first to do starts-with matching.<br>Or use a <b>/</b> to do regex matching.")
         name_filter_input.setText('')
         name_filter_input.setMinimumWidth(80)
         name_filter_input.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed))
