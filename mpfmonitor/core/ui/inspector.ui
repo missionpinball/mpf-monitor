@@ -453,7 +453,7 @@
          <item>
           <widget class="QPushButton" name="cycle_pf_image_button">
            <property name="text">
-            <string>Playfield Image</string>
+            <string>Cycle Playfield Image</string>
            </property>
           </widget>
          </item>
@@ -464,7 +464,7 @@
          <item>
           <widget class="QCheckBox" name="toggle_lights_button">
            <property name="text">
-            <string>Lights</string>
+            <string>Show Lights</string>
            </property>
           </widget>
          </item>
@@ -475,7 +475,7 @@
          <item>
           <widget class="QCheckBox" name="toggle_switches_button">
            <property name="text">
-            <string>Switches</string>
+            <string>Show Switches</string>
            </property>
           </widget>
          </item>
@@ -486,7 +486,7 @@
          <item>
           <widget class="QCheckBox" name="toggle_others_button">
            <property name="text">
-            <string>Other Devices</string>
+            <string>Show Other Devices</string>
            </property>
           </widget>
          </item>
