@@ -34,7 +34,10 @@
      <item row="1" column="0" colspan="2">
       <widget class="QLineEdit" name="inject_text">
        <property name="placeholderText">
-        <string>Event name</string>
+        <string>Send event to MPF</string>
+       </property>
+       <property name="toolTip">
+        <string>Example: "my_event param1=foo param2=True"</string>
        </property>
        <property name="clearButtonEnabled">
         <bool>true</bool>
@@ -54,7 +57,7 @@
         <string/>
        </property>
        <property name="placeholderText">
-        <string>Filter</string>
+        <string>Name filter</string>
        </property>
        <property name="clearButtonEnabled">
         <bool>true</bool>
