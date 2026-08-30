@@ -261,6 +261,24 @@ class PfWidget(QGraphicsItem):
             elif self.device_type == 'diverter':
                 shape_result = Shape.TRIANGLE
 
+            elif self.device_type in ['timer', 'spinner', 'ball_save', 'multiball']:
+                shape_result = Shape.HEXAGON
+
+            elif self.device_type in ['achievement', 'achievement_group']:
+                shape_result = Shape.STAR
+
+            elif self.device_type in ['timed_switch', 'combo_switch', 'magnet']:
+                shape_result = Shape.OCTAGON
+
+            elif self.device_type in ['drop_target', 'drop_target_bank', 'kickback']:
+                shape_result = Shape.ARROW
+
+            elif self.device_type in ['shot', 'shot_group']:
+                shape_result = Shape.PENTAGON
+
+            elif self.device_type in ['state_machine', 'counter', 'accrual']:
+                shape_result = Shape.RECTANGLE
+
             else:  # Draw any other devices as square by default
                 shape_result = Shape.SQUARE
 
