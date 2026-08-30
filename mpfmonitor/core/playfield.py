@@ -553,5 +553,28 @@ class PfWidget(QGraphicsItem):
             req = node_data.get('balls_requested', 0)
             tooltip_text += f" | balls: {balls} (available: {avail}, requested: {req})"
 
+        elif self.device_type == 'ball_device':
+            balls = node_data.get('balls', 0)
+            avail = node_data.get('available_balls', 0)
+            tooltip_text += f" | balls: {balls} (available: {avail})"
+
+        elif self.device_type == 'ball_hold':
+            held = node_data.get('balls_held', 0)
+            tooltip_text += f" | held: {held}"
+
+        elif self.device_type == 'ball_save':
+            remaining = node_data.get('saves_remaining', 0)
+            tooltip_text += f" - Saves remaining: {remaining}"
+
+        elif self.device_type == 'drop_target':
+            complete = node_data.get('complete', None)
+            tooltip_text += f" - Complete: {complete}"
+
+        elif self.device_type == 'drop_target_bank':
+            down = node_data.get('down', 0)
+            up = node_data.get('up', 0)
+            state = node_data.get('state', None)
+            tooltip_text += f" - State: {state} | Up: {up}, Down: {down}"
+
         self.setToolTip(tooltip_text)
         super().hoverEnterEvent(event)
