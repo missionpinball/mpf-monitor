@@ -372,8 +372,10 @@ class DeviceWindow(QWidget):
         self.filtered_model = QSortFilterProxyModel(self)
         self.filtered_model.setSourceModel(self.model)
         self.filtered_model.setRecursiveFilteringEnabled(True)
+        self.filtered_model.setAutoAcceptChildRows(True)
         self.filtered_model.setDynamicSortFilter(True)
         self.filtered_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.filtered_model.setFilterKeyColumn(0)
 
         self.treeview.setModel(self.filtered_model)
         self.ui.treeView.setColumnHidden(2, True)
@@ -410,10 +412,7 @@ class DeviceWindow(QWidget):
             self.device_states[type][name].setData(state)
 
     def filter_text(self, string):
-        wc_string = "*" + str(string) + "*"
-        self.filtered_model.setFilterWildcard(wc_string)
-        self.ui.treeView.resizeColumnToContents(0)
-        self.ui.treeView.resizeColumnToContents(1)
+        self.filtered_model.setFilterFixedString(str(string))
 
     def change_sort(self, index=1):
         if index == 1:    # Name A-Z
