@@ -137,6 +137,8 @@ class PfWidget(QGraphicsItem):
         self.custom_shape_points = custom_shape_points
 
         self.setToolTip('{}: {}'.format(self.device_type, self.name))
+        self.setAcceptHoverEvents(True)
+
         self.setAcceptedMouseButtons(Qt.MouseButton.LeftButton | Qt.MouseButton.RightButton)
         self.setPos(x, y)
         self.update_pos(save)
@@ -512,3 +514,13 @@ class PfWidget(QGraphicsItem):
 
     def send_to_inspector_window(self):
         self.mpfmon.inspector_window_last_selected_cb(pf_widget=self)
+
+    def hoverEnterEvent(self, event):
+        if self.device_type == 'switch':
+            tooltip_text = f"{self.device_type}: {self.name}"
+            sw_num = self.widget.data().get('number', None)
+            if sw_num is not None:
+                tooltip_text += f" @ {sw_num}"
+
+            self.setToolTip(tooltip_text)
+        super().hoverEnterEvent(event)
