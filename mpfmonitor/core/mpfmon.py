@@ -216,32 +216,68 @@ class MPFMonitor():
         layers_toolbar.setFloatable(False)
         layers_toolbar.setStyleSheet("""
             QToolButton {
-                background-color: palette(button);
-                color: palette(button-text);
-                border: 1px solid palette(mid);
                 border-radius: 4px;
                 padding: 4px 8px;
                 margin: 0px 2px;
             }
-            QToolButton:hover {
+            QLineEdit {
+                border-radius: 4px;
+            }
+
+            QToolBar[theme="dark"] QToolButton {
+                background-color: palette(dark);
+                color: palette(button-text);
+                border: 1px solid palette(mid);
+            }
+            QToolBar[theme="dark"] QToolButton:hover {
                 background-color: palette(highlight);
                 color: palette(highlighted-text);
                 border: 1px solid palette(dark);
             }
-            QToolButton:checked {
-                background-color: palette(dark);
-                color: palette(bright-text);
+            QToolBar[theme="dark"] QToolButton:checked {
+                background-color: palette(button);
+                color: palette(button-text);
                 border: 1px solid palette(shadow);
-            QToolButton:checked:hover {
+            }
+            QToolBar[theme="dark"] QToolButton:checked:hover {
                 background-color: palette(shadow);
             }
-            QLineEdit {
+            QToolBar[theme="dark"] QLineEdit {
                 background-color: palette(base);
                 color: palette(text);
                 border: 1px solid palette(mid);
-                border-radius: 4px;
+            }
+
+            QToolButton {
+                background-color: #f5f5f5;
+                color: #000000;
+                border: 1px solid #cccccc;
+            }
+            QToolButton:hover {
+                background-color: #e5e5e5;
+                color: #000000;
+                border: 1px solid #b0b0b0;
+            }
+            QToolButton:checked {
+                background-color: #ffffff;
+                color: #000000;
+                border: 1px solid #000000;
+            }
+            QToolButton:checked:hover {
+                background-color: #dcdcdc;
+                color: #000000;
+                border: 1px solid #666666;
+            }
+            QLineEdit {
+                background-color: #ffffff;
+                color: #000000;
+                border: 1px solid #cccccc;
             }
         """)
+
+        is_dark_mode = layers_toolbar.palette().window().color().value() < 128
+        if is_dark_mode:
+            layers_toolbar.setProperty("theme", "dark")
 
         layers_toolbar.addAction(self.toggle_layer_lights_action)
         layers_toolbar.addAction(self.toggle_layer_switches_action)
