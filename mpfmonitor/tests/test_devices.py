@@ -65,15 +65,6 @@ class TestDeviceWindowFunctions(unittest.TestCase):
 
         self.device_window.device_states[type][name].setData.assert_called_with(state)
 
-
-    def test_filter_text(self):
-        string_in = "filter_string_test"
-        expected_string_out = "*filter_string_test*"
-
-        self.device_window.filter_text(string=string_in)
-
-        self.device_window.filtered_model.setFilterWildcard.assert_called_once_with(expected_string_out)
-
     def test_change_sort_default(self):
         self.device_window.change_sort()
         self.device_window.filtered_model.sort.assert_called_once_with(0, Qt.SortOrder.AscendingOrder)

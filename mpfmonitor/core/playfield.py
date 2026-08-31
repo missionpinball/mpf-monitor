@@ -137,6 +137,8 @@ class PfWidget(QGraphicsItem):
         self.custom_shape_points = custom_shape_points
 
         self.setToolTip('{}: {}'.format(self.device_type, self.name))
+        self.setAcceptHoverEvents(True)
+
         self.setAcceptedMouseButtons(Qt.MouseButton.LeftButton | Qt.MouseButton.RightButton)
         self.setPos(x, y)
         self.update_pos(save)
@@ -260,6 +262,24 @@ class PfWidget(QGraphicsItem):
 
             elif self.device_type == 'diverter':
                 shape_result = Shape.TRIANGLE
+
+            elif self.device_type in ['timer', 'spinner', 'ball_save', 'multiball']:
+                shape_result = Shape.HEXAGON
+
+            elif self.device_type in ['achievement', 'achievement_group']:
+                shape_result = Shape.STAR
+
+            elif self.device_type in ['timed_switch', 'combo_switch', 'magnet']:
+                shape_result = Shape.OCTAGON
+
+            elif self.device_type in ['drop_target', 'drop_target_bank', 'kickback']:
+                shape_result = Shape.ARROW
+
+            elif self.device_type in ['shot', 'shot_group']:
+                shape_result = Shape.PENTAGON
+
+            elif self.device_type in ['state_machine', 'counter', 'accrual']:
+                shape_result = Shape.RECTANGLE
 
             else:  # Draw any other devices as square by default
                 shape_result = Shape.SQUARE
@@ -494,3 +514,67 @@ class PfWidget(QGraphicsItem):
 
     def send_to_inspector_window(self):
         self.mpfmon.inspector_window_last_selected_cb(pf_widget=self)
+
+    def hoverEnterEvent(self, event):
+        tooltip_text = f"{self.device_type}: {self.name}"
+        node_data = self.widget.data()
+
+        if self.device_type == 'switch':
+            sw_num = node_data.get('number', None)
+            if sw_num is not None:
+                tooltip_text += f" @ {sw_num}"
+
+        elif self.device_type in ('accrual', 'counter'):
+            val = node_data.get('value', None)
+            if val is not None:
+                tooltip_text += f" - {val}"
+
+        elif self.device_type in ('achievement', 'state_machine'):
+            state = node_data.get('state', None)
+            if state is not None:
+                tooltip_text += f" - {state}"
+
+        elif self.device_type == 'shot':
+            state_name = node_data.get('state_name', None)
+            state_idx = node_data.get('state', None)
+            tooltip_text += f" - {state_name} ({state_idx})"
+
+        elif self.device_type == 'shot_group':
+            common_state = node_data.get('common_state', None)
+            tooltip_text += f" | Common: {common_state}"
+
+        elif self.device_type == 'servo':
+            pos = node_data.get('position', None)
+            tooltip_text += f" | position: {pos}"
+
+        elif self.device_type == 'playfield':
+            balls = node_data.get('balls', 0)
+            avail = node_data.get('available_balls', 0)
+            req = node_data.get('balls_requested', 0)
+            tooltip_text += f" | balls: {balls} (available: {avail}, requested: {req})"
+
+        elif self.device_type == 'ball_device':
+            balls = node_data.get('balls', 0)
+            avail = node_data.get('available_balls', 0)
+            tooltip_text += f" | balls: {balls} (available: {avail})"
+
+        elif self.device_type == 'ball_hold':
+            held = node_data.get('balls_held', 0)
+            tooltip_text += f" | held: {held}"
+
+        elif self.device_type == 'ball_save':
+            remaining = node_data.get('saves_remaining', 0)
+            tooltip_text += f" - Saves remaining: {remaining}"
+
+        elif self.device_type == 'drop_target':
+            complete = node_data.get('complete', None)
+            tooltip_text += f" - Complete: {complete}"
+
+        elif self.device_type == 'drop_target_bank':
+            down = node_data.get('down', 0)
+            up = node_data.get('up', 0)
+            state = node_data.get('state', None)
+            tooltip_text += f" - State: {state} | Up: {up}, Down: {down}"
+
+        self.setToolTip(tooltip_text)
+        super().hoverEnterEvent(event)

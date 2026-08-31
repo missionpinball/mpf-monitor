@@ -167,6 +167,21 @@ class DeviceNode:
             self._callback = callback
             self.q_state.emitDataChanged()
 
+    def set_placed_status(self, is_placed: bool):
+        """Styles the node depending on whether it's placed on the playfield."""
+        self.q_name.setData(str(self._name), Qt.ItemDataRole.DisplayRole)
+        self.q_name.setData(None, Qt.ItemDataRole.FontRole)
+
+        if not is_placed:
+            bg_color = QApplication.palette().color(QPalette.ColorRole.Window)
+            is_dark_mode = bg_color.value() < 128
+
+            if is_dark_mode:
+                self.q_name.setData(QColor(100, 180, 255), Qt.ItemDataRole.ForegroundRole)
+            else:
+                self.q_name.setData(QColor(70, 100, 200), Qt.ItemDataRole.ForegroundRole)
+        else:
+            self.q_name.setData(None, Qt.ItemDataRole.ForegroundRole)
 
 class DeviceDelegate(QStyledItemDelegate):
     def __init__(self):
@@ -174,6 +189,10 @@ class DeviceDelegate(QStyledItemDelegate):
         super().__init__()
 
     def paint(self, painter, view, index):
+        if index.column() == 0:
+            super().paint(painter, view, index)
+            return
+
         super().paint(painter, view, index)
         color = None
         state = None
@@ -310,8 +329,8 @@ class DeviceDelegate(QStyledItemDelegate):
 
 class DeviceWindow(QWidget):
 
-    __slots__ = ["mpfmn", "ui", "model", "log", "already_hidden", "added_index", "device_states",
-                 "device_type_widgets", "_debug_enabled"]
+    __slots__ = ["mpfmon", "ui", "model", "log", "already_hidden", "added_index", "device_states",
+                 "device_type_widgets", "_debug_enabled", "filtered_model"]
 
     def __init__(self, mpfmon):
         self.mpfmon = mpfmon
@@ -372,8 +391,10 @@ class DeviceWindow(QWidget):
         self.filtered_model = QSortFilterProxyModel(self)
         self.filtered_model.setSourceModel(self.model)
         self.filtered_model.setRecursiveFilteringEnabled(True)
+        self.filtered_model.setAutoAcceptChildRows(True)
         self.filtered_model.setDynamicSortFilter(True)
         self.filtered_model.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.filtered_model.setFilterKeyColumn(0)
 
         self.treeview.setModel(self.filtered_model)
         self.ui.treeView.setColumnHidden(2, True)
@@ -401,6 +422,14 @@ class DeviceWindow(QWidget):
             node.setData(state)
             node.setType(type)
 
+            is_placed = False
+            try:
+                if type in self.mpfmon.config and name in self.mpfmon.config[type]:
+                    is_placed = 'x' in self.mpfmon.config[type][name]
+            except (AttributeError, KeyError):
+                pass
+            node.set_placed_status(is_placed)
+
             self.device_states[type][name] = node
             self.device_type_widgets[type].appendRow(node.get_row())
 
@@ -410,10 +439,7 @@ class DeviceWindow(QWidget):
             self.device_states[type][name].setData(state)
 
     def filter_text(self, string):
-        wc_string = "*" + str(string) + "*"
-        self.filtered_model.setFilterWildcard(wc_string)
-        self.ui.treeView.resizeColumnToContents(0)
-        self.ui.treeView.resizeColumnToContents(1)
+        self.filtered_model.setFilterFixedString(str(string))
 
     def change_sort(self, index=1):
         if index == 1:    # Name A-Z
