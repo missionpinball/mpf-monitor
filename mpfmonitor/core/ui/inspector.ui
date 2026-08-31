@@ -318,37 +318,37 @@
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_2">
          <item>
-          <widget class="QCheckBox" name="toggle_device_win_button">
+          <widget class="QPushButton" name="toggle_device_win_button">
            <property name="text">
-            <string>Show device window</string>
+            <string>Toggle Device window</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="toggle_event_win_button">
+          <widget class="QPushButton" name="toggle_event_win_button">
            <property name="text">
-            <string>Show event window</string>
+            <string>Toggle Event window</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="toggle_pf_win_button">
+          <widget class="QPushButton" name="toggle_pf_win_button">
            <property name="text">
-            <string>Show playfield window</string>
+            <string>Toggle Playfield window</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="toggle_mode_win_button">
+          <widget class="QPushButton" name="toggle_mode_win_button">
            <property name="text">
-            <string>Show mode window</string>
+            <string>Toggle Mode window</string>
            </property>
           </widget>
          </item>
          <item>
-          <widget class="QCheckBox" name="toggle_variables_win_button">
+          <widget class="QPushButton" name="toggle_variables_win_button">
            <property name="text">
-            <string>Show variables window</string>
+            <string>Toggle Variables window</string>
            </property>
           </widget>
          </item>
@@ -362,7 +362,7 @@
          <item>
           <widget class="QCheckBox" name="exit_on_close_button">
            <property name="text">
-            <string>Quit on single window close</string>
+            <string>Quit on any window closing</string>
            </property>
           </widget>
          </item>
@@ -453,7 +453,7 @@
          <item>
           <widget class="QPushButton" name="cycle_pf_image_button">
            <property name="text">
-            <string>Playfield Image</string>
+            <string>Cycle Playfield Image</string>
            </property>
           </widget>
          </item>
@@ -464,7 +464,7 @@
          <item>
           <widget class="QCheckBox" name="toggle_lights_button">
            <property name="text">
-            <string>Lights</string>
+            <string>Show Lights</string>
            </property>
           </widget>
          </item>
@@ -475,7 +475,7 @@
          <item>
           <widget class="QCheckBox" name="toggle_switches_button">
            <property name="text">
-            <string>Switches</string>
+            <string>Show Switches</string>
            </property>
           </widget>
          </item>
@@ -486,7 +486,7 @@
          <item>
           <widget class="QCheckBox" name="toggle_others_button">
            <property name="text">
-            <string>Other Devices</string>
+            <string>Show Other Devices</string>
            </property>
           </widget>
          </item>
