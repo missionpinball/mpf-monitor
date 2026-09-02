@@ -524,6 +524,11 @@ class PfWidget(QGraphicsItem):
             if sw_num is not None:
                 tooltip_text += f" @ {sw_num}"
 
+        elif self.device_type == 'light':
+            address = node_data.get('address', None)
+            if address is not None:
+                tooltip_text += f"\n{address}"
+
         elif self.device_type in ('accrual', 'counter'):
             val = node_data.get('value', None)
             if val is not None:
