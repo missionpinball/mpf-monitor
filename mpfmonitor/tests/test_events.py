@@ -177,6 +177,24 @@ class TestEvents(unittest.TestCase):
         self.eventWindow.mpfmon.bcp.send.assert_called_with('trigger', name="fake_event", foo="bar", quux=1, corge=True, fred=None)
         self.assertEqual(self.eventWindow.ui.inject_text.text(), "")
 
+    def test_ui_injection_history(self):
+        self.eventWindow.ui.inject_text.setText("fake_event_1")
+        QTest.mouseClick(self.eventWindow.ui.inject_button, QtCore.Qt.MouseButton.LeftButton)
+        self.eventWindow.mpfmon.bcp.send.assert_called_with('trigger', name="fake_event_1")
+        self.assertEqual(self.eventWindow.mpfmon.bcp.send.call_count, 2)
+        self.assertEqual(self.eventWindow.ui.inject_text.text(), "")
+
+        # Pressing up when empty will go to the previous event
+        QTest.keyClick(self.eventWindow.ui.inject_text, QtCore.Qt.Key.Key_Up)
+        self.assertEqual(self.eventWindow.ui.inject_text.text(), "fake_event_1")
+        QTest.mouseClick(self.eventWindow.ui.inject_button, QtCore.Qt.MouseButton.LeftButton)
+        self.assertEqual(self.eventWindow.mpfmon.bcp.send.call_count, 3)
+        self.assertEqual(self.eventWindow.ui.inject_text.text(), "")
+
+        # Pressing up when already with text will not go to the previous event
+        self.eventWindow.ui.inject_text.setText("something_else")
+        QTest.keyClick(self.eventWindow.ui.inject_text, QtCore.Qt.Key.Key_Up)
+        self.assertEqual(self.eventWindow.ui.inject_text.text(), "something_else")
 
 if __name__ == '__main__':
     unittest.main()

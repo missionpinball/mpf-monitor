@@ -56,6 +56,11 @@ class Command(object):
                             default=logging.INFO,
                             help="Enables verbose logging to the console. Do NOT use on Windows platforms")
 
+        parser.add_argument("--version",
+                            action="store_true", dest="print_version",
+                            default=False,
+                            help="Prints version and quits")
+
         parser.add_argument("-ip",
                             action="store", dest="mpfipaddr",
                             help="The MPF IP Address Default is localhost")
@@ -65,6 +70,11 @@ class Command(object):
                             help="The MPF Port Default is 5051")
 
         args = parser.parse_args(args)
+
+        if args.print_version:
+            print(f'MPF Monitor v{__version__}')
+            sys.exit(0)
+
         args.configfile = "{}.yaml".format(args.configfile)
 
         # Configure logging. Creates a logfile and logs to the console.

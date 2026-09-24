@@ -23,6 +23,7 @@ class EventWindow(QWidget):
         self.ui.tableView.setModel(self.filtered_model)
         self.rootNode = self.model.invisibleRootItem()
         self.attach_signals()
+        self.last_sent_event = None
 
         initial_sort = int(self.mpfmon.local_settings.value('windows/events/sort_index', 1))
         self.ui.sortComboBox.setCurrentIndex(initial_sort)
@@ -48,6 +49,16 @@ class EventWindow(QWidget):
         self.ui.clear_button.clicked.connect(self.clear_log)
         self.ui.inject_button.clicked.connect(self.trigger_text_event)
         self.ui.inject_text.returnPressed.connect(self.trigger_text_event)
+        self.ui.inject_text.installEventFilter(self)
+
+    def eventFilter(self, watched, event):
+        # Check if the event is a key press happening inside the inject_text box
+        if watched == self.ui.inject_text and event.type() == QEvent.Type.KeyPress:
+            if event.key() == Qt.Key.Key_Up:
+                self.recall_history_up()
+                return True
+
+        return super().eventFilter(watched, event)
 
     def attach_model(self):
         self.model = QStandardItemModel(0, 3)
@@ -106,9 +117,16 @@ class EventWindow(QWidget):
         event.accept()
         self.mpfmon.check_if_quit()
 
+    def recall_history_up(self):
+        """If text box is empty and previous value is saved, restore it."""
+        raw_text = self.ui.inject_text.text().strip()
+        if raw_text == '' and self.last_sent_event is not None:
+            self.ui.inject_text.setText(self.last_sent_event)
+
     def trigger_text_event(self):
         """Send an event from the event window field to MPF."""
         raw_text = self.ui.inject_text.text().strip()
+        self.last_sent_event = raw_text
         if raw_text:
 
             try:
