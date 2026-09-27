@@ -196,5 +196,11 @@ class TestEvents(unittest.TestCase):
         QTest.keyClick(self.eventWindow.ui.inject_text, QtCore.Qt.Key.Key_Up)
         self.assertEqual(self.eventWindow.ui.inject_text.text(), "something_else")
 
+        # Submitting empty content does not overwrite or lose the history item ("fake_event_1")
+        self.eventWindow.ui.inject_text.setText("")
+        QTest.mouseClick(self.eventWindow.ui.inject_button, QtCore.Qt.MouseButton.LeftButton)
+        QTest.keyClick(self.eventWindow.ui.inject_text, QtCore.Qt.Key.Key_Up)
+        self.assertEqual(self.eventWindow.ui.inject_text.text(), "fake_event_1")
+
 if __name__ == '__main__':
     unittest.main()
