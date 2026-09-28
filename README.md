@@ -21,7 +21,7 @@ Installation & Instructions
 Full instructions for installing and using the MPF monitor are included
 in the MPF documentation here: https://missionpinball.org/
 
-<img src="mpf-monitor-screenshot.jpg"/>
+<img src="mpf-monitor-screenshot.png"/>
 
 Support
 -------

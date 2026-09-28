@@ -1,20 +1,18 @@
 """BCP Server interface for the MPF Media Controller"""
 
+from datetime import datetime
 import logging
+import math
+import os
 import queue
+import select
 import socket
 import threading
-import os
 import time
 
-import select
-
-from datetime import datetime
-import math
-
-import mpf.core.bcp.bcp_socket_client as bcp
 from PyQt6.QtCore import QTimer
 
+from mpfmonitor.mpf.bcp_utils import decode_command_string, encode_command_string
 
 class BCPClient(object):
 
@@ -80,7 +78,6 @@ class BCPClient(object):
                         self.start_monitoring()
             else:
                 time.sleep(1)
-
 
     def register_timer(self):
         if self.simulate:
@@ -230,15 +227,14 @@ class BCPClient(object):
             self.cache_file.write(str(message_tmr) + "," + message + "\n")
 
         try:
-            cmd, kwargs = bcp.decode_command_string(message)
+            cmd, kwargs = decode_command_string(message)
             self.receive_queue.put((cmd, kwargs))
         except ValueError:
             self.log.error("DECODE BCP ERROR. Message: %s", message)
             raise
 
     def send(self, bcp_command, **kwargs):
-            self.sending_queue.put(bcp.encode_command_string(bcp_command,
-                                                             **kwargs))
+            self.sending_queue.put(encode_command_string(bcp_command, **kwargs))
 
     def simulator_init(self):
         if self.caching_enabled:
