@@ -128,7 +128,7 @@ class EventWindow(QWidget):
         raw_text = self.ui.inject_text.text().strip()
         self.last_sent_event = raw_text
         if raw_text:
-
+            self.last_sent_event = raw_text
             try:
                 parts = shlex.split(raw_text)
             except ValueError:
