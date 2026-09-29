@@ -38,9 +38,9 @@ class Command(object):
                             default=[],  # Default for lists must be implemented by custom check
                             metavar='image_files',
                             help="The MPF Monitor image file name. "
-                                 "Files must be placed within the folder '<game>/monitor/' "
-                                 "Default is playfield.jpg\n"
-                                 "Use `-i=image1.jpg image2.png` to add multiple options.\n"
+                                 "Files must be placed within the folder '<game>/monitor/'. "
+                                 "Default is 'playfield.jpg'. "
+                                 "Use `-i=image1.jpg image2.png` to add multiple options. "
                                  "Supported types: PNG, JPG, BMP, GIF")
 
         parser.add_argument("-is",
@@ -59,15 +59,15 @@ class Command(object):
         parser.add_argument("--version",
                             action="store_true", dest="print_version",
                             default=False,
-                            help="Prints version and quits")
+                            help="Print version and exit")
 
         parser.add_argument("-ip",
-                            action="store", dest="mpfipaddr",
-                            help="The MPF IP Address Default is localhost")
+                            action="store", dest="mpf_ip_addr",
+                            help="Provide an alternative to the default MPF IP Address. Default is 'localhost'")
 
         parser.add_argument("-port",
-                            action="store", dest="mpfport",
-                            help="The MPF Port Default is 5051")
+                            action="store", dest="mpf_port",
+                            help="Provide an alternative to the default MPF Port. Default is 5051")
 
         args = parser.parse_args(args)
 
@@ -134,8 +134,8 @@ class Command(object):
                 thread_stopper=thread_stopper,
                 config_file=args.configfile,
                 image_files=resolved_images,
-                ip_addr=args.mpfipaddr,
-                port=args.mpfport)
+                ip_addr=args.mpf_ip_addr,
+                port=args.mpf_port)
             logging.info("MPF Monitor run loop ended.")
         except Exception as e:
             logging.exception(str(e))
