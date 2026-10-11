@@ -43,6 +43,7 @@ mpf-monitor = "mpfmonitor.commands.monitor:main"
 
 [tool.setuptools]
 include-package-data = true
+package-data = { "mpfmonitor" = ["**/*.ui"] }
 
 [tool.setuptools.dynamic]
 version = {attr = "mpfmonitor._version.__version__"}
